@@ -1,4 +1,62 @@
-# Play button
+# Button text/font
+- alias: HASwitchPlate_Page10_Media
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b6.font'
+      payload: '4'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b7.font'
+      payload: '4'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b8.font'
+      payload: '4'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b9.font'
+      payload: '4'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b10.font'
+      payload: '4'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b11.font'
+      payload: '4'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b6.txt'
+      payload: '"9"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b7.txt'
+      payload: '";"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b8.txt'
+      payload: '":"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b9.txt'
+      payload: '"4"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b10.txt'
+      payload: '"5"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b11.txt'
+      payload: '"6"'
+
+# Play button action
 - alias: HASwitchPlate_Media_PlayButton9
   trigger:
     platform: mqtt
@@ -8,7 +66,7 @@
     service: media_player.media_play
     entity_id: media_player.media_player
 
-# Pause button
+# Pause button action
 - alias: HASwitchPlate_Media_PauseButton7
   trigger:
     platform: mqtt
@@ -18,7 +76,7 @@
     service: media_player.media_pause
     entity_id: media_player.media_player
 
-# Prev Track button
+# Prev Track button action
 - alias: HASwitchPlate_Media_PrevTrackButton6
   trigger:
     platform: mqtt
@@ -28,7 +86,7 @@
     service: media_player.media_previous_track
     entity_id: media_player.media_player
     
-# Next Track button
+# Next Track button action
 - alias: HASwitchPlate_Media_NextTrackButton8
   trigger:
     platform: mqtt
@@ -38,7 +96,7 @@
     service: media_player.media_next_track
     entity_id: media_player.media_player
     
-# Volume Up button
+# Volume Up button action
 - alias: HASwitchPlate_Media_VolumeUpButton10
   trigger:
     platform: mqtt
@@ -48,7 +106,7 @@
     service: media_player.volume_up
     entity_id: media_player.media_player
 
-# Volume Down button
+# Volume Down button action
 - alias: HASwitchPlate_Media_VolumeDownButton11
   trigger:
     platform: mqtt
@@ -57,26 +115,6 @@
   action:
     service: media_player.volume_down
     entity_id: media_player.media_player
- 
-# Update artist/track
-# - alias: HASwitchPlate_Media_Info
-  # trigger:
-  # - platform: state
-    # entity_id: media_player.media_player
-  # - platform: mqtt
-    # topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
-    # payload: 'ON'
-  # - platform: homeassistant
-    # event: start
-  # action:
-  # - service: mqtt.publish
-    # data:
-      # topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.txt'
-      # payload_template: "\"{{states.media_player.media_player.attributes.media_artist}}\""
-  # - service: mqtt.publish
-    # data:
-      # topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.txt'
-      # payload_template: "\"{{states.media_player.media_player.attributes.media_title}}\""
 
 # Scale artist font to fit
 # 0 consolas 24 - 20 chars x 2 lines (wrapped)

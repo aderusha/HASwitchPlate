@@ -12,7 +12,6 @@
     data:
       topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b6.txt'
       payload_template: "\"{{states.sensor.weather_temperature.state}}F\""
-#      payload_template: "\"{{states.sensor.weather_temperature.state}}-{{states.sensor.weather_temperature.attributes.unit_of_measurement}}\""
       retain: true
   - service: mqtt.publish
     data:
