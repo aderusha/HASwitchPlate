@@ -1,0 +1,42 @@
+- alias: HASwitchPlate_Page1_Scenes
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b4.font'
+      payload: '2'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b4.txt'
+      payload: '"Lights On"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b5.font'
+      payload: '2'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b5.txt'
+      payload: '"Daylight"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b6.font'
+      payload: '2'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b6.txt'
+      payload: '"Night"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b7.font'
+      payload: '2'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b7.txt'
+      payload: '"Lights Off"'
+
+

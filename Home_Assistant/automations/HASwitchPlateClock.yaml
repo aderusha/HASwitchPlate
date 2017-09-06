@@ -1,0 +1,16 @@
+- alias: HASwitchPlate_Clock
+  trigger:
+    platform: time
+    # Matches every minute
+    seconds: 00
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b4.txt'
+      payload_template: "\"{{now().strftime('%H:%M')}}\""
+      retain: true
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b5.txt'
+      payload_template: "\"{{now().strftime('%A %b %d')}}\""
+      retain: true

@@ -1,0 +1,175 @@
+homeassistant:
+  # Name of the location where Home Assistant is running
+  name: Home
+  # Location required to calculate the time the sun rises and sets
+  latitude: 42.9741465
+  longitude: -85.6852731
+  # Impacts weather/sunrise data (altitude above sea level in meters)
+  elevation: 115
+  # metric for Metric, imperial for Imperial
+  unit_system: imperial
+  # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  time_zone: America/Detroit
+
+# Show links to resources in log and frontend
+#introduction:
+
+# Enables the frontend
+frontend:
+
+# Enables configuration UI
+config:
+
+http:
+  # Uncomment this to add a password (recommended!)
+  # api_password: PASSWORD
+  # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
+  # base_url: example.duckdns.org:8123
+
+# Checks for available updates
+# Note: This component will send some information about your system to
+# the developers to assist with development of Home Assistant.
+# For more information, please see:
+# https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
+# updater:
+  # Optional, allows Home Assistant developers to focus on popular components.
+  # include_used_components: true
+
+# Discover some devices automatically
+# discovery:
+
+# Allows you to issue voice commands from the frontend in enabled browsers
+# conversation:
+
+# Enables support for tracking state changes over time
+history:
+
+# View all events in a logbook
+# logbook:
+
+# Track the sun
+# sun:
+input_select:
+  haswitchplate_pagebutton1_page:
+    name: HASwitchPlate Page Button 1 Page
+    options:
+     - 1
+     - 2
+     - 3
+     - 4
+     - 5
+     - 6
+     - 7
+     - 8
+     - 9
+    icon: mdi:format-list-numbers
+  haswitchplate_pagebutton1_label:
+    name: HASwitchPlate Page Button 1 Label
+    options:
+     - Scene
+     - Status
+     - Dimmer
+     - Media
+     - Print
+    icon: mdi:book-open-page-variant
+  haswitchplate_pagebutton2_page:
+    name: HASwitchPlate Page Button 2 Page
+    options:
+     - 1
+     - 2
+     - 3
+     - 4
+     - 5
+     - 6
+     - 7
+     - 8
+     - 9
+    icon: mdi:format-list-numbers
+  haswitchplate_pagebutton2_label:
+    name: HASwitchPlate Page Button 2 Label
+    options:
+     - Scene
+     - Status
+     - Dimmer
+     - Media
+     - Print
+    icon: mdi:book-open-page-variant
+  haswitchplate_pagebutton3_page:
+    name: HASwitchPlate Page Button 3 Page
+    options:
+     - 1
+     - 2
+     - 3
+     - 4
+     - 5
+     - 6
+     - 7
+     - 8
+     - 9
+    icon: mdi:format-list-numbers
+  haswitchplate_pagebutton3_label:
+    name: HASwitchPlate Page Button 3 Label
+    options:
+     - Scene
+     - Status
+     - Dimmer
+     - Media
+     - Print
+    initial: Dimmer
+    icon: mdi:book-open-page-variant
+
+# Weather prediction
+sensor:
+  - platform: yweather
+    name: Weather
+    monitored_conditions:
+      - weather_current
+      - temperature
+      - temp_min
+      - temp_max
+      - humidity
+
+media_player:
+  - platform: gpmdp
+    name: "Media Player"
+    host: 127.0.0.1
+
+# Text to speech
+# tts:
+  # - platform: google
+
+mqtt:
+  broker: localhost
+  client_id: homeassistant
+  discovery: true
+  discovery_prefix: homeassistant
+
+light:
+  - platform: mqtt
+    name: "Light 1"
+    command_topic: "homeassistant/light/light1"
+    state_topic: "homeassistant/light/light1"
+    brightness_command_topic: "homeassistant/light/light1/bright"
+    brightness_state_topic: "homeassistant/light/light1/bright"
+  - platform: mqtt
+    name: "Light 2"
+    command_topic: "homeassistant/light/light2"
+    state_topic: "homeassistant/light/light2"
+    brightness_command_topic: "homeassistant/light/light2/bright"
+    brightness_state_topic: "homeassistant/light/light2/bright"
+  - platform: mqtt
+    name: "Light 3"
+    command_topic: "homeassistant/light/light3"
+    state_topic: "homeassistant/light/light3"
+    brightness_command_topic: "homeassistant/light/light3/bright"
+    brightness_state_topic: "homeassistant/light/light3/bright"
+  - platform: mqtt
+    name: "Light 4"
+    command_topic: "homeassistant/light/light4"
+    state_topic: "homeassistant/light/light4"
+    brightness_command_topic: "homeassistant/light/light4/bright"
+    brightness_state_topic: "homeassistant/light/light4/bright"
+    
+automation: !include_dir_merge_list automations/
+scene: !include_dir_merge_list scenes/
+

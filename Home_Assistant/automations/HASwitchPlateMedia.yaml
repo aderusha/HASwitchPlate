@@ -1,0 +1,290 @@
+# Play button
+- alias: HASwitchPlate_Media_PlayButton9
+  trigger:
+    platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b9'
+    payload: 'ON'
+  action:
+    service: media_player.media_play
+    entity_id: media_player.media_player
+
+# Pause button
+- alias: HASwitchPlate_Media_PauseButton7
+  trigger:
+    platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b7'
+    payload: 'ON'
+  action:
+    service: media_player.media_pause
+    entity_id: media_player.media_player
+
+# Prev Track button
+- alias: HASwitchPlate_Media_PrevTrackButton6
+  trigger:
+    platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b6'
+    payload: 'ON'
+  action:
+    service: media_player.media_previous_track
+    entity_id: media_player.media_player
+    
+# Next Track button
+- alias: HASwitchPlate_Media_NextTrackButton8
+  trigger:
+    platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b8'
+    payload: 'ON'
+  action:
+    service: media_player.media_next_track
+    entity_id: media_player.media_player
+    
+# Volume Up button
+- alias: HASwitchPlate_Media_VolumeUpButton10
+  trigger:
+    platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b10'
+    payload: 'ON'
+  action:
+    service: media_player.volume_up
+    entity_id: media_player.media_player
+
+# Volume Down button
+- alias: HASwitchPlate_Media_VolumeDownButton11
+  trigger:
+    platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b11'
+    payload: 'ON'
+  action:
+    service: media_player.volume_down
+    entity_id: media_player.media_player
+ 
+# Update artist/track
+# - alias: HASwitchPlate_Media_Info
+  # trigger:
+  # - platform: state
+    # entity_id: media_player.media_player
+  # - platform: mqtt
+    # topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    # payload: 'ON'
+  # - platform: homeassistant
+    # event: start
+  # action:
+  # - service: mqtt.publish
+    # data:
+      # topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.txt'
+      # payload_template: "\"{{states.media_player.media_player.attributes.media_artist}}\""
+  # - service: mqtt.publish
+    # data:
+      # topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.txt'
+      # payload_template: "\"{{states.media_player.media_player.attributes.media_title}}\""
+
+# Scale artist font to fit
+# 0 consolas 24 - 20 chars x 2 lines (wrapped)
+# 1 consolas 32 - 15 chars x 2 lines (wrapped)
+# 2 consolas 48 - 10 chars x 1 line
+# 3 consolas 80 - 6 chars x 1 line
+- alias: HASwitchPlate_Media_Artist_6chars
+  trigger:
+  - platform: state
+    entity_id: media_player.media_player
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  condition:
+    condition: template
+    value_template: '{{ states.media_player.media_player.attributes.media_artist|length <= 6 }}'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.font'
+      payload: '3'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.txt'
+      payload_template: '"{{states.media_player.media_player.attributes.media_artist}}"'
+
+- alias: HASwitchPlate_Media_Artist_10chars
+  trigger:
+  - platform: state
+    entity_id: media_player.media_player
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  condition:
+    condition: template
+    value_template: '{{ (states.media_player.media_player.attributes.media_artist|length > 6) and (states.media_player.media_player.attributes.media_artist|length <= 10) }}'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.font'
+      payload: '2'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.txt'
+      payload_template: '"{{states.media_player.media_player.attributes.media_artist}}"'
+
+- alias: HASwitchPlate_Media_Artist_15chars
+  trigger:
+  - platform: state
+    entity_id: media_player.media_player
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  condition:
+    condition: template
+    value_template: '{{ (states.media_player.media_player.attributes.media_artist|length > 10) and (states.media_player.media_player.attributes.media_artist|length <= 15) }}'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.font'
+      payload: '1'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.txt'
+      payload_template: '"{{states.media_player.media_player.attributes.media_artist}}"'
+
+- alias: HASwitchPlate_Media_Artist_40chars
+  trigger:
+  - platform: state
+    entity_id: media_player.media_player
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  condition:
+    condition: template
+    value_template: '{{ (states.media_player.media_player.attributes.media_artist|length > 15) }}'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.font'
+      payload: '0'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.txt'
+      payload_template: '"{{states.media_player.media_player.attributes.media_artist|wordwrap(20, wrapstring="\\r")}}"'
+
+- alias: HASwitchPlate_Media_Title_6chars
+  trigger:
+  - platform: state
+    entity_id: media_player.media_player
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  condition:
+    condition: template
+    value_template: '{{ states.media_player.media_player.attributes.media_title|length <= 6 }}'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.font'
+      payload: '3'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.txt'
+      payload_template: '"{{states.media_player.media_player.attributes.media_title}}"'
+
+- alias: HASwitchPlate_Media_Title_10chars
+  trigger:
+  - platform: state
+    entity_id: media_player.media_player
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  condition:
+    condition: template
+    value_template: '{{ (states.media_player.media_player.attributes.media_title|length > 6) and (states.media_player.media_player.attributes.media_title|length <= 10) }}'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.font'
+      payload: '2'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.txt'
+      payload_template: '"{{states.media_player.media_player.attributes.media_title}}"'
+
+- alias: HASwitchPlate_Media_Title_15chars
+  trigger:
+  - platform: state
+    entity_id: media_player.media_player
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  condition:
+    condition: template
+    value_template: '{{ (states.media_player.media_player.attributes.media_title|length > 10) and (states.media_player.media_player.attributes.media_title|length <= 15) }}'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.font'
+      payload: '1'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.txt'
+      payload_template: '"{{states.media_player.media_player.attributes.media_title}}"'
+
+- alias: HASwitchPlate_Media_Title_40chars
+  trigger:
+  - platform: state
+    entity_id: media_player.media_player
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  condition:
+    condition: template
+    value_template: '{{ (states.media_player.media_player.attributes.media_title|length > 15) }}'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.font'
+      payload: '0'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.txt'
+      payload_template: '"{{states.media_player.media_player.attributes.media_title|wordwrap(20, wrapstring="\\r")}}"'
+      
+# if media is playing, set Play button .b9 to grey and Pause button .b7 to black
+- alias: HASwitchPlate_Media_Playing
+  trigger:
+    platform: template
+    value_template: "{% if is_state('media_player.media_player', 'playing') %}true{% endif %}"
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b9.pco'
+      payload: '50712'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b7.pco'
+      payload: '0'
+
+# if media is paused, set Play button .b9 to black and Pause button .b7 to grey
+- alias: HASwitchPlate_Media_Paused
+  trigger:
+    platform: template
+    value_template: "{% if is_state('media_player.media_player', 'paused') %}true{% endif %}"
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b9.pco'
+      payload: '0'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b7.pco'
+      payload: '50712'

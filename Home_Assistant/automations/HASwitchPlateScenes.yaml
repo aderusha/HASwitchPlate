@@ -1,0 +1,35 @@
+- alias: HASwitchPlate_Page1_SceneButton4
+  trigger:
+    platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b4'
+    payload: 'ON'
+  action:
+    service: scene.turn_on
+    entity_id: scene.lights_on
+    
+- alias: HASwitchPlate_Page1_SceneButton5
+  trigger:
+    platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b5'
+    payload: 'ON'
+  action:
+    service: scene.turn_on
+    entity_id: scene.daylight
+
+- alias: HASwitchPlate_Page1_SceneButton6
+  trigger:
+    platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b6'
+    payload: 'ON'
+  action:
+    service: scene.turn_on
+    entity_id: scene.night
+
+- alias: HASwitchPlate_Page1_SceneButton7
+  trigger:
+    platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b7'
+    payload: 'ON'
+  action:
+    service: scene.turn_on
+    entity_id: scene.lights_off

@@ -1,0 +1,522 @@
+##############################################################################
+# Set page button actions across all pages to the value selected in the interface
+# select haswitchplate_pagebutton1_page in response to page button 1
+- alias: HASwitchPlate_PageButton1_action
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b1'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b1'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p3.b1'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p4.b1'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p5.b1'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p6.b1'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p7.b1'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b1'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p9.b1'
+    payload: 'ON'
+  action:
+  # activate selected page
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextioncmd'
+      payload_template: "page {{states.input_select.haswitchplate_pagebutton1_page.state}}"
+      
+# select haswitchplate_pagebutton2_page in response to page button 2
+- alias: HASwitchPlate_PageButton2_action
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b2'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b2'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p3.b2'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p4.b2'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p5.b2'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p6.b2'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p7.b2'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b2'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p9.b2'
+    payload: 'ON'
+  action:
+  # activate selected page
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextioncmd'
+      payload_template: "page {{states.input_select.haswitchplate_pagebutton2_page.state}}"
+
+# select haswitchplate_pagebutton3_page in response to page button 2
+- alias: HASwitchPlate_PageButton3_action
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b3'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b3'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p3.b3'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p4.b3'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p5.b3'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p6.b3'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p7.b3'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b3'
+    payload: 'ON'
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p9.b3'
+    payload: 'ON'
+  action:
+  # activate selected page
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextioncmd'
+      payload_template: "page {{states.input_select.haswitchplate_pagebutton3_page.state}}"
+ 
+##############################################################################
+# Set page button text across all pages to the value selected in the interface
+
+# set page button text on each page to haswitchplate_pagebutton1_label
+- alias: HASwitchPlate_PageButton1_text
+  trigger:
+  - platform: state
+    entity_id: input_select.haswitchplate_pagebutton1_label
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b1.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton1_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b1.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton1_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p3.b1.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton1_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p4.b1.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton1_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p5.b1.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton1_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p6.b1.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton1_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p7.b1.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton1_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b1.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton1_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p9.b1.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton1_label.state}}"'
+
+# set page button text on each page to haswitchplate_pagebutton2_label
+- alias: HASwitchPlate_PageButton2_text
+  trigger:
+  - platform: state
+    entity_id: input_select.haswitchplate_pagebutton2_label
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b2.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton2_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b2.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton2_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p3.b2.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton2_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p4.b2.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton2_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p5.b2.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton2_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p6.b2.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton2_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p7.b2.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton2_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b2.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton2_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p9.b2.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton2_label.state}}"'
+
+# set page button text on each page to haswitchplate_pagebutton3_label
+- alias: HASwitchPlate_PageButton3_text
+  trigger:
+  - platform: state
+    entity_id: input_select.haswitchplate_pagebutton3_label
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b3.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton3_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b3.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton3_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p3.b3.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton3_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p4.b3.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton3_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p5.b3.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton3_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p6.b3.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton3_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p7.b3.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton3_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b3.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton3_label.state}}"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p9.b3.txt'
+      payload_template: '"{{states.input_select.haswitchplate_pagebutton3_label.state}}"'
+
+##############################################################################
+# Set page button colors across selected pages to show active page button
+# First we'll reset all page buttons, then overwrite our three pages with 
+# a highlighted page button to show the selection. 
+
+# set page button 1 colors on page 
+- alias: HASwitchPlate_PageButton1_text
+  trigger:
+  - platform: state
+    entity_id: input_select.haswitchplate_pagebutton1_page
+  - platform: state
+    entity_id: input_select.haswitchplate_pagebutton2_page
+  - platform: state
+    entity_id: input_select.haswitchplate_pagebutton3_page
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b1.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b1.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b2.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b2.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b3.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b3.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b1.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b1.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b2.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b2.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b3.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b3.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p3.b1.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p3.b1.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p3.b2.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p3.b2.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p3.b3.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p3.b3.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p4.b1.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p4.b1.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p4.b2.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p4.b2.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p4.b3.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p4.b3.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p5.b1.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p5.b1.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p5.b2.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p5.b2.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p5.b3.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p5.b3.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p6.b1.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p6.b1.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p6.b2.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p6.b2.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p6.b3.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p6.b3.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p7.b1.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p7.b1.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p7.b2.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p7.b2.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p7.b3.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p7.b3.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b1.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b1.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b2.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b2.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b3.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b3.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p9.b1.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p9.b1.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p9.b2.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p9.b2.pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p9.b3.bco'
+      payload: '25388'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p9.b3.pco'
+      payload: '65535'
+# now write out the highlight colors for our 3 selected pages
+  - service: mqtt.publish
+    data_template:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p{{states.input_select.haswitchplate_pagebutton1_page.state}}.b1.bco'
+      payload: '65535'
+  - service: mqtt.publish
+    data_template:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p{{states.input_select.haswitchplate_pagebutton1_page.state}}.b1.pco'
+      payload: '0'
+  - service: mqtt.publish
+    data_template:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p{{states.input_select.haswitchplate_pagebutton2_page.state}}.b2.bco'
+      payload: '65535'
+  - service: mqtt.publish
+    data_template:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p{{states.input_select.haswitchplate_pagebutton2_page.state}}.b2.pco'
+      payload: '0'
+  - service: mqtt.publish
+    data_template:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p{{states.input_select.haswitchplate_pagebutton3_page.state}}.b3.bco'
+      payload: '65535'
+  - service: mqtt.publish
+    data_template:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p{{states.input_select.haswitchplate_pagebutton3_page.state}}.b3.pco'
+      payload: '0'
+     

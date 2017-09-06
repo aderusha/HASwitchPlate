@@ -1,0 +1,21 @@
+- alias: HASwitchPlate_Weather
+  trigger:
+  - platform: state
+    entity_id: sensor.weather_temperature
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b6.txt'
+      payload_template: "\"{{states.sensor.weather_temperature.state}}F\""
+#      payload_template: "\"{{states.sensor.weather_temperature.state}}-{{states.sensor.weather_temperature.attributes.unit_of_measurement}}\""
+      retain: true
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b7.txt'
+      payload_template: "\"{{states.sensor.weather_current.state}}\""
+      retain: true
