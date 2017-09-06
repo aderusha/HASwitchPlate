@@ -6,6 +6,12 @@
     light.light_2:
       state: on
       brightness: 255
+    light.light_3:
+      state: on
+      brightness: 255
+    light.light_4:
+      state: on
+      brightness: 255
     light.haswitchplate:
       state: on
       brightness: 255
@@ -16,6 +22,12 @@
       state: on
       brightness: 150
     light.light_2:
+      state: on
+      brightness: 150
+    light.light_3:
+      state: on
+      brightness: 150
+    light.light_4:
       state: on
       brightness: 150
     light.haswitchplate:
@@ -30,6 +42,12 @@
     light.light_2:
       state: on
       brightness: 50
+    light.light_3:
+      state: on
+      brightness: 50
+    light.light_4:
+      state: on
+      brightness: 50
     light.haswitchplate:
       state: on
       brightness: 50
@@ -39,6 +57,10 @@
     light.light_1:
       state: off
     light.light_2:
+      state: off
+    light.light_3:
+      state: off
+    light.light_4:
       state: off
     light.haswitchplate:
       state: on
