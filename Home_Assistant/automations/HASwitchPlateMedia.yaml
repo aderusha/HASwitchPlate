@@ -9,58 +9,58 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b6.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[6].font'
       payload: '4'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b7.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[7].font'
       payload: '4'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b8.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[8].font'
       payload: '4'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b9.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[9].font'
       payload: '4'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b10.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[10].font'
       payload: '4'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b11.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[11].font'
       payload: '4'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b6.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[6].txt'
       payload: '"9"'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b7.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[7].txt'
       payload: '";"'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b8.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[8].txt'
       payload: '":"'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b9.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[9].txt'
       payload: '"4"'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b10.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[10].txt'
       payload: '"5"'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b11.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[11].txt'
       payload: '"6"'
 
 # Play button action
 - alias: HASwitchPlate_Media_PlayButton9
   trigger:
     platform: mqtt
-    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b9'
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[8].b[9]'
     payload: 'ON'
   action:
     service: media_player.media_play
@@ -70,7 +70,7 @@
 - alias: HASwitchPlate_Media_PauseButton7
   trigger:
     platform: mqtt
-    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b7'
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[8].b[7]'
     payload: 'ON'
   action:
     service: media_player.media_pause
@@ -80,7 +80,7 @@
 - alias: HASwitchPlate_Media_PrevTrackButton6
   trigger:
     platform: mqtt
-    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b6'
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[8].b[6]'
     payload: 'ON'
   action:
     service: media_player.media_previous_track
@@ -90,7 +90,7 @@
 - alias: HASwitchPlate_Media_NextTrackButton8
   trigger:
     platform: mqtt
-    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b8'
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[8].b[8]'
     payload: 'ON'
   action:
     service: media_player.media_next_track
@@ -100,7 +100,7 @@
 - alias: HASwitchPlate_Media_VolumeUpButton10
   trigger:
     platform: mqtt
-    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b10'
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[8].b[10]'
     payload: 'ON'
   action:
     service: media_player.volume_up
@@ -110,7 +110,7 @@
 - alias: HASwitchPlate_Media_VolumeDownButton11
   trigger:
     platform: mqtt
-    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b11'
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[8].b[11]'
     payload: 'ON'
   action:
     service: media_player.volume_down
@@ -136,11 +136,11 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[4].font'
       payload: '3'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[4].txt'
       payload_template: '"{{states.media_player.media_player.attributes.media_artist}}"'
 
 - alias: HASwitchPlate_Media_Artist_10chars
@@ -158,11 +158,11 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[4].font'
       payload: '2'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[4].txt'
       payload_template: '"{{states.media_player.media_player.attributes.media_artist}}"'
 
 - alias: HASwitchPlate_Media_Artist_15chars
@@ -180,11 +180,11 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[4].font'
       payload: '1'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[4].txt'
       payload_template: '"{{states.media_player.media_player.attributes.media_artist}}"'
 
 - alias: HASwitchPlate_Media_Artist_40chars
@@ -202,11 +202,11 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[4].font'
       payload: '0'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b4.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[4].txt'
       payload_template: '"{{states.media_player.media_player.attributes.media_artist|wordwrap(20, wrapstring="\\r")}}"'
 
 - alias: HASwitchPlate_Media_Title_6chars
@@ -224,11 +224,11 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[5].font'
       payload: '3'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[5].txt'
       payload_template: '"{{states.media_player.media_player.attributes.media_title}}"'
 
 - alias: HASwitchPlate_Media_Title_10chars
@@ -246,11 +246,11 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[5].font'
       payload: '2'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[5].txt'
       payload_template: '"{{states.media_player.media_player.attributes.media_title}}"'
 
 - alias: HASwitchPlate_Media_Title_15chars
@@ -268,11 +268,11 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[5].font'
       payload: '1'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[5].txt'
       payload_template: '"{{states.media_player.media_player.attributes.media_title}}"'
 
 - alias: HASwitchPlate_Media_Title_40chars
@@ -290,11 +290,11 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[5].font'
       payload: '0'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b5.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[5].txt'
       payload_template: '"{{states.media_player.media_player.attributes.media_title|wordwrap(20, wrapstring="\\r")}}"'
       
 # if media is playing, set Play button .b9 to grey and Pause button .b7 to black
@@ -305,11 +305,11 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b9.pco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[9].pco'
       payload: '50712'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b7.pco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[7].pco'
       payload: '0'
 
 # if media is paused, set Play button .b9 to black and Pause button .b7 to grey
@@ -320,9 +320,9 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b9.pco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[9].pco'
       payload: '0'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p8.b7.pco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[7].pco'
       payload: '50712'

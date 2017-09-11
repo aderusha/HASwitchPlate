@@ -10,13 +10,15 @@ The [Arduino code](Arduino_Sketch) for the ESP8266 provides a generic gateway be
 ![Scene controller](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate_Demo_SceneController.png?raw=true) ![Status display](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate_Demo_Status.png?raw=true) ![Media control](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate_Demo_Media.png?raw=true) ![3D printer monitor](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate_Demo_PrintStatus.png?raw=true) ![Alarm Panel](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate_Demo_AlarmPanel.png?raw=true) ![Example blank page](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/NextionUI_p10_2_and_6buttons.png?raw=true)
 
 ## Bill of Materials
-To build this project you will minimally require the following components:
+To build a basic version project you will minimally require the following components:
 * [Nextion 2.4" LCD Touchscreen display](https://www.itead.cc/nextion-nx3224t024.html)
 * [WeMos D1 Mini ESP8266 WiFi microcontroller](https://wiki.wemos.cc/products:d1:d1_mini)
 * [3D printed switch plate](https://github.com/aderusha/HASwitchPlate/blob/master/3D_Printable_Models/HASwitchPlate_front.stl)
 * [3D printed rear cover](https://github.com/aderusha/HASwitchPlate/blob/master/3D_Printable_Models/HASwitchPlate_rear.stl)
-* Assorted screws to mount things (and some threaded inserts wouldn't hurt)
 * [5V Power supply](https://www.arrow.com/en/products/irm-03-5/mean-well-enterprises) for converting line voltage to 5VDC.
+* [Screw terminal connectors](https://www.amazon.com/gp/product/B011QFLS0S)
+* [4x6 protoboard](https://www.amazon.com/gp/product/B06XTPGBS5)
+* Assorted screws/hot glue/etc to fasten things together
 
 The end result is a highly-customized touchscreen solution for controlling your home, mounted in the wall in a functional and attractive enclosure.
 

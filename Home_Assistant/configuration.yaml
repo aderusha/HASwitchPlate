@@ -49,74 +49,43 @@ history:
 
 # Track the sun
 # sun:
-input_select:
-  haswitchplate_pagebutton1_page:
-    name: HASwitchPlate Page Button 1 Page
-    options:
-     - 1
-     - 2
-     - 3
-     - 4
-     - 5
-     - 6
-     - 7
-     - 8
-     - 9
-    icon: mdi:format-list-numbers
+
+input_text:
   haswitchplate_pagebutton1_label:
     name: HASwitchPlate Page Button 1 Label
-    options:
-     - Scene
-     - Status
-     - Dimmer
-     - Media
-     - Print
     icon: mdi:book-open-page-variant
-  haswitchplate_pagebutton2_page:
-    name: HASwitchPlate Page Button 2 Page
-    options:
-     - 1
-     - 2
-     - 3
-     - 4
-     - 5
-     - 6
-     - 7
-     - 8
-     - 9
-    icon: mdi:format-list-numbers
   haswitchplate_pagebutton2_label:
     name: HASwitchPlate Page Button 2 Label
-    options:
-     - Scene
-     - Status
-     - Dimmer
-     - Media
-     - Print
     icon: mdi:book-open-page-variant
-  haswitchplate_pagebutton3_page:
-    name: HASwitchPlate Page Button 3 Page
-    options:
-     - 1
-     - 2
-     - 3
-     - 4
-     - 5
-     - 6
-     - 7
-     - 8
-     - 9
-    icon: mdi:format-list-numbers
   haswitchplate_pagebutton3_label:
     name: HASwitchPlate Page Button 3 Label
-    options:
-     - Scene
-     - Status
-     - Dimmer
-     - Media
-     - Print
-    initial: Dimmer
     icon: mdi:book-open-page-variant
+
+input_slider:
+  haswitchplate_pagebutton1_page:
+    name: HASwitchPlate Page Button 1 Page
+    icon: mdi:format-list-numbers
+    min: 0
+    max: 9
+    step: 1
+  haswitchplate_pagebutton2_page:
+    name: HASwitchPlate Page Button 2 Page
+    icon: mdi:format-list-numbers
+    min: 0
+    max: 9
+    step: 1
+  haswitchplate_pagebutton3_page:
+    name: HASwitchPlate Page Button 3 Page
+    icon: mdi:format-list-numbers
+    min: 0
+    max: 9
+    step: 1
+  haswitchplate_active_page:
+    name: HASwitchPlate Active Page
+    icon: mdi:format-list-numbers
+    min: 0
+    max: 9
+    step: 1
 
 # Weather prediction
 sensor:

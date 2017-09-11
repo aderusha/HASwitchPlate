@@ -8,41 +8,41 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b4.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[1].b[4].font'
       payload: '2'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b4.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[1].b[4].txt'
       payload: '"Lights On"'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b5.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[1].b[5].font'
       payload: '2'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b5.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[1].b[5].txt'
       payload: '"Daylight"'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b6.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[1].b[6].font'
       payload: '2'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b6.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[1].b[6].txt'
       payload: '"Night"'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b7.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[1].b[7].font'
       payload: '2'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b7.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[1].b[7].txt'
       payload: '"Lights Off"'
 
 - alias: HASwitchPlate_Page1_SceneButton4
   trigger:
     platform: mqtt
-    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b4'
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[1].b[4]'
     payload: 'ON'
   action:
     service: scene.turn_on
@@ -51,7 +51,7 @@
 - alias: HASwitchPlate_Page1_SceneButton5
   trigger:
     platform: mqtt
-    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b5'
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[1].b[5]'
     payload: 'ON'
   action:
     service: scene.turn_on
@@ -60,7 +60,7 @@
 - alias: HASwitchPlate_Page1_SceneButton6
   trigger:
     platform: mqtt
-    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b6'
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[1].b[6]'
     payload: 'ON'
   action:
     service: scene.turn_on
@@ -69,7 +69,7 @@
 - alias: HASwitchPlate_Page1_SceneButton7
   trigger:
     platform: mqtt
-    topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p1.b7'
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[1].b[7]'
     payload: 'ON'
   action:
     service: scene.turn_on

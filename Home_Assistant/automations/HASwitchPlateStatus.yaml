@@ -8,19 +8,19 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b4.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[2].b[4].font'
       payload: '3'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b5.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[2].b[5].font'
       payload: '1'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b6.font'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[2].b[6].font'
       payload: '3'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b7.font'
-      payload: '1'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[2].b[7].font'
+      payload: '2'
 
 

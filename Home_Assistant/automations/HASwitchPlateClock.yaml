@@ -6,11 +6,11 @@
   action:
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b4.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[2].b[4].txt'
       payload_template: "\"{{now().strftime('%H:%M')}}\""
       retain: true
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/nextionattr/p2.b5.txt'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[2].b[5].txt'
       payload_template: "\"{{now().strftime('%A %b %d')}}\""
       retain: true
