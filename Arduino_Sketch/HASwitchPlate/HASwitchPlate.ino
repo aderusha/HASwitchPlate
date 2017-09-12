@@ -1,12 +1,12 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Modify these values for your environment
-const char* wifiSSID = "YOUR_WIFI_NETWORK";  // Your WiFi network name
-const char* wifiPassword = "YOUR_WIFI_PASSWORD";  // Your WiFi network wifiPassword
+const char* wifiSSID = "YOUR_WIFI_NETWORK";  // your WiFi network name
+const char* wifiPassword = "YOUR_WIFI_PASSWORD";  // your WiFi network password
 const char* otaPassword = "YOUR_OTA_PASSWORD";  // set to "" to disable OTA updates
-const char* mqttServer = "YOUR_MQTT_BROKER_IP";  // Your MQTT server IP address
-const char* mqttUser = ""; // mqtt username, set to "" for no user
-const char* mqttwifiPassword = ""; // mqtt wifiPassword, set to "" for no wifiPassword
-const String mqttNode = "HASwitchPlate"; // Your unique hostname for this device
+const char* mqttServer = "YOUR_MQTT_BROKER_IP";  // your MQTT broker IP address
+const char* mqttUser = ""; // mqtt broker username, set to "" for no user
+const char* mqttPassword = ""; // mqtt broker password, set to "" for no password
+const String mqttNode = "HASwitchPlate"; // your unique hostname for this device
 const String mqttDiscoveryPrefix = "homeassistant"; // Home Assistant MQTT Discovery, see https://home-assistant.io/docs/mqtt/discovery/
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,11 +41,16 @@ const String mqttDiscoLightSubscription = mqttDiscoveryPrefix + "/light/" + mqtt
 const String mqttDiscoBinaryConfigPayload = "{\"name\": \"" + mqttNode + "\", \"device_class\": \"connectivity\", \"state_topic\": \"" + mqttDiscoBinaryStateTopic + "\"}";
 const String mqttDiscoLightConfigPayload = "{\"name\": \"" + mqttNode + "\", \"command_topic\": \"" + mqttDiscoLightSwitchCommandTopic + "\", \"state_topic\": \"" + mqttDiscoLightSwitchStateTopic + "\", \"brightness_command_topic\": \"" + mqttDiscoLightBrightCommandTopic + "\", \"brightness_state_topic\": \"" + mqttDiscoLightBrightStateTopic + "\"}";
 
+// global var to pass around data coming from the panel
+byte nextionReturnBuffer[100];
+int nextionReturnIndex = 0;
+
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <PubSubClient.h>
+#include <ESP8266HTTPClient.h>
 
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
@@ -166,6 +171,11 @@ void mqtt_callback(char* topic, byte* payload, unsigned int payloadLength) {
     sendNextionCmd("page " + strPayload);
   }
 
+  // '[...]/device/command/update' 'http://192.168.0.10:8123/local/HASwitchPlate.tft' : start LCD update
+  else if ((strTopic == (mqttCommandTopic + "/update")) && (strPayload != "")) {
+    startNextionOTA(strPayload);
+  }
+
   // '[...]/device/command/p[1].b[4].txt' '' : getNextionAttr("p[1].b[4].txt")
   else if (strTopic.startsWith(mqttCommandTopic) && (strPayload == "")) {
     String subTopic = strTopic.substring(mqttCommandTopic.length() + 1);
@@ -252,35 +262,9 @@ void initializeNextion() {
 void processNextionInput() {
   // Command reference: https://www.itead.cc/wiki/Nextion_Instruction_Set#Format_of_Device_Return_Data
   // tl;dr, command byte, command data, 0xFF 0xFF 0xFF
-  // Create a buffer for our command, waiting for those 0xFFs, then process the command once we get
-  // three in a row
-  byte nextionBuffer[20];  // bin to hold our incoming command
-  int nextionCommandByteCnt = 0;  // Counter for incoming command buffer
-  bool nextionCommandIncoming = true; // we'll flip this to false when we receive 3 consecutive 0xFFs
-  int nextionCommandTimeout = 1000; // timeout for receiving termination string in milliseconds
-  int nextionTermByteCnt = 0;
-  unsigned long nextionCommandTimer = millis(); // record current time for our timeout
-  String hmiDebug = "HMI IN:  ";
-  // Load the nextionBuffer until we receive a termination command or we hit our timeout
-  while (nextionCommandIncoming && ((millis() - nextionCommandTimer) < nextionCommandTimeout)) {
-    byte nextionCommandByte = Serial.read();
-    delay(1);
-    hmiDebug += (" 0x" + String(nextionCommandByte, HEX));
 
-    // check to see if we have one of 3 consecutive 0xFF which indicates the end of a command
-    if (nextionCommandByte == 0xFF) {
-      nextionTermByteCnt++;
-      if (nextionTermByteCnt >= 3) {
-        nextionCommandIncoming = false;
-      }
-    }
-    else {
-      nextionTermByteCnt = 0;  // reset counter if a non-term byte was encountered
-    }
-    nextionBuffer[nextionCommandByteCnt] = nextionCommandByte;
-    nextionCommandByteCnt++;
-  }
-  debugPrintln(hmiDebug);
+  // Call handleNextionInput() to load nextionReturnBuffer[] and set nextionReturnIndex
+  handleNextionInput();
 
   // Handle incoming touch command
   // 0x65+Page ID+Component ID+TouchEvent+End
@@ -288,18 +272,19 @@ void processNextionInput() {
   // Definition of TouchEvent: Press Event 0x01, Release Event 0X00
   // Example: 0x65 0x00 0x02 0x01 0xFF 0xFF 0xFF
   // Meaning: Touch Event, Page 0, Object 2, Press
-  if (nextionBuffer[0] == 0x65) {
-    String nextionPage = String(nextionBuffer[1]);
-    String nextionButtonID = String(nextionBuffer[2]);
-    byte nextionButtonAction = nextionBuffer[3];
+  if (nextionReturnBuffer[0] == 0x65) {
+    String nextionPage = String(nextionReturnBuffer[1]);
+    String nextionButtonID = String(nextionReturnBuffer[2]);
+    byte nextionButtonAction = nextionReturnBuffer[3];
+
     if (nextionButtonAction == 0x01) {
-      debugPrintln("HMI IN:   [Button ON] ' p[" + nextionPage + "].b[" + nextionButtonID + "]'");
+      debugPrintln("HMI IN:   [Button ON] 'p[" + nextionPage + "].b[" + nextionButtonID + "]'");
       String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
       debugPrintln("MQTT OUT: '" + mqttButtonTopic + "' : 'ON'");
       mqttClient.publish(mqttButtonTopic.c_str(), "ON");
     }
     if (nextionButtonAction == 0x00) {
-      debugPrintln("HMI IN:   [Button OFF] ' p[" + nextionPage + "].b[" + nextionButtonID + "]'");
+      debugPrintln("HMI IN:   [Button OFF] 'p[" + nextionPage + "].b[" + nextionButtonID + "]'");
       String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
       debugPrintln("MQTT OUT: '" + mqttButtonTopic + "' : 'OFF'");
       mqttClient.publish(mqttButtonTopic.c_str(), "OFF");
@@ -309,8 +294,8 @@ void processNextionInput() {
   // 0x66+PageNum+End
   // Example: 0x66 0x02 0xFF 0xFF 0xFF
   // Meaning: page 2
-  else if (nextionBuffer[0] == 0x66) {
-    String nextionPage = String(nextionBuffer[1]);
+  else if (nextionReturnBuffer[0] == 0x66) {
+    String nextionPage = String(nextionReturnBuffer[1]);
     debugPrintln("HMI IN:   [sendme Page] '" + nextionPage + "'");
     String mqttPageTopic = mqttStateTopic + "/page";
     debugPrintln("MQTT OUT: '" + mqttPageTopic + "' : '" + nextionPage + "'");
@@ -320,13 +305,14 @@ void processNextionInput() {
   // 0X67+Coordinate X High+Coordinate X Low+Coordinate Y High+Coordinate Y Low+TouchEvent+End
   // Example: 0X67 0X00 0X7A 0X00 0X1E 0X01 0XFF 0XFF 0XFF
   // Meaning: Coordinate (122,30), Touch Event: Press
-  else if (nextionBuffer[0] == 0x67) {
-    uint16_t xCoord = nextionBuffer[2];
-    xCoord = xCoord * 256 + nextionBuffer[1];
-    uint16_t yCoord = nextionBuffer[4];
-    yCoord = yCoord * 256 + nextionBuffer[3];
+  // issue Nextion command "sendxy=1" to enable this output
+  else if (nextionReturnBuffer[0] == 0x67) {
+    uint16_t xCoord = nextionReturnBuffer[1];
+    xCoord = xCoord * 256 + nextionReturnBuffer[2];
+    uint16_t yCoord = nextionReturnBuffer[3];
+    yCoord = yCoord * 256 + nextionReturnBuffer[4];
     String xyCoord = String(xCoord) + ',' + String(yCoord);
-    byte nextionTouchAction = nextionBuffer[5];
+    byte nextionTouchAction = nextionReturnBuffer[5];
     if (nextionTouchAction == 0x01) {
       debugPrintln("HMI IN:   [Touch ON] '" + xyCoord + "'");
       String mqttTouchTopic = mqttStateTopic + "/touchOn";
@@ -344,22 +330,22 @@ void processNextionInput() {
   // 0x70+ASCII string+End
   // Example: 0x70 0x41 0x42 0x43 0x44 0x31 0x32 0x33 0x34 0xFF 0xFF 0xFF
   // Meaning: String data, ABCD1234
-  else if (nextionBuffer[0] == 0x70) {
+  else if (nextionReturnBuffer[0] == 0x70) {
     String getString;
     // convert the payload into a string
-    for (int i = 1; i < nextionCommandByteCnt - 3; i++) {
-      getString += (char)nextionBuffer[i];
+    for (int i = 1; i < nextionReturnIndex - 3; i++) {
+      getString += (char)nextionReturnBuffer[i];
     }
     debugPrintln("HMI IN:   [String Return] '" + getString + "'");
     // If there's no outstanding request for a value, publish to mqttStateTopic
     if (mqttGetSubtopic == "") {
-      debugPrintln("MQTT out '" + mqttStateTopic + "' : '" + getString + "]");
+      debugPrintln("MQTT OUT: '" + mqttStateTopic + "' : '" + getString + "]");
       mqttClient.publish(mqttStateTopic.c_str(), getString.c_str());
     }
     // Otherwise, publish the to saved mqttGetSubtopic and then reset mqttGetSubtopic
     else {
       String mqttReturnTopic = mqttStateTopic + mqttGetSubtopic;
-      debugPrintln("MQTT out '" + mqttReturnTopic + "' : '" + getString + "]");
+      debugPrintln("MQTT OUT: '" + mqttReturnTopic + "' : '" + getString + "]");
       mqttClient.publish(mqttReturnTopic.c_str(), getString.c_str());
       mqttGetSubtopic = "";
     }
@@ -368,11 +354,11 @@ void processNextionInput() {
   // 0x71+byte1+byte2+byte3+byte4+End (4 byte little endian)
   // Example: 0x71 0x7B 0x00 0x00 0x00 0xFF 0xFF 0xFF
   // Meaning: Integer data, 123
-  else if (nextionBuffer[0] == 0x71) {
-    unsigned long getInt = nextionBuffer[4];
-    getInt = getInt * 256 + nextionBuffer[3];
-    getInt = getInt * 256 + nextionBuffer[2];
-    getInt = getInt * 256 + nextionBuffer[1];
+  else if (nextionReturnBuffer[0] == 0x71) {
+    unsigned long getInt = nextionReturnBuffer[4];
+    getInt = getInt * 256 + nextionReturnBuffer[3];
+    getInt = getInt * 256 + nextionReturnBuffer[2];
+    getInt = getInt * 256 + nextionReturnBuffer[1];
     String getString = String(getInt);
     debugPrintln("HMI IN:   [Int Return] '" + getString + "'");
     // If there's no outstanding request for a value, published to mqttStateTopic
@@ -415,7 +401,7 @@ void mqttConnect() {
     setNextionAttr("p[0].b[1].txt", "\"WiFi connected\\r" + WiFi.localIP().toString() + "\\rMQTT Connecting\"");
     debugPrintln("Attempting MQTT connection to broker: " + String(mqttServer));
     // Attempt to connect to broker, setting last will and testament
-    if (mqttClient.connect(mqttNode.c_str(), mqttUser, mqttwifiPassword, mqttDiscoBinaryStateTopic.c_str(), 1, 1, "OFF")) {
+    if (mqttClient.connect(mqttNode.c_str(), mqttUser, mqttPassword, mqttDiscoBinaryStateTopic.c_str(), 1, 1, "OFF")) {
       mqttClient.subscribe(mqttSubscription.c_str());
       mqttClient.subscribe(mqttDiscoLightSubscription.c_str());
       debugPrintln("MQTT discovery config: [" + mqttDiscoBinaryConfigTopic + "] : [" + mqttDiscoBinaryConfigPayload + "]");
@@ -441,7 +427,6 @@ void mqttConnect() {
 // (mostly) boilerplate OTA setup from library examples
 void setupOTA() {
   // Start up OTA
-
   // ArduinoOTA.setPort(8266); // Port defaults to 8266
   ArduinoOTA.setHostname(mqttNode.c_str()); // Hostname defaults to esp8266-[ChipID]
   ArduinoOTA.setPassword(otaPassword); // No authentication by default
@@ -452,7 +437,8 @@ void setupOTA() {
   ArduinoOTA.onEnd([]() {
     debugPrintln("\nOTA update complete");
   });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+  ArduinoOTA.onProgress([](unsigned int 
+, unsigned int total) {
     //Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
@@ -465,6 +451,163 @@ void setupOTA() {
   });
   ArduinoOTA.begin();
   debugPrintln("OTA firmware update ready");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Upload firmware to the Nextion LCD
+void startNextionOTA (String otaURL) {
+  // based in large part on code posted by indev2 here:
+  // http://support.iteadstudio.com/support/discussions/topics/11000007686/page/2
+  byte nextionSuffix[] = {0xFF, 0xFF, 0xFF};
+  int nextionResponseTimeout = 500; // timeout for receiving ack string in milliseconds
+  unsigned long nextionResponseTimer = millis(); // record current time for our timeout
+
+  int FileSize = 0;
+  String nexcmd;
+  int count = 0;
+  byte partNum = 0;
+  int total = 0;
+  int pCent = 0;
+
+  debugPrintln("LCD OTA: Attempting firmware download from:" + otaURL);
+  HTTPClient http;
+  http.begin(otaURL);
+  int httpCode = http.GET();
+  if (httpCode > 0) {
+    // HTTP header has been send and Server response header has been handled
+    debugPrintln("LCD OTA: HTTP GET return code:" + String(httpCode));
+    if (httpCode == HTTP_CODE_OK) { // file found at server
+      // get length of document (is -1 when Server sends no Content-Length header)
+      int len = http.getSize();
+      FileSize = len;
+      int Parts = (len / 4096) + 1;
+      debugPrintln("LCD OTA: File found at Server. Size " + String(len) + " bytes in " + String(Parts) + " 4k chunks.");
+      // create buffer for read
+      uint8_t buff[128] = {};
+      // get tcp stream
+      WiFiClient * stream = http.getStreamPtr();
+
+      debugPrintln("LCD OTA: Issuing NULL command");
+      Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+      handleNextionInput();
+
+      String nexcmd = "whmi-wri " + String(FileSize) + ",115200,0";
+      debugPrintln("LCD OTA: Sending LCD upload command: " + nexcmd);
+      Serial1.print(nexcmd);
+      Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+      Serial1.flush();
+
+      if (otaReturnSuccess()) {
+        debugPrintln("LCD OTA: LCD upload command accepted");
+      }
+      else {
+        debugPrintln("LCD OTA: LCD upload command FAILED.");
+        return;
+      }
+      debugPrintln("LCD OTA: Starting update");
+      while (http.connected() && (len > 0 || len == -1)) {
+        // get available data size
+        size_t size = stream->available();
+        if (size) {
+          // read up to 128 bytes
+          int c = stream->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+          // write it to Serial
+          Serial1.write(buff, c);
+          Serial1.flush();
+          count += c;
+          if (count == 4096) {
+            nextionResponseTimer = millis();
+            partNum ++;
+            total += count;
+            pCent = (total * 100) / FileSize;
+            count = 0;
+            if (otaReturnSuccess()) {
+              debugPrintln("LCD OTA: Part " + String(partNum) + " OK, " + String(pCent) + "% complete");
+            }
+            else {
+              debugPrintln("LCD OTA: Part " + String(partNum) + " FAILED, " + String(pCent) + "% complete");
+            }
+          }
+          if (len > 0) {
+            len -= c;
+          }
+        }
+        //delay(1);
+      }
+      partNum++;
+      //delay (250);
+      total += count;
+      if ((total == FileSize) && otaReturnSuccess()) {
+        debugPrintln("LCD OTA: success, wrote " + String(total) + " of " + String(FileSize) + " bytes.");
+      }
+      else {
+        debugPrintln("LCD OTA: failure");
+      }
+    }
+  }
+  else {
+    debugPrintln("LCD OTA: HTTP GET failed, error code " + http.errorToString(httpCode));
+  }
+  http.end();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Handle incoming serial data from the Nextion panel
+void handleNextionInput() {
+  // This will collect serial data from the panel and place it into the global buffer
+  // nextionReturnBuffer[nextionReturnIndex] until it finds a string of 3 consecutive
+  // 0xFF values or runs into the timeout
+  bool nextionCommandIncoming = true; // we'll flip this to false when we receive 3 consecutive 0xFFs
+  int nextionCommandTimeout = 1000; // timeout for receiving termination string in milliseconds
+  int nextionTermByteCnt = 0; // counter for our 3 consecutive 0xFFs
+  unsigned long nextionCommandTimer = millis(); // record current time for our timeout
+  nextionReturnIndex = 0; // reset the global nextionReturnIndex back to zero
+  String hmiDebug = "HMI IN: "; // assemble a string for debug output
+  // Load the nextionBuffer until we receive a termination command or we hit our timeout
+  while (nextionCommandIncoming && ((millis() - nextionCommandTimer) < nextionCommandTimeout)) {
+    if (Serial.available()) {
+      byte nextionCommandByte = Serial.read();
+      delay(1);
+      hmiDebug += (" 0x" + String(nextionCommandByte, HEX));
+      // check to see if we have one of 3 consecutive 0xFF which indicates the end of a command
+      if (nextionCommandByte == 0xFF) {
+        nextionTermByteCnt++;
+        if (nextionTermByteCnt >= 3) {
+          nextionCommandIncoming = false;
+        }
+      }
+      else {
+        nextionTermByteCnt = 0;  // reset counter if a non-term byte was encountered
+      }
+      nextionReturnBuffer[nextionReturnIndex] = nextionCommandByte;
+      nextionReturnIndex++;
+    }
+    else {
+      delay (1);
+    }
+  }
+  debugPrintln(hmiDebug);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Monitor the serial port for a 0x05 response within our timeout
+bool otaReturnSuccess() {
+  int nextionCommandTimeout = 1000; // timeout for receiving termination string in milliseconds
+  unsigned long nextionCommandTimer = millis(); // record current time for our timeout
+  bool otaSuccessVal = false;
+  while ((millis() - nextionCommandTimer) < nextionCommandTimeout) {
+    if (Serial.available()) {
+      byte inByte = Serial.read();
+      if (inByte == 0x5) {
+        otaSuccessVal = true;
+        break;
+      }
+    }
+    else {
+      delay (1);
+    }
+  }
+  return otaSuccessVal;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

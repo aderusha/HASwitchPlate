@@ -10,6 +10,7 @@ By default the device will subscribe to `homeassistant/haswitchplate/<node_name>
 Messages sent to the panel under the `command` topic will be handled based on the following rules:
 * **`'[...]/command' 'dim 100'`** A `command` with no subtopic will send the command in the payload to the panel directly.
 * **`'[...]/command/page' '1'`** The `page` command subtopic will set the current page on the device to the page number included in the payload.
+* **`'[...]/command/update' 'http://192.168.0.10:8123/local/HASwitchPlate.tft'`** The `update` command subtopic attempt to update the Nextion LCD from the file URL named in the payload.
 * **`'[...]/command/p[1].b[4].txt' '"Lamp On"'`** A `command` with a subtopic will set the attribute named in the subtopic to the value sent in the payload.  You can send these messages with `retain` enabled and the broker will remember these settings for you.
 * **`'[...]/command/p[1].b[4].txt' ''`** A `command` with a subtopic and an empty payload will request the current value of the attribute named in the subtopic from the panel.  The value will be returned under the `state` topic as `'[...]/state/p[1].b[4].txt' '"Lamp On"'`
 
