@@ -9,10 +9,12 @@ By default the device will subscribe to `homeassistant/haswitchplate/<node_name>
 ## `command` Syntax
 Messages sent to the panel under the `command` topic will be handled based on the following rules:
 * **`'[...]/command' 'dim 100'`** A `command` with no subtopic will send the command in the payload to the panel directly.
-* **`'[...]/command/page' '1'`** This command will set the current page on the device to the page number included in the payload.
+* **`'[...]/command/page' '1'`** The `page` command subtopic will set the current page on the device to the page number included in the payload.
 * **`'[...]/command/p[1].b[4].txt' '"Lamp On"'`** A `command` with a subtopic will set the attribute named in the subtopic to the value sent in the payload.  You can send these messages with `retain` enabled and the broker will remember these settings for you.
 * **`'[...]/command/p[1].b[4].txt' ''`** A `command` with a subtopic and an empty payload will request the current value of the attribute named in the subtopic from the panel.  The value will be returned under the `state` topic as `'[...]/state/p[1].b[4].txt' '"Lamp On"'`
 
 [Detailed documentation on the Nextion command instruction set can be found here](https://www.itead.cc/wiki/Nextion_Instruction_Set).  Note that some values require quotes, while others don't, and different shells (and Home Assistant config files) eat quotes differently.  As a general rule, attributes which accept an numeric value cannot have quotes, all other attributes must be enclosed in double quotes.
 
-Objects are reference by page number (not page name) and object ID (not object name) as shown in the Nextion editor.  While it is possible to send `command` messages using the object or page names, all messages coming back from the panel under `state` will be using page numbers and object IDs.  Save yourself the confusion and do everything in the format `p[<page number>].b[<object id>]` and things will go easier.
+Objects are referenced by page number (not page name) and object ID (not object name) as shown in the Nextion editor.  While it is possible to send `command` messages using the object or page names, all messages coming back from the panel under `state` will be using page numbers and object IDs.  Save yourself the confusion and do everything in the format `p[<page number>].b[<object id>]` and things will go easier.
+
+![Page and Object IDs](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Nextion_Editor_Page_and_Object_Ids.png?raw=true)
