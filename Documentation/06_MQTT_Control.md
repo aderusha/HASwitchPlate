@@ -1,10 +1,10 @@
 # MQTT Control
 
 ## MQTT Namespace
-By default the device will subscribe to `homeassistant/haswitchplate/<node_name>/#` to accept incoming commands.  There are two subtopics send commands to and receive messages from the panel:
+By default the device will subscribe to `homeassistant/haswitchplate/<node_name>/#` to accept incoming commands.  There are two subtopics to send commands to and receive messages from the panel:
 
-* `command` will send commands to or set attribute of the display, such as button text or screen dim.  The specific attribute must be appended as a subtopic, with the value to be set delivered as the payload.  For example, the following command will set the text displayed on page 1/button 4 to "Lamp On": `mosquitto_pub -h mqtt -t homeassistant/haswitchplate/nodename/command/p[1].b[4].txt -m '"Lamp On"'`
-* `state` topics will be sent by the panel in response to local user interactions or received commands which provide output in return.  For example, a user pressing button 4 on page 1 will cause the panel to issue a message: `'homeassistant/haswitchplate/nodename/command/p[1].b[4]' 'ON'`
+* `command` will send commands or set attribute of the display, such as button text or screen dim.  The specific attribute must be appended as a subtopic, with the value to be set delivered as the payload.  For example, the following command will set the text displayed on page 1/button 4 to "Lamp On": `mosquitto_pub -h mqtt -t homeassistant/haswitchplate/nodename/command/p[1].b[4].txt -m '"Lamp On"'`
+* `state` topics will be sent by the panel in response to local user interactions or received commands which provide output in return.  For example, a user pressing button 4 on page 1 will cause the panel to publish a message: `'homeassistant/haswitchplate/nodename/command/p[1].b[4]' 'ON'`
 
 ## `command` Syntax
 Messages sent to the panel under the `command` topic will be handled based on the following rules:
