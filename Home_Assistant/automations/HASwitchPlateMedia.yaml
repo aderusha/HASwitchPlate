@@ -1,5 +1,5 @@
 # Button text/font
-- alias: HASwitchPlate_Page10_Media
+- alias: HASwitchPlate_Page8_Media
   trigger:
   - platform: mqtt
     topic: 'homeassistant/binary_sensor/HASwitchPlate/state'

@@ -1,0 +1,96 @@
+- alias: HASwitchPlate_Page4_Dimmers
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[4].b[4].txt'
+      payload: '"Light 1"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[4].b[5].txt'
+      payload: '"Light 2"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[4].b[6].txt'
+      payload: '"Light 3"'
+
+# the template here checks for an "OFF" message from a subtopic of p[4]b[<7-9>]
+- alias: HASwitchPlate_Page4_DimmerSliderMoved
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/+'
+    payload: 'OFF'
+  condition: 
+    condition: template
+    value_template: '{{ (trigger.topic.split("/")[-1].split("p[")[1].split("]")[0]|int == 4) and ( 7 <= trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int <= 9) }}'
+  action:
+  - service: mqtt.publish
+    data_template:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[4].b[{{ trigger.topic.split("[")[-1].strip("]") }}].val'
+      payload: ''
+
+- alias: HASwitchPlate_p[4]b[7]_DimmerSliderUpdateHass
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[4].b[7].val'
+  action:
+  - service: light.turn_on
+    data_template:
+      entity_id: light.light_1
+      brightness: '{{ trigger.payload }}'
+
+- alias: HASwitchPlate_p[4]b[7]_DimmerSliderUpdateHASP
+  trigger:
+  - platform: state
+    entity_id: light.light_1
+  action:
+  - service: mqtt.publish
+    data_template:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[4].b[7].val'
+      payload_template: '{{states.light.light_1.attributes.brightness|default(0)|int}}'
+
+- alias: HASwitchPlate_p[4]b[8]_DimmerSliderUpdateHass
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[4].b[8].val'
+  action:
+  - service: light.turn_on
+    data_template:
+      entity_id: light.light_2
+      brightness: '{{ trigger.payload }}'
+
+- alias: HASwitchPlate_p[4]b[8]_DimmerSliderUpdateHASP
+  trigger:
+  - platform: state
+    entity_id: light.light_2
+  action:
+  - service: mqtt.publish
+    data_template:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[4].b[8].val'
+      payload_template: '{{states.light.light_2.attributes.brightness|default(0)|int}}'
+
+- alias: HASwitchPlate_p[4]b[9]_DimmerSliderUpdateHass
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[4].b[9].val'
+  action:
+  - service: light.turn_on
+    data_template:
+      entity_id: light.light_3
+      brightness: '{{ trigger.payload }}'
+
+- alias: HASwitchPlate_p[4]b[9]_DimmerSliderUpdateHASP
+  trigger:
+  - platform: state
+    entity_id: light.light_3
+  action:
+  - service: mqtt.publish
+    data_template:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[4].b[9].val'
+      payload_template: '{{states.light.light_1.attributes.brightness|default(0)|int}}'
+
