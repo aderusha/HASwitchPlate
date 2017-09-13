@@ -73,10 +73,14 @@
   - platform: mqtt
     topic: 'homeassistant/haswitchplate/HASwitchPlate/state/page'
   action:
-     service: input_slider.select_value
-     data_template:
+  - service: automation.turn_off
+    entity_id: automation.haswitchplate_active_page_slider_changed
+  - service: input_slider.select_value
+    data_template:
       entity_id: input_slider.haswitchplate_active_page
       value: '{{ trigger.payload }}'
+  - service: automation.turn_on
+    entity_id: automation.haswitchplate_active_page_slider_changed
 
 ##############################################################################
 # Change page at panel when haswitchplate_active_page updated
