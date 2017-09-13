@@ -7,3 +7,5 @@ For advanced customization you will need to download the (Windows-only) [Nextion
 The Nextion panel accepts and sends commands over the serial interface.  A [detailed guide to the Nextion control language can be found here](https://www.itead.cc/wiki/Nextion_Instruction_Set).
 
 Two compiled TFT files are included for the [Basic](https://github.com/aderusha/HASwitchPlate/raw/master/Nextion_HMI/HASwitchPlate.tft) and [Enhanced](https://github.com/aderusha/HASwitchPlate/raw/master/Nextion_HMI/HASwitchPlate-Enhanced.tft) versions of the panel.  This project does not currently utilize any features offered in the Enhanced panel.
+
+Once the project is assembled, future updates to the LCD firmware can be handled over-the-air by [issuing an MQTT command](06_MQTT_Control.md#command-syntax) with a URL to the target TFT file.
