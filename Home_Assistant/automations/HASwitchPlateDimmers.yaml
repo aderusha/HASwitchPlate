@@ -92,5 +92,5 @@
   - service: mqtt.publish
     data_template:
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[4].b[9].val'
-      payload_template: '{{states.light.light_1.attributes.brightness|default(0)|int}}'
+      payload_template: '{{states.light.light_3.attributes.brightness|default(0)|int}}'
 
