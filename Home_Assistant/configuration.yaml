@@ -52,40 +52,68 @@ history:
 
 input_text:
   haswitchplate_pagebutton1_label:
-    name: HASwitchPlate Page Button 1 Label
+    name: HASP Page Button 1 Label
     icon: mdi:book-open-page-variant
   haswitchplate_pagebutton2_label:
-    name: HASwitchPlate Page Button 2 Label
+    name: HASP Page Button 2 Label
     icon: mdi:book-open-page-variant
   haswitchplate_pagebutton3_label:
-    name: HASwitchPlate Page Button 3 Label
+    name: HASP Page Button 3 Label
     icon: mdi:book-open-page-variant
 
 input_slider:
   haswitchplate_pagebutton1_page:
-    name: HASwitchPlate Page Button 1 Page
+    name: HASP Page Button 1 Page
     icon: mdi:format-list-numbers
     min: 0
     max: 9
     step: 1
   haswitchplate_pagebutton2_page:
-    name: HASwitchPlate Page Button 2 Page
+    name: HASP Page Button 2 Page
     icon: mdi:format-list-numbers
     min: 0
     max: 9
     step: 1
   haswitchplate_pagebutton3_page:
-    name: HASwitchPlate Page Button 3 Page
+    name: HASP Page Button 3 Page
     icon: mdi:format-list-numbers
     min: 0
     max: 9
     step: 1
   haswitchplate_active_page:
-    name: HASwitchPlate Active Page
+    name: HASP Active Page
     icon: mdi:format-list-numbers
     min: 0
     max: 9
     step: 1
+  haswitchplate_alarmcode1:
+    name: AlarmCode1
+    icon: mdi:format-list-numbers
+    min: -1
+    max: 9
+    step: 1
+    initial: -1
+  haswitchplate_alarmcode2:
+    name: AlarmCode2
+    icon: mdi:format-list-numbers
+    min: -1
+    max: 9
+    step: 1
+    initial: -1
+  haswitchplate_alarmcode3:
+    name: AlarmCode3
+    icon: mdi:format-list-numbers
+    min: -1
+    max: 9
+    step: 1
+    initial: -1
+  haswitchplate_alarmcode4:
+    name: AlarmCode4
+    icon: mdi:format-list-numbers
+    min: -1
+    max: 9
+    step: 1
+    initial: -1
 
 # Weather prediction
 sensor:
@@ -97,11 +125,23 @@ sensor:
       - temp_min
       - temp_max
       - humidity
-
+- platform: template
+  sensors:
+    media_player_title:
+      value_template: '{{ states.media_player.media_player.attributes.media_title }}'
+    media_player_artist:
+      value_template: '{{ states.media_player.media_player.attributes.media_artist }}'
+    media_player_volume:
+      value_template: '{{ states.media_player.media_player.attributes.volume_level }}'
+      
 media_player:
   - platform: gpmdp
     name: "Media Player"
     host: 127.0.0.1
+
+alarm_control_panel:
+  - platform: manual
+    code: 1234
 
 # Text to speech
 # tts:
@@ -132,12 +172,6 @@ light:
     state_topic: "homeassistant/light/light3"
     brightness_command_topic: "homeassistant/light/light3/bright"
     brightness_state_topic: "homeassistant/light/light3/bright"
-  - platform: mqtt
-    name: "Light 4"
-    command_topic: "homeassistant/light/light4"
-    state_topic: "homeassistant/light/light4"
-    brightness_command_topic: "homeassistant/light/light4/bright"
-    brightness_state_topic: "homeassistant/light/light4/bright"
     
 automation: !include_dir_merge_list automations/
 scene: !include_dir_merge_list scenes/

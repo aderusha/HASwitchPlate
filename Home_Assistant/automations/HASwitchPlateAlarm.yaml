@@ -1,0 +1,387 @@
+- alias: HASwitchPlate_Page7_AlarmCodeKeyLabels
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[4].txt'
+      payload: '"1"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[5].txt'
+      payload: '"2"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[6].txt'
+      payload: '"3"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[7].txt'
+      payload: '"4"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[8].txt'
+      payload: '"5"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[9].txt'
+      payload: '"6"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[10].txt'
+      payload: '"7"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[11].txt'
+      payload: '"8"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[12].txt'
+      payload: '"9"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[14].txt'
+      payload: '"0"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[4].font'
+      payload: '3'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[5].font'
+      payload: '3'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[6].font'
+      payload: '3'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[7].font'
+      payload: '3'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[8].font'
+      payload: '3'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[9].font'
+      payload: '3'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[10].font'
+      payload: '3'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[11].font'
+      payload: '3'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[12].font'
+      payload: '3'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].font'
+      payload: '0'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[14].font'
+      payload: '3'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].font'
+      payload: '0'
+
+- alias: HASwitchPlate_AlarmCodeEntry_1to9
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/+'
+    payload: 'OFF'
+  condition: 
+    condition: template
+    value_template: '{{ (trigger.topic.split("/")[-1].split("p[")[1].split("]")[0]|int == 7) and ( 4 <= trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int <= 12) }}'
+  action:
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode1
+      value: '{{ states.input_slider.haswitchplate_alarmcode2.state }}'
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode2
+      value: '{{ states.input_slider.haswitchplate_alarmcode3.state }}'
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode3
+      value: '{{ states.input_slider.haswitchplate_alarmcode4.state }}'
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode4
+      value: '{{trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int-3}}'
+
+- alias: HASwitchPlate_AlarmCodeEntry_0
+  trigger:
+    platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[7].b[14]'
+    payload: 'OFF'
+  action:
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode1
+      value: '{{ states.input_slider.haswitchplate_alarmcode2.state }}'
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode2
+      value: '{{ states.input_slider.haswitchplate_alarmcode3.state }}'
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode3
+      value: '{{ states.input_slider.haswitchplate_alarmcode4.state }}'
+  - service: input_slider.select_value
+    data:
+      entity_id: input_slider.haswitchplate_alarmcode4
+      value: '0'
+
+- alias: HASwitchPlate_AlarmStatus_Disarmed
+  trigger:
+  - platform: state
+    entity_id: alarm_control_panel.ha_alarm
+    to: 'disarmed'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].txt'
+      payload: '"DIS\rARMED"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].font'
+      payload: '0'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
+      payload: '63488'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].txt'
+      payload: '"ARM"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].font'
+      payload: '1'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].bco'
+      payload: '63488'
+
+- alias: HASwitchPlate_AlarmStatus_Armed
+  trigger:
+  - platform: state
+    entity_id: alarm_control_panel.ha_alarm
+    to: 'armed_away'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].txt'
+      payload: '"ARMED"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].font'
+      payload: '0'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
+      payload: '63488'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].txt'
+      payload: '"DISARM"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].font'
+      payload: '0'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
+      payload: '63488'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
+      payload: '65535'
+
+- alias: HASwitchPlate_AlarmStatus_Pending
+  trigger:
+  - platform: state
+    entity_id: alarm_control_panel.ha_alarm
+    to: 'pending'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].txt'
+      payload: '"ARMING"'
+
+      
+- alias: HASwitchPlate_Alarm_Disarm
+  trigger:
+    platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[7].b[15]'
+    payload: 'OFF'
+  condition: 
+    condition: state
+    entity_id: alarm_control_panel.ha_alarm
+    state: 'armed_away'
+  action:
+  - service: alarm_control_panel.alarm_disarm
+    entity_id: alarm_control_panel.ha_alarm
+    data_template:
+      code: '{{ states.input_slider.haswitchplate_alarmcode1.state|int }}{{ states.input_slider.haswitchplate_alarmcode2.state|int }}{{ states.input_slider.haswitchplate_alarmcode3.state|int }}{{ states.input_slider.haswitchplate_alarmcode4.state|int }}'
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode1
+      value: '-1'
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode2
+      value: '-1'
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode3
+      value: '-1'
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode4
+      value: '-1'
+      
+- alias: HASwitchPlate_Alarm_Arm
+  trigger:
+    platform: mqtt
+    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[7].b[15]'
+    payload: 'OFF'
+  condition: 
+    condition: state
+    entity_id: alarm_control_panel.ha_alarm
+    state: 'disarmed'
+  action:
+  - service: alarm_control_panel.alarm_arm_away
+    entity_id: alarm_control_panel.ha_alarm
+    data_template:
+      code: '{{ states.input_slider.haswitchplate_alarmcode1.state|int }}{{ states.input_slider.haswitchplate_alarmcode2.state|int }}{{ states.input_slider.haswitchplate_alarmcode3.state|int }}{{ states.input_slider.haswitchplate_alarmcode4.state|int }}'
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode1
+      value: '-1'
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode2
+      value: '-1'
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode3
+      value: '-1'
+  - service: input_slider.select_value
+    data_template:
+      entity_id: input_slider.haswitchplate_alarmcode4
+      value: '-1'
+
+- alias: HASwitchPlate_Page7_AlarmCodeKeyLabelDisarmed
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  condition: 
+    condition: state
+    entity_id: alarm_control_panel.ha_alarm
+    state: 'disarmed'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].txt'
+      payload: '"DIS\rARMED"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].font'
+      payload: '0'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
+      payload: '63488'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].txt'
+      payload: '"ARM"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].font'
+      payload: '1'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].bco'
+      payload: '63488'
+
+- alias: HASwitchPlate_Page7_AlarmCodeKeyLabelArmed
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  condition: 
+    condition: state
+    entity_id: alarm_control_panel.ha_alarm
+    state: 'armed_away'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].txt'
+      payload: '"ARMED"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].font'
+      payload: '0'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
+      payload: '63488'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].txt'
+      payload: '"DISARM"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].font'
+      payload: '0'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
+      payload: '63488'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
+      payload: '65535'
