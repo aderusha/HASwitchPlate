@@ -12,5 +12,5 @@
   - service: mqtt.publish
     data:
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[2].b[5].txt'
-      payload_template: "\"{{now().strftime('%A')|center(20)}}\\r{{now().strftime('%B %-d')|center(20)}}\""
+      payload_template: "\"{{now().strftime('%A')}}\\r{{now().strftime('%B %-d')}}\""
       retain: true
