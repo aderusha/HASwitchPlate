@@ -1,3 +1,5 @@
+###############################################################################
+# set key labels at system start
 - alias: HASwitchPlate_Page7_AlarmCodeKeyLabels
   trigger:
   - platform: mqtt
@@ -95,6 +97,104 @@
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].font'
       payload: '0'
 
+# set key labels at system start when system is disarmed
+- alias: HASwitchPlate_Page7_AlarmCodeKeyLabelDisarmed
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  condition: 
+    condition: state
+    entity_id: alarm_control_panel.ha_alarm
+    state: 'disarmed'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].txt'
+      payload: '"DIS\rARMED"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].font'
+      payload: '0'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
+      payload: '63488'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].txt'
+      payload: '"ARM"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].font'
+      payload: '1'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].bco'
+      payload: '63488'
+
+# set key labels at system start when system is armed_away
+- alias: HASwitchPlate_Page7_AlarmCodeKeyLabelArmed
+  trigger:
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
+  - platform: homeassistant
+    event: start
+  condition: 
+    condition: state
+    entity_id: alarm_control_panel.ha_alarm
+    state: 'armed_away'
+  action:
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].txt'
+      payload: '"ARMED"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].font'
+      payload: '0'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
+      payload: '65535'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
+      payload: '63488'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].txt'
+      payload: '"DISARM"'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].font'
+      payload: '0'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
+      payload: '63488'
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
+      payload: '65535'
+###############################################################################     
+      
+# This automation catches the key presses 1-9 and sets our input sliders in response.
+# Button p[7]b[4] is labeled 1, so I'm grabbing buttons p[7]b[4] through p[7]b[13]
+# then subtracting 3.  The math doesn't work out for button "0" so that will be handled
+# in a separate automation.  Once we have the button number, we can copy slider 2 to 1,
+# 3 to 2, 4 to 3, then set our new value into slider 4 to update our rolling code entry.
 - alias: HASwitchPlate_AlarmCodeEntry_1to9
   trigger:
   - platform: mqtt
@@ -144,6 +244,7 @@
       entity_id: input_slider.haswitchplate_alarmcode4
       value: '0'
 
+# Alarm panel is disarmed, so update panel text
 - alias: HASwitchPlate_AlarmStatus_Disarmed
   trigger:
   - platform: state
@@ -183,6 +284,7 @@
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].bco'
       payload: '63488'
 
+# Alarm panel is armed_away, so update panel text
 - alias: HASwitchPlate_AlarmStatus_Armed
   trigger:
   - platform: state
@@ -222,6 +324,7 @@
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
       payload: '65535'
 
+# Alarm panel is pending arm so update panel text
 - alias: HASwitchPlate_AlarmStatus_Pending
   trigger:
   - platform: state
@@ -233,7 +336,8 @@
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].txt'
       payload: '"ARMING"'
 
-      
+# User is attempting to disarm the panel.  Send the alarm service our collected code then
+# reset all the sliders.      
 - alias: HASwitchPlate_Alarm_Disarm
   trigger:
     platform: mqtt
@@ -265,6 +369,8 @@
       entity_id: input_slider.haswitchplate_alarmcode4
       value: '-1'
       
+# User is attempting to arm the panel.  Send the alarm service our collected code then
+# reset all the sliders.
 - alias: HASwitchPlate_Alarm_Arm
   trigger:
     platform: mqtt
@@ -296,92 +402,3 @@
       entity_id: input_slider.haswitchplate_alarmcode4
       value: '-1'
 
-- alias: HASwitchPlate_Page7_AlarmCodeKeyLabelDisarmed
-  trigger:
-  - platform: mqtt
-    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
-    payload: 'ON'
-  - platform: homeassistant
-    event: start
-  condition: 
-    condition: state
-    entity_id: alarm_control_panel.ha_alarm
-    state: 'disarmed'
-  action:
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].txt'
-      payload: '"DIS\rARMED"'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].font'
-      payload: '0'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
-      payload: '63488'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
-      payload: '65535'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].txt'
-      payload: '"ARM"'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].font'
-      payload: '1'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].pco'
-      payload: '65535'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].bco'
-      payload: '63488'
-
-- alias: HASwitchPlate_Page7_AlarmCodeKeyLabelArmed
-  trigger:
-  - platform: mqtt
-    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
-    payload: 'ON'
-  - platform: homeassistant
-    event: start
-  condition: 
-    condition: state
-    entity_id: alarm_control_panel.ha_alarm
-    state: 'armed_away'
-  action:
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].txt'
-      payload: '"ARMED"'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].font'
-      payload: '0'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
-      payload: '65535'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
-      payload: '63488'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].txt'
-      payload: '"DISARM"'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].font'
-      payload: '0'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
-      payload: '63488'
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
-      payload: '65535'
