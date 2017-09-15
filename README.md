@@ -10,7 +10,7 @@ The [Arduino code](Arduino_Sketch) for the ESP8266 provides a generic gateway be
 ![Scene controller](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate_Demo_SceneController.png?raw=true) ![Status display](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate_Demo_Status.png?raw=true) ![Media control](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate_Demo_Media.png?raw=true) ![3D printer monitor](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate_Demo_PrintStatus.png?raw=true) ![Alarm Panel](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate_Demo_AlarmPanel.png?raw=true) ![Slider/Dimmer Controls](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate_Demo_Dimmers.png?raw=true)
 
 ## Bill of Materials
-To build a simple version of this project you will only need the [LCD panel]((https://www.itead.cc/nextion-nx3224t024.html)) and the [WeMos D1 Mini]((https://wiki.wemos.cc/products:d1:d1_mini)), a 4 jumper wires, and a USB cable to power both devices.
+To build a simple version of this project you will only need the [LCD panel]((https://www.itead.cc/nextion-nx3224t024.html)) and the [WeMos D1 Mini]((https://wiki.wemos.cc/products:d1:d1_mini)), 4 jumper wires, and a USB cable to power both devices.
 
 A complete build that's ready to install will require the following components:
 * [Nextion 2.4" LCD Touchscreen display](https://www.itead.cc/nextion-nx3224t024.html)
@@ -20,7 +20,7 @@ A complete build that's ready to install will require the following components:
 * [5V Power supply](https://www.arrow.com/en/products/irm-03-5/mean-well-enterprises)
 * [Screw terminal connectors](https://www.amazon.com/gp/product/B011QFLS0S)
 * [4x6 protoboard](https://www.amazon.com/gp/product/B06XTPGBS5)
-* Assorted screws/hot glue/etc to fasten things together
+* [Three 20mm M2 flathead screws](https://www.amazon.com/uxcell-Female-Knurled-Threaded-Embedment/dp/B01IYWTCWW) and [three heat-set threaded inserts](https://www.amazon.com/uxcell-Female-Knurled-Threaded-Embedment/dp/B01IYWTCWW) to fasten things together (feel free to improvise here)
 
 The end result is a highly-customized touchscreen solution for controlling your home, mounted in the wall in a functional and attractive enclosure.
 
