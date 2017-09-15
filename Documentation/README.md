@@ -28,15 +28,15 @@ The Nextion environment is centered around "pages", each of which have their own
 
 ### Considerations
 * Nextion instructions executed locally on the panel are fast and always available, even if the other components are offline for whichever reason.  User interaction code happening on the panel will create the most responsive experience from a user perspective.
-* Updating firmware on the panel currently requires physically removing the device from the wall either to insert an SD card or to attach a serial programmer.  This makes code updates logistically difficult.
-* The provided pages utilize no bitmap graphical resources, resulting in a very "flat" UI which is easy to modify over the wire.  Feel free to add your own resources to the firmware but keep in mind the update limitation mentioned above.
+* Updating firmware on the panel over the air carries some risk of failure.  Recovery requires rebooting the panel, which may involve a trip to the circuit break panel.
 * The Nextion command set is very basic and memory is limited.  Don't expect to be accomplish much of your automation logic at this layer.
+* The provided pages utilize no bitmap graphical resources, resulting in a very "flat" UI which is general-purpose and easy to modify over the wire.  Feel free to add your own images and customize the panel for your specific use case!
 
 ## Arduino IDE
 The ESP8266 microcontroller physically attaches to the Nextion LCD via serial, connects to your network via WiFi, and connects to an MQTT broker to gateway Nextion control messages.  For the most part the provided code has been designed to gateway messages back and forth without a lot of automation logic happening at this layer.
 
 ### Considerations
-* The provided Arduino sketch supports OTA programming allowing for remote code updates without involving a screwdriver and circuit breaker.
+* The provided Arduino sketch supports OTA programming allowing for remote code updates without involving a screwdriver and circuit breaker.  This process is reasonably reliable, but if you flash an update that leaves the device unresponsive you'll need to unplug the device from AC and re-flash via USB.
 * The Arduino platform and the C++ programming language is a powerful and flexible environment allowing for nearly any degree of automation you might dream up.
 * The ESP8266 does not include a realtime clock, so any logic dependent upon time-of-day will be problematic to implement at this layer.
 * The ESP8266 provides a watchdog process which will reset the device if anything hangs up.  This makes the device reliable in the face of network outages, but also means that the system may restart (and thus lose state) unexpectedly.  Clever use of local EEPROM or retained MQTT messages may help with this.
