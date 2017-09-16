@@ -1,5 +1,5 @@
 # Button text/font
-- alias: HASwitchPlate_Page8_Media
+- alias: HASwitchPlate_Media_Init
   trigger:
   - platform: mqtt
     topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
@@ -114,17 +114,6 @@
     data:
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[7].txt'
       payload_template: "\"{%- if is_state('media_player.media_player', 'playing') %};{% elif is_state('media_player.media_player', 'paused') %}4{% endif -%}\""
-
-# Volume slider changed, query new state
-- alias: HASwitchPlate_Media_VolSliderMoved
-  trigger:
-    platform: mqtt
-    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[8].b[9]'
-    payload: 'OFF'
-  action:
-  - service: mqtt.publish
-    data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[8].b[9].val'
 
 # Volume slider value published, apply published state
 - alias: HASwitchPlate_Media_VolSliderUpdateHass

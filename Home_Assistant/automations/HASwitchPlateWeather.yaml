@@ -10,6 +10,10 @@
   action:
   - service: mqtt.publish
     data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[2].b[6].font'
+      payload: '3'
+  - service: mqtt.publish
+    data:
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[2].b[6].txt'
       payload_template: '"{{states.sensor.weather_temperature.state}}F"'
       retain: true

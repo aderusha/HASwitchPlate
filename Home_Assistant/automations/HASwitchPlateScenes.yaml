@@ -1,4 +1,4 @@
-- alias: HASwitchPlate_Page1_Scenes
+- alias: HASwitchPlate_Scenes_Init
   trigger:
   - platform: mqtt
     topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
@@ -39,7 +39,7 @@
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[1].b[7].txt'
       payload: '"Lights Off"'
 
-- alias: HASwitchPlate_Page1_SceneButton4
+- alias: HASwitchPlate_SceneButton4
   trigger:
     platform: mqtt
     topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[1].b[4]'
@@ -48,7 +48,7 @@
     service: scene.turn_on
     entity_id: scene.lights_on
     
-- alias: HASwitchPlate_Page1_SceneButton5
+- alias: HASwitchPlate_SceneButton5
   trigger:
     platform: mqtt
     topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[1].b[5]'
@@ -57,7 +57,7 @@
     service: scene.turn_on
     entity_id: scene.daylight
 
-- alias: HASwitchPlate_Page1_SceneButton6
+- alias: HASwitchPlate_SceneButton6
   trigger:
     platform: mqtt
     topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[1].b[6]'
@@ -66,7 +66,7 @@
     service: scene.turn_on
     entity_id: scene.night
 
-- alias: HASwitchPlate_Page1_SceneButton7
+- alias: HASwitchPlate_SceneButton7
   trigger:
     platform: mqtt
     topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[1].b[7]'

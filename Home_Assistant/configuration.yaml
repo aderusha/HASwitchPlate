@@ -133,7 +133,17 @@ sensor:
       value_template: '{{ states.media_player.media_player.attributes.media_artist }}'
     media_player_volume:
       value_template: '{{ states.media_player.media_player.attributes.volume_level }}'
-      
+# - platform: octoprint
+  # name: OctoPrint
+  # monitored_conditions:
+    # - Current State
+    # - Temperatures
+    # - Job Percentage
+
+# octoprint:
+  # host: octoprint.local
+  # api_key: YOUROCTOPRINTAPIKEY
+
 media_player:
   - platform: gpmdp
     name: "Media Player"
@@ -172,7 +182,7 @@ light:
     state_topic: "homeassistant/light/light3"
     brightness_command_topic: "homeassistant/light/light3/bright"
     brightness_state_topic: "homeassistant/light/light3/bright"
-    
+
 automation: !include_dir_merge_list automations/
 scene: !include_dir_merge_list scenes/
 

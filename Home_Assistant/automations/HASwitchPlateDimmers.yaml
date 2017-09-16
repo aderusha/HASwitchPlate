@@ -1,4 +1,4 @@
-- alias: HASwitchPlate_Page4_Dimmers
+- alias: HASwitchPlate_Dimmers_Init
   trigger:
   - platform: mqtt
     topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
@@ -18,21 +18,6 @@
     data:
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[4].b[6].txt'
       payload: '"Light 3"'
-
-# the template here checks for an "OFF" message from a subtopic of p[4]b[<7-9>]
-- alias: HASwitchPlate_Page4_DimmerSliderMoved
-  trigger:
-  - platform: mqtt
-    topic: 'homeassistant/haswitchplate/HASwitchPlate/state/+'
-    payload: 'OFF'
-  condition: 
-    condition: template
-    value_template: '{{ (trigger.topic.split("/")[-1].split("p[")[1].split("]")[0]|int == 4) and ( 7 <= trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int <= 9) }}'
-  action:
-  - service: mqtt.publish
-    data_template:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[4].b[{{ trigger.topic.split("[")[-1].strip("]") }}].val'
-      payload: ''
 
 - alias: HASwitchPlate_p[4]b[7]_DimmerSliderUpdateHass
   trigger:
