@@ -419,12 +419,12 @@ void processNextionInput() {
   }
   // Catch 0x1A error, possibly from .val query against things that might not support that request
   if (nextionReturnBuffer[0] == 0x1A) {
-    // 0x1A+End 
+    // 0x1A+End
     // ERROR: Variable name invalid
     // We'll be triggering this a lot due to requesting .val on every component that sends us a Touch Off
     // Just reset mqttGetSubtopic and move on with life.
     mqttGetSubtopic = "";
-  }    
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -481,29 +481,32 @@ void mqttConnect() {
 void setupOTA() {
   // Start up OTA
   // ArduinoOTA.setPort(8266); // Port defaults to 8266
-  ArduinoOTA.setHostname(mqttNode.c_str()); // Hostname defaults to esp8266-[ChipID]
-  ArduinoOTA.setPassword(otaPassword); // No authentication by default
+  ArduinoOTA.setHostname(mqttNode.c_str());
+  ArduinoOTA.setPassword(otaPassword);
 
   ArduinoOTA.onStart([]() {
-    debugPrintln("OTA update start");
+    debugPrintln("ESP OTA:  update start");
+    setNextionAttr("p[0].b[1].txt", "\"ESP OTA Update\"");
+    sendNextionCmd("page 0");
   });
   ArduinoOTA.onEnd([]() {
-    debugPrintln("\nOTA update complete");
+    debugPrintln("ESP OTA:  update complete");
+    setNextionAttr("p[0].b[1].txt", "\"ESP OTA Update\\rComplete!\"");
   });
-  ArduinoOTA.onProgress([](unsigned int
-  , unsigned int total) {
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    setNextionAttr("p[0].b[1].txt", "\"ESP OTA Update\\rProgress: " + String(progress / (total / 100)) + "%\"");
     //Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    debugPrint("OTA Error: " + String(error));
-    if (error == OTA_AUTH_ERROR) debugPrintln(" Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) debugPrintln(" Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) debugPrintln(" Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) debugPrintln(" Receive Failed");
-    else if (error == OTA_END_ERROR) debugPrintln(" End Failed");
+    debugPrintln("ESP OTA:  ERROR code " + String(error));
+    if (error == OTA_AUTH_ERROR) debugPrintln("ESP OTA:  ERROR - Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) debugPrintln("ESP OTA:  ERROR - Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) debugPrintln("ESP OTA:  ERROR - Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) debugPrintln("ESP OTA:  ERROR - Receive Failed");
+    else if (error == OTA_END_ERROR) debugPrintln("ESP OTA:  ERROR - End Failed");
   });
   ArduinoOTA.begin();
-  debugPrintln("OTA firmware update ready");
+  debugPrintln("ESP OTA:  Over the Air firmware update ready");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -622,6 +625,7 @@ bool otaReturnSuccess() {
       delay (1);
     }
   }
+  delay (10);
   return otaSuccessVal;
 }
 
