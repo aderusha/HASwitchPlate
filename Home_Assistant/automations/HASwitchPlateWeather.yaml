@@ -11,10 +11,15 @@
   - service: mqtt.publish
     data:
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[2].b[6].txt'
-      payload_template: "\"{{states.sensor.weather_temperature.state}}F\""
+      payload_template: '"{{states.sensor.weather_temperature.state}}F"'
+      retain: true
+  - service: mqtt.publish
+    data:
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[2].b[7].font'
+      payload_template: '{% if states.sensor.weather_current.state|length <= 6 -%}3{% elif (states.sensor.weather_current.state|length > 6) and (states.sensor.weather_current.state|length <= 10) %}2{% elif (states.sensor.weather_current.state|length > 10) and (states.sensor.weather_current.state|length <= 15) %}1{% else %}0{%- endif %}'
       retain: true
   - service: mqtt.publish
     data:
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[2].b[7].txt'
-      payload_template: "\"{{states.sensor.weather_current.state}}\""
+      payload_template: '"{{states.sensor.weather_current.state|wordwrap(20, wrapstring="\\r")}}"'
       retain: true
