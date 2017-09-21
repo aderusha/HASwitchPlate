@@ -3,6 +3,10 @@
     platform: time
     # Matches every minute
     seconds: 00
+  condition:
+  - condition: state
+    entity_id: 'binary_sensor.haswitchplate'
+    state: 'on'
   action:
   - service: mqtt.publish
     data:

@@ -15,6 +15,13 @@ const String mqttDiscoveryPrefix = "homeassistant"; // Home Assistant MQTT Disco
 // Open a super-insecure (but read-only) telnet debug port
 #define DEBUGTELNET
 
+// If you have a motion sensor connected, define the pin here.  Leave set at "0" otherwise
+const uint8_t motionPin = 0;
+uint16_t motionLatch = 60; // Latch time in seconds, can be set via MQTT command/motionLatch
+// No need to change these two values
+bool motionDetected = 0;
+uint32_t motionTimer = 0;
+
 // OK embedded guys don't read anything below because thar be strings errywhere (HEY I HAVE THE RAM OK)
 
 // MQTT topic string definitions
@@ -26,6 +33,9 @@ const String mqttSubscription = mqttCommandTopic + "/#";
 // We'll create one binary_sensor device to track MQTT connectivity
 const String mqttDiscoBinaryStateTopic = mqttDiscoveryPrefix + "/binary_sensor/" + mqttNode + "/state";
 const String mqttDiscoBinaryConfigTopic = mqttDiscoveryPrefix + "/binary_sensor/" + mqttNode + "/config";
+// And one binary_sensor for the (optional) motion tracker
+const String mqttDiscoMotionStateTopic = mqttDiscoveryPrefix + "/binary_sensor/" + mqttNode + "-motion/state";
+const String mqttDiscoMotionConfigTopic = mqttDiscoveryPrefix + "/binary_sensor/" + mqttNode + "-motion/config";
 // And one light device to set dim values on the panel
 const String mqttDiscoLightSwitchCommandTopic = mqttDiscoveryPrefix + "/light/" + mqttNode + "/switch";
 const String mqttDiscoLightSwitchStateTopic = mqttDiscoveryPrefix + "/light/" + mqttNode + "/status";
@@ -36,6 +46,7 @@ const String mqttDiscoLightSubscription = mqttDiscoveryPrefix + "/light/" + mqtt
 
 // The strings below will spill over the PubSubClient_MAX_PACKET_SIZE 128
 const String mqttDiscoBinaryConfigPayload = "{\"name\": \"" + mqttNode + "\", \"device_class\": \"connectivity\", \"state_topic\": \"" + mqttDiscoBinaryStateTopic + "\"}";
+const String mqttDiscoMotionConfigPayload = "{\"name\": \"" + mqttNode + "-motion\", \"device_class\": \"motion\", \"state_topic\": \"" + mqttDiscoMotionStateTopic + "\"}";
 const String mqttDiscoLightConfigPayload = "{\"name\": \"" + mqttNode + "\", \"command_topic\": \"" + mqttDiscoLightSwitchCommandTopic + "\", \"state_topic\": \"" + mqttDiscoLightSwitchStateTopic + "\", \"brightness_command_topic\": \"" + mqttDiscoLightBrightCommandTopic + "\", \"brightness_state_topic\": \"" + mqttDiscoLightBrightStateTopic + "\"}";
 
 // global byte array to pass around data coming from the panel
@@ -71,6 +82,10 @@ void setup() {
 
   debugPrintln("\r\nHardware initialized, starting program load");
 
+  if (motionPin) {
+    pinMode(motionPin, INPUT);
+  }
+
   // initialize display
   initializeNextion();
 
@@ -105,14 +120,19 @@ void loop() {
     processNextionInput();
   }
 
-  // check WiFi connection
+  // Check on our motion sensor
+  if (motionPin) {
+    checkMotion();
+  }
+  
+  // Check WiFi connection
   if (WiFi.status() != WL_CONNECTED) {
     setNextionAttr("p[0].b[1].txt", "\"WiFi connecting\"");
     setupWifi();
     setNextionAttr("p[0].b[1].txt", "\"WiFi connected\\r" + WiFi.localIP().toString() + "\"");
   }
 
-  // check MQTT connection
+  // Check MQTT connection
   if (!mqttClient.connected()) {
     mqttConnect();
   }
@@ -152,6 +172,7 @@ void mqtt_callback(char* topic, byte* payload, unsigned int payloadLength) {
   // '[...]/device/command' -m '' = undefined
   // '[...]/device/command' -m 'dim 50' = sendNextionCmd("dim 50")
   // '[...]/device/command/page' -m '1' = sendNextionCmd("page 1")
+  // '[...]/device/command/motionLatch' -m '120' = set motionLatch time to 120 seconds
   // '[...]/device/command/update' -m 'http://192.168.0.10/local/HASwitchPlate.tft' = startNextionOTA("http://192.168.0.10/local/HASwitchPlate.tft")
   // '[...]/device/command/p[1].b[4].txt' -m '' = getNextionAttr("p[1].b[4].txt")
   // '[...]/device/command/p[1].b[4].txt' -m '"Lights On"' = setNextionAttr("p[1].b[4].txt", "\"Lights On\"")
@@ -171,6 +192,13 @@ void mqtt_callback(char* topic, byte* payload, unsigned int payloadLength) {
   // '[...]/device/command/page' -m '1' = sendNextionCmd("page 1")
   else if ((strTopic == (mqttCommandTopic + "/page"))) {
     sendNextionCmd("page " + strPayload);
+  }
+
+  // '[...]/device/command/motionLatch' -m '120' = set motionLatch time to 120 seconds
+  else if ((strTopic == (mqttCommandTopic + "/motionLatch")) && strPayload.toInt()) {
+    // ensure that we log the actual value of the conversion of the String payload to an integer
+    debugPrintln("MQTT CMD: setting motionLatch to " + String(strPayload.toInt()));
+    motionLatch = strPayload.toInt();
   }
 
   // '[...]/device/command/update' -m 'http://192.168.0.10/local/HASwitchPlate.tft' = startNextionOTA("http://192.168.0.10/local/HASwitchPlate.tft")
@@ -439,7 +467,6 @@ void setupWifi() {
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    debugPrint(".");
   }
   debugPrintln("\r\nWiFi connected succesfully and assigned IP: " + WiFi.localIP().toString());
   setNextionAttr("p[0].b[1].txt", "\"WiFi connected\\r" + WiFi.localIP().toString() + "\"");
@@ -455,16 +482,26 @@ void mqttConnect() {
     debugPrintln("Attempting MQTT connection to broker: " + String(mqttServer));
     // Attempt to connect to broker, setting last will and testament
     if (mqttClient.connect(mqttNode.c_str(), mqttUser, mqttPassword, mqttDiscoBinaryStateTopic.c_str(), 1, 1, "OFF")) {
+      // Subscribe to our incoming topics
       mqttClient.subscribe(mqttSubscription.c_str());
       mqttClient.subscribe(mqttDiscoLightSubscription.c_str());
+
+      // publish discovery messages for Home Assistant MQTT Discovery
       debugPrintln("MQTT discovery config: [" + mqttDiscoBinaryConfigTopic + "] : [" + mqttDiscoBinaryConfigPayload + "]");
       debugPrintln("MQTT discovery state: [" + mqttDiscoBinaryStateTopic + "] : [ON]");
       mqttClient.publish(mqttDiscoBinaryConfigTopic.c_str(), mqttDiscoBinaryConfigPayload.c_str(), true);
       mqttClient.publish(mqttDiscoBinaryStateTopic.c_str(), "ON", true);
+      if (motionPin) {
+        debugPrintln("MQTT discovery config: [" + mqttDiscoMotionConfigTopic + "] : [" + mqttDiscoMotionConfigPayload + "]");
+        debugPrintln("MQTT discovery state: [" + mqttDiscoMotionStateTopic + "] : [ON]");
+        mqttClient.publish(mqttDiscoMotionConfigTopic.c_str(), mqttDiscoMotionConfigPayload.c_str(), true);
+      }
       debugPrintln("MQTT discovery config: [" + mqttDiscoLightConfigTopic + "] : [" + mqttDiscoLightConfigTopic + "]");
       debugPrintln("MQTT discovery state: [" + mqttDiscoLightSwitchStateTopic + "] : [ON]");
       mqttClient.publish(mqttDiscoLightConfigTopic.c_str(), mqttDiscoLightConfigPayload.c_str(), true);
       mqttClient.publish(mqttDiscoLightSwitchStateTopic.c_str(), "ON", true);
+
+      // Update panel with MQTT status
       setNextionAttr("p[0].b[1].txt", "\"WiFi connected\\r" + WiFi.localIP().toString() + "\\rMQTT Connected\\r" + String(mqttServer) + "\"");
       debugPrintln("MQTT connected");
     }
@@ -627,6 +664,30 @@ bool otaReturnSuccess() {
   }
   delay (10);
   return otaSuccessVal;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// Monitor motion sensor
+void checkMotion() {
+  bool motionRead = digitalRead(motionPin);
+
+  // if motion is detected and we aren't already ON, publish motion ON
+  if (motionRead && !motionDetected) {
+    debugPrintln("MQTT OUT: '" + mqttDiscoMotionStateTopic + "' : 'ON'");
+    mqttClient.publish(mqttDiscoMotionStateTopic.c_str(), "ON");
+    motionDetected = true;
+    motionTimer = millis();
+  }
+  // if motion isn't detected, and we're latched ON, and we're outside of our latch time, publish motion OFF
+  else if (!motionRead && motionDetected && ((millis() - motionTimer) >= (motionLatch * 1000))) {
+    debugPrintln("MQTT OUT: '" + mqttDiscoMotionStateTopic + "' : 'OFF'");
+    mqttClient.publish(mqttDiscoMotionStateTopic.c_str(), "OFF");
+    motionDetected = false;    
+  }
+  else if (motionRead) {
+    // reset our latch timer if motion was detected (again)
+    motionTimer = millis();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
