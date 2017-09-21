@@ -3,9 +3,9 @@
 # https://home-assistant.io/components/octoprint/
 - alias: HASwitchPlate_3DPrinter_Init
   trigger:
-  - platform: state
-    entity_id: binary_sensor.haswitchplate
-    to: 'on'
+  - platform: mqtt
+    topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
+    payload: 'ON'
   - platform: homeassistant
     event: start
   action:
