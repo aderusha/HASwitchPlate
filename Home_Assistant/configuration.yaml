@@ -61,7 +61,7 @@ input_text:
     name: HASP Page Button 3 Label
     icon: mdi:book-open-page-variant
 
-input_slider:
+input_number:
   haswitchplate_pagebutton1_page:
     name: HASP Page Button 1 Page
     icon: mdi:format-list-numbers

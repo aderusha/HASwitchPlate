@@ -190,7 +190,7 @@
       payload: '65535'
 ###############################################################################     
       
-# This automation catches the key presses 1-9 and sets our input sliders in response.
+# This automation catches the key presses 1-9 and sets our input numbers in response.
 # Button p[7]b[4] is labeled 1, so I'm grabbing buttons p[7]b[4] through p[7]b[13]
 # then subtracting 3.  The math doesn't work out for button "0" so that will be handled
 # in a separate automation.  Once we have the button number, we can copy slider 2 to 1,
@@ -204,21 +204,21 @@
     condition: template
     value_template: '{{ (trigger.topic.split("/")[-1].split("p[")[1].split("]")[0]|int == 7) and ( 4 <= trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int <= 12) }}'
   action:
-  - service: input_slider.select_value
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode1
-      value: '{{ states.input_slider.haswitchplate_alarmcode2.state }}'
-  - service: input_slider.select_value
+      entity_id: input_number.haswitchplate_alarmcode1
+      value: '{{ states.input_number.haswitchplate_alarmcode2.state }}'
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode2
-      value: '{{ states.input_slider.haswitchplate_alarmcode3.state }}'
-  - service: input_slider.select_value
+      entity_id: input_number.haswitchplate_alarmcode2
+      value: '{{ states.input_number.haswitchplate_alarmcode3.state }}'
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode3
-      value: '{{ states.input_slider.haswitchplate_alarmcode4.state }}'
-  - service: input_slider.select_value
+      entity_id: input_number.haswitchplate_alarmcode3
+      value: '{{ states.input_number.haswitchplate_alarmcode4.state }}'
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode4
+      entity_id: input_number.haswitchplate_alarmcode4
       value: '{{trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int-3}}'
 
 - alias: HASwitchPlate_AlarmCodeEntry_0
@@ -227,21 +227,21 @@
     topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[7].b[14]'
     payload: 'OFF'
   action:
-  - service: input_slider.select_value
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode1
-      value: '{{ states.input_slider.haswitchplate_alarmcode2.state }}'
-  - service: input_slider.select_value
+      entity_id: input_number.haswitchplate_alarmcode1
+      value: '{{ states.input_number.haswitchplate_alarmcode2.state }}'
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode2
-      value: '{{ states.input_slider.haswitchplate_alarmcode3.state }}'
-  - service: input_slider.select_value
+      entity_id: input_number.haswitchplate_alarmcode2
+      value: '{{ states.input_number.haswitchplate_alarmcode3.state }}'
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode3
-      value: '{{ states.input_slider.haswitchplate_alarmcode4.state }}'
-  - service: input_slider.select_value
+      entity_id: input_number.haswitchplate_alarmcode3
+      value: '{{ states.input_number.haswitchplate_alarmcode4.state }}'
+  - service: input_number.select_value
     data:
-      entity_id: input_slider.haswitchplate_alarmcode4
+      entity_id: input_number.haswitchplate_alarmcode4
       value: '0'
 
 # Alarm panel is disarmed, so update panel text
@@ -351,22 +351,22 @@
   - service: alarm_control_panel.alarm_disarm
     entity_id: alarm_control_panel.ha_alarm
     data_template:
-      code: '{{ states.input_slider.haswitchplate_alarmcode1.state|int }}{{ states.input_slider.haswitchplate_alarmcode2.state|int }}{{ states.input_slider.haswitchplate_alarmcode3.state|int }}{{ states.input_slider.haswitchplate_alarmcode4.state|int }}'
-  - service: input_slider.select_value
+      code: '{{ states.input_number.haswitchplate_alarmcode1.state|int }}{{ states.input_number.haswitchplate_alarmcode2.state|int }}{{ states.input_number.haswitchplate_alarmcode3.state|int }}{{ states.input_number.haswitchplate_alarmcode4.state|int }}'
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode1
+      entity_id: input_number.haswitchplate_alarmcode1
       value: '-1'
-  - service: input_slider.select_value
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode2
+      entity_id: input_number.haswitchplate_alarmcode2
       value: '-1'
-  - service: input_slider.select_value
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode3
+      entity_id: input_number.haswitchplate_alarmcode3
       value: '-1'
-  - service: input_slider.select_value
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode4
+      entity_id: input_number.haswitchplate_alarmcode4
       value: '-1'
       
 # User is attempting to arm the panel.  Send the alarm service our collected code then
@@ -384,21 +384,21 @@
   - service: alarm_control_panel.alarm_arm_away
     entity_id: alarm_control_panel.ha_alarm
     data_template:
-      code: '{{ states.input_slider.haswitchplate_alarmcode1.state|int }}{{ states.input_slider.haswitchplate_alarmcode2.state|int }}{{ states.input_slider.haswitchplate_alarmcode3.state|int }}{{ states.input_slider.haswitchplate_alarmcode4.state|int }}'
-  - service: input_slider.select_value
+      code: '{{ states.input_number.haswitchplate_alarmcode1.state|int }}{{ states.input_number.haswitchplate_alarmcode2.state|int }}{{ states.input_number.haswitchplate_alarmcode3.state|int }}{{ states.input_number.haswitchplate_alarmcode4.state|int }}'
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode1
+      entity_id: input_number.haswitchplate_alarmcode1
       value: '-1'
-  - service: input_slider.select_value
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode2
+      entity_id: input_number.haswitchplate_alarmcode2
       value: '-1'
-  - service: input_slider.select_value
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode3
+      entity_id: input_number.haswitchplate_alarmcode3
       value: '-1'
-  - service: input_slider.select_value
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_alarmcode4
+      entity_id: input_number.haswitchplate_alarmcode4
       value: '-1'
 

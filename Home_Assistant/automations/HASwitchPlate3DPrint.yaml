@@ -119,7 +119,7 @@
   - condition: template
     value_template: "{% if is_state('sensor.octoprint_current_state', 'Printing') or is_state('sensor.octoprint_current_state', 'Operational') or is_state('sensor.octoprint_current_state', 'Paused') %}true{% endif %}"
   - condition: state
-    entity_id: 'input_slider.haswitchplate_active_page'
+    entity_id: 'input_number.haswitchplate_active_page'
     state: '9.0'
   - condition: state
     entity_id: 'binary_sensor.haswitchplate'

@@ -16,7 +16,7 @@
   - service: mqtt.publish
     data_template:
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/page'
-      payload_template: '{{states.input_slider.haswitchplate_active_page.state|int}}'
+      payload_template: '{{states.input_number.haswitchplate_active_page.state|int}}'
     
 ##############################################################################
 # select haswitchplate_pagebutton1_page in response to page button 1
@@ -32,7 +32,7 @@
   - service: mqtt.publish
     data_template:
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/page'
-      payload_template: "{{states.input_slider.haswitchplate_pagebutton1_page.state|int}}"
+      payload_template: "{{states.input_number.haswitchplate_pagebutton1_page.state|int}}"
       
 ##############################################################################
 # select haswitchplate_pagebutton2_page in response to page button 2
@@ -48,7 +48,7 @@
   - service: mqtt.publish
     data_template:
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/page'
-      payload_template: "{{states.input_slider.haswitchplate_pagebutton2_page.state|int}}"
+      payload_template: "{{states.input_number.haswitchplate_pagebutton2_page.state|int}}"
       
 ##############################################################################
 # select haswitchplate_pagebutton3_page in response to page button 3
@@ -64,7 +64,7 @@
   - service: mqtt.publish
     data_template:
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/page'
-      payload_template: "{{states.input_slider.haswitchplate_pagebutton3_page.state|int}}"
+      payload_template: "{{states.input_number.haswitchplate_pagebutton3_page.state|int}}"
 
 ##############################################################################
 # Update haswitchplate_active_page when changed at the panel
@@ -75,9 +75,9 @@
   action:
   - service: automation.turn_off
     entity_id: automation.haswitchplate_active_page_slider_changed
-  - service: input_slider.select_value
+  - service: input_number.select_value
     data_template:
-      entity_id: input_slider.haswitchplate_active_page
+      entity_id: input_number.haswitchplate_active_page
       value: '{{ trigger.payload }}'
   - service: automation.turn_on
     entity_id: automation.haswitchplate_active_page_slider_changed
@@ -87,12 +87,12 @@
 - alias: HASwitchPlate_Active_Page_Slider_Changed
   trigger:
     platform: state
-    entity_id: input_slider.haswitchplate_active_page
+    entity_id: input_number.haswitchplate_active_page
   action:
     service: mqtt.publish
     data_template:
       topic: 'homeassistant/haswitchplate/HASwitchPlate/command/page'
-      payload: '{{ states.input_slider.haswitchplate_active_page.state | int }}'
+      payload: '{{ states.input_number.haswitchplate_active_page.state | int }}'
       
 ##############################################################################
 # Set page button text across all pages to the value selected in the interface
@@ -250,11 +250,11 @@
 - alias: HASwitchPlate_PageButton_Colors
   trigger:
   - platform: state
-    entity_id: input_slider.haswitchplate_pagebutton1_page
+    entity_id: input_number.haswitchplate_pagebutton1_page
   - platform: state
-    entity_id: input_slider.haswitchplate_pagebutton2_page
+    entity_id: input_number.haswitchplate_pagebutton2_page
   - platform: state
-    entity_id: input_slider.haswitchplate_pagebutton3_page
+    entity_id: input_number.haswitchplate_pagebutton3_page
   - platform: mqtt
     topic: 'homeassistant/binary_sensor/HASwitchPlate/state'
     payload: 'ON'
@@ -480,25 +480,25 @@
 # now write out the highlight colors for our 3 selected pages
   - service: mqtt.publish
     data_template:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[{{states.input_slider.haswitchplate_pagebutton1_page.state|int}}].b[1].bco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[{{states.input_number.haswitchplate_pagebutton1_page.state|int}}].b[1].bco'
       payload: '65535'
   - service: mqtt.publish
     data_template:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[{{states.input_slider.haswitchplate_pagebutton1_page.state|int}}].b[1].pco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[{{states.input_number.haswitchplate_pagebutton1_page.state|int}}].b[1].pco'
       payload: '0'
   - service: mqtt.publish
     data_template:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[{{states.input_slider.haswitchplate_pagebutton2_page.state|int}}].b[2].bco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[{{states.input_number.haswitchplate_pagebutton2_page.state|int}}].b[2].bco'
       payload: '65535'
   - service: mqtt.publish
     data_template:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[{{states.input_slider.haswitchplate_pagebutton2_page.state|int}}].b[2].pco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[{{states.input_number.haswitchplate_pagebutton2_page.state|int}}].b[2].pco'
       payload: '0'
   - service: mqtt.publish
     data_template:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[{{states.input_slider.haswitchplate_pagebutton3_page.state|int}}].b[3].bco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[{{states.input_number.haswitchplate_pagebutton3_page.state|int}}].b[3].bco'
       payload: '65535'
   - service: mqtt.publish
     data_template:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[{{states.input_slider.haswitchplate_pagebutton3_page.state|int}}].b[3].pco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[{{states.input_number.haswitchplate_pagebutton3_page.state|int}}].b[3].pco'
       payload: '0'
