@@ -17,7 +17,7 @@ A complete build that's ready to install will require the following components:
 * [WeMos D1 Mini ESP8266 WiFi microcontroller](https://wiki.wemos.cc/products:d1:d1_mini)
 * [3D printed switch plate](https://github.com/aderusha/HASwitchPlate/blob/master/3D_Printable_Models/HASwitchPlate_front.stl)
 * [3D printed rear cover](https://github.com/aderusha/HASwitchPlate/blob/master/3D_Printable_Models/HASwitchPlate_rear.stl)
-* [5V Power supply](https://www.arrow.com/en/products/irm-03-5/mean-well-enterprises)
+* [5V Power supply](https://www.findchips.com/search/IRM-03-5)
 * [Screw terminal connectors](https://www.amazon.com/gp/product/B011QFLS0S)
 * [4x6 protoboard](https://www.amazon.com/gp/product/B06XTPGBS5)
 * [Three 20mm M2 flathead screws](https://www.amazon.com/Stainless-Machine-Finish-Phillips-Threads/dp/B000FN3Q94) and [three heat-set threaded inserts](https://www.amazon.com/uxcell-Female-Knurled-Threaded-Embedment/dp/B01IYWTCWW) to fasten things together (feel free to improvise here)
