@@ -204,19 +204,19 @@
     condition: template
     value_template: '{{ (trigger.topic.split("/")[-1].split("p[")[1].split("]")[0]|int == 7) and ( 4 <= trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int <= 12) }}'
   action:
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode1
       value: '{{ states.input_number.haswitchplate_alarmcode2.state }}'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode2
       value: '{{ states.input_number.haswitchplate_alarmcode3.state }}'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode3
       value: '{{ states.input_number.haswitchplate_alarmcode4.state }}'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode4
       value: '{{trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int-3}}'
@@ -227,19 +227,19 @@
     topic: 'homeassistant/haswitchplate/HASwitchPlate/state/p[7].b[14]'
     payload: 'OFF'
   action:
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode1
       value: '{{ states.input_number.haswitchplate_alarmcode2.state }}'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode2
       value: '{{ states.input_number.haswitchplate_alarmcode3.state }}'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode3
       value: '{{ states.input_number.haswitchplate_alarmcode4.state }}'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data:
       entity_id: input_number.haswitchplate_alarmcode4
       value: '0'
@@ -352,19 +352,19 @@
     entity_id: alarm_control_panel.ha_alarm
     data_template:
       code: '{{ states.input_number.haswitchplate_alarmcode1.state|int }}{{ states.input_number.haswitchplate_alarmcode2.state|int }}{{ states.input_number.haswitchplate_alarmcode3.state|int }}{{ states.input_number.haswitchplate_alarmcode4.state|int }}'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode1
       value: '-1'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode2
       value: '-1'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode3
       value: '-1'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode4
       value: '-1'
@@ -385,20 +385,19 @@
     entity_id: alarm_control_panel.ha_alarm
     data_template:
       code: '{{ states.input_number.haswitchplate_alarmcode1.state|int }}{{ states.input_number.haswitchplate_alarmcode2.state|int }}{{ states.input_number.haswitchplate_alarmcode3.state|int }}{{ states.input_number.haswitchplate_alarmcode4.state|int }}'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode1
       value: '-1'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode2
       value: '-1'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode3
       value: '-1'
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_alarmcode4
       value: '-1'
-
