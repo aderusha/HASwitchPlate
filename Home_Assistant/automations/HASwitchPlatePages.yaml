@@ -75,7 +75,7 @@
   action:
   - service: automation.turn_off
     entity_id: automation.haswitchplate_active_page_slider_changed
-  - service: input_number.select_value
+  - service: input_number.set_value
     data_template:
       entity_id: input_number.haswitchplate_active_page
       value: '{{ trigger.payload }}'
