@@ -125,14 +125,14 @@ sensor:
       - temp_min
       - temp_max
       - humidity
-- platform: template
-  sensors:
-    media_player_title:
-      value_template: '{{ states.media_player.media_player.attributes.media_title }}'
-    media_player_artist:
-      value_template: '{{ states.media_player.media_player.attributes.media_artist }}'
-    media_player_volume:
-      value_template: '{{ states.media_player.media_player.attributes.volume_level }}'
+  - platform: template
+    sensors:
+      media_player_title:
+        value_template: '{{ states.media_player.media_player.attributes.media_title }}'
+      media_player_artist:
+        value_template: '{{ states.media_player.media_player.attributes.media_artist }}'
+      media_player_volume:
+        value_template: '{{ states.media_player.media_player.attributes.volume_level }}'
 # - platform: octoprint
   # name: OctoPrint
   # monitored_conditions:
