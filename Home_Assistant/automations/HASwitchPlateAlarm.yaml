@@ -182,11 +182,11 @@
       payload: '0'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].pco'
       payload: '63488'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].bco'
       payload: '65535'
 ###############################################################################     
       
@@ -317,11 +317,11 @@
       payload: '0'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].pco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].pco'
       payload: '63488'
   - service: mqtt.publish
     data:
-      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[13].bco'
+      topic: 'homeassistant/haswitchplate/HASwitchPlate/command/p[7].b[15].bco'
       payload: '65535'
 
 # Alarm panel is pending arm so update panel text
