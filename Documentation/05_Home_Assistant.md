@@ -21,10 +21,10 @@ With the demonstration automations in place, the default node name of HASwitchPl
 ```
 curl -X POST -H "x-ha-access: YOUR_PASSWORD" -H "Content-Type: application/json" -d '{ "entity_id": "input_text.haswitchplate_pagebutton1_label", "value": "scenes" }' http://localhost:8123/api/services/input_text/set_value
 curl -X POST -H "x-ha-access: YOUR_PASSWORD" -H "Content-Type: application/json" -d '{ "entity_id": "input_text.haswitchplate_pagebutton2_label", "value": "status" }' http://localhost:8123/api/services/input_text/set_value
-curl -X POST -H "x-ha-access: YOUR_PASSWORD" -H "Content-Type: application/json" -d '{ "entity_id": "input_text.haswitchplate_pagebutton3_label", "value": "media" }' http://localhost:8123/api/services/input_text/set_value
+curl -X POST -H "x-ha-access: YOUR_PASSWORD" -H "Content-Type: application/json" -d '{ "entity_id": "input_text.haswitchplate_pagebutton3_label", "value": "alarm" }' http://localhost:8123/api/services/input_text/set_value
 curl -X POST -H "x-ha-access: YOUR_PASSWORD" -H "Content-Type: application/json" -d '{ "entity_id": "input_number.haswitchplate_pagebutton1_page", "value": 1}' http://localhost:8123/api/services/input_number/set_value
 curl -X POST -H "x-ha-access: YOUR_PASSWORD" -H "Content-Type: application/json" -d '{ "entity_id": "input_number.haswitchplate_pagebutton2_page", "value": 2}' http://localhost:8123/api/services/input_number/set_value
-curl -X POST -H "x-ha-access: YOUR_PASSWORD" -H "Content-Type: application/json" -d '{ "entity_id": "input_number.haswitchplate_pagebutton3_page", "value": 8}' http://localhost:8123/api/services/input_number/set_value
+curl -X POST -H "x-ha-access: YOUR_PASSWORD" -H "Content-Type: application/json" -d '{ "entity_id": "input_number.haswitchplate_pagebutton3_page", "value": 7}' http://localhost:8123/api/services/input_number/set_value
 curl -X POST -H "x-ha-access: YOUR_PASSWORD" -H "Content-Type: application/json" -d '{ "entity_id": "input_number.haswitchplate_active_page", "value": 1}' http://localhost:8123/api/services/input_number/set_value
 ```
 
