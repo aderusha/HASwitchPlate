@@ -16,11 +16,11 @@ To hold the two halves on the enclosure together I've used [three 20mm M2 flat-h
 
 I've threaded in a brass standoff I had laying around to prevent melted plastic from entering the nut during assembly and to give myself a handle to position and retain the insert when removing the soldering iron.  The model includes a small cutout for the inserts to sit centered on their hole in preparation for installation, so I just set the insert in place, heat it for a moment with the iron, gently press until it's inserted, then hold the standoff with some pliers (it's hot!) while I remove the iron and adjust to make sure it's reasonably vertical while the plastic is still pliable.  Be careful not to press in too far or you'll leave a dimple in the front of the plate!
 
-![Ready to assemble](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Assembly_Ready_to_Assemble.jpg?raw=true)
+![Ready to assemble](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Perfboard_Assembly_Ready_to_Assemble.jpg?raw=true)
 
 Installing the protoboard requires a pair of small m2-ish screws, I had some machine thread flatheads on hand but some self-tapping (or wood thread or sheet metal etc) might be more suitable as this is cutting into plastic.  There shouldn't be much strain on these two so I haven't bothered with inserts here.
 
-![Parts installed](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Assembly_Parts_Installed.jpg?raw=true)
+![Parts installed](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Perfboard_Assembly_Parts_Installed.jpg?raw=true)
 
 Once everything is fit together then it's a simple matter of running the three 20mm m2 screws through the back to hold the two halves of the enclosure together.  Again, be careful not to tighten these too hard as the screws can dimple the front of the switch plate.  Now you should be ready to mount into the wall!
 
