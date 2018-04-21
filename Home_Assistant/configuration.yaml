@@ -158,10 +158,21 @@ alarm_control_panel:
   # - platform: google
 
 mqtt:
-  broker: localhost
-  client_id: homeassistant
+  # This next line is the important bit, you need to enable MQTT discovery
+  # https://www.home-assistant.io/docs/mqtt/discovery/
   discovery: true
-  discovery_prefix: homeassistant
+  # These lines are to enable the embedded broker, change as needed for your own broker setup
+  embedded:
+    listeners:
+      default:
+        bind: 0.0.0.0:1883
+        type: tcp
+    auth:
+      plugins: ['auth.anonymous']
+      allow-anonymous: true
+  broker: 0.0.0.0
+  port: 1883
+  client_id: haspdemo
 
 light:
   - platform: mqtt
