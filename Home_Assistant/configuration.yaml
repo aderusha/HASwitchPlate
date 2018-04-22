@@ -2,17 +2,19 @@ homeassistant:
   # Name of the location where Home Assistant is running
   name: Home
   # Location required to calculate the time the sun rises and sets
-  latitude: 42.9741465
-  longitude: -85.6852731
+  latitude: 42.7864
+  longitude: -85.5506
   # Impacts weather/sunrise data (altitude above sea level in meters)
-  elevation: 115
+  elevation: 0
   # metric for Metric, imperial for Imperial
   unit_system: imperial
   # Pick yours from here: http://en.wikipedia.org/wiki/List_of_tz_database_time_zones
   time_zone: America/Detroit
+  # Customization file
+  customize: !include customize.yaml
 
 # Show links to resources in log and frontend
-#introduction:
+introduction:
 
 # Enables the frontend
 frontend:
@@ -21,8 +23,8 @@ frontend:
 config:
 
 http:
-  # Uncomment this to add a password (recommended!)
-  # api_password: PASSWORD
+  # Secrets are defined in the file secrets.yaml
+  # api_password: !secret http_password
   # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
   # base_url: example.duckdns.org:8123
 
@@ -31,25 +33,77 @@ http:
 # the developers to assist with development of Home Assistant.
 # For more information, please see:
 # https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
-# updater:
+updater:
   # Optional, allows Home Assistant developers to focus on popular components.
   # include_used_components: true
 
 # Discover some devices automatically
-# discovery:
+discovery:
 
 # Allows you to issue voice commands from the frontend in enabled browsers
-# conversation:
+conversation:
 
 # Enables support for tracking state changes over time
 history:
 
 # View all events in a logbook
-# logbook:
+logbook:
+
+# Enables a map showing the location of tracked devices
+map:
 
 # Track the sun
-# sun:
+sun:
 
+# Text to speech
+tts:
+  - platform: google
+
+# Cloud
+cloud:
+
+# Sensors for weather and media player information
+sensor:
+  - platform: yweather
+    name: Weather
+    monitored_conditions:
+      - weather_current
+      - temperature
+      - temp_min
+      - temp_max
+      - humidity
+  - platform: template
+    sensors:
+      media_player_title:
+        value_template: '{{ states.media_player.media_player.attributes.media_title }}'
+      media_player_artist:
+        value_template: '{{ states.media_player.media_player.attributes.media_artist }}'
+      media_player_volume:
+        value_template: '{{ states.media_player.media_player.attributes.volume_level }}'
+# - platform: octoprint
+  # name: OctoPrint
+  # monitored_conditions:
+    # - Current State
+    # - Temperatures
+    # - Job Percentage
+
+# octoprint:
+  # host: octoprint.local
+  # api_key: YOUROCTOPRINTAPIKEY
+
+media_player:
+  - platform: gpmdp
+    name: "Media Player"
+    host: 127.0.0.1
+
+alarm_control_panel:
+  - platform: manual
+    code: 1234
+
+##############################################################################
+# The input_text and input_number devices created below are essential to the
+# page control automations and you'll probably want to carry them over to your
+# own configuration
 input_text:
   haswitchplate_pagebutton1_label:
     name: HASP Page Button 1 Label
@@ -115,85 +169,13 @@ input_number:
     step: 1
     initial: -1
 
-# Weather prediction
-sensor:
-  - platform: yweather
-    name: Weather
-    monitored_conditions:
-      - weather_current
-      - temperature
-      - temp_min
-      - temp_max
-      - humidity
-  - platform: template
-    sensors:
-      media_player_title:
-        value_template: '{{ states.media_player.media_player.attributes.media_title }}'
-      media_player_artist:
-        value_template: '{{ states.media_player.media_player.attributes.media_artist }}'
-      media_player_volume:
-        value_template: '{{ states.media_player.media_player.attributes.volume_level }}'
-# - platform: octoprint
-  # name: OctoPrint
-  # monitored_conditions:
-    # - Current State
-    # - Temperatures
-    # - Job Percentage
-
-# octoprint:
-  # host: octoprint.local
-  # api_key: YOUROCTOPRINTAPIKEY
-
-media_player:
-  - platform: gpmdp
-    name: "Media Player"
-    host: 127.0.0.1
-
-alarm_control_panel:
-  - platform: manual
-    code: 1234
-
-# Text to speech
-# tts:
-  # - platform: google
-
+# Enable MQTT discovery: https://www.home-assistant.io/docs/mqtt/discovery/
+# This is essential for HASP to create the required devices
 mqtt:
-  # This next line is the important bit, you need to enable MQTT discovery
-  # https://www.home-assistant.io/docs/mqtt/discovery/
-  discovery: true
-  # These lines are to enable the embedded broker, change as needed for your own broker setup
-  embedded:
-    listeners:
-      default:
-        bind: 0.0.0.0:1883
-        type: tcp
-    auth:
-      plugins: ['auth.anonymous']
-      allow-anonymous: true
-  broker: 0.0.0.0
-  port: 1883
-  client_id: haspdemo
+  discovery:
 
-light:
-  - platform: mqtt
-    name: "Light 1"
-    command_topic: "homeassistant/light/light1"
-    state_topic: "homeassistant/light/light1"
-    brightness_command_topic: "homeassistant/light/light1/bright"
-    brightness_state_topic: "homeassistant/light/light1/bright"
-  - platform: mqtt
-    name: "Light 2"
-    command_topic: "homeassistant/light/light2"
-    state_topic: "homeassistant/light/light2"
-    brightness_command_topic: "homeassistant/light/light2/bright"
-    brightness_state_topic: "homeassistant/light/light2/bright"
-  - platform: mqtt
-    name: "Light 3"
-    command_topic: "homeassistant/light/light3"
-    state_topic: "homeassistant/light/light3"
-    brightness_command_topic: "homeassistant/light/light3/bright"
-    brightness_state_topic: "homeassistant/light/light3/bright"
+group: !include groups.yaml
+script: !include scripts.yaml
 
 automation: !include_dir_merge_list automations/
 scene: !include_dir_merge_list scenes/
-
