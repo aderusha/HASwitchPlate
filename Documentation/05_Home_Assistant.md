@@ -18,7 +18,7 @@ The provided Home Assistant automations presume the default node name of `HASwit
 
 With the demonstration automations in place, the default node name of HASwitchPlate, and hass installed on `localhost`, you can issue the following commands to initialize the base automations to their default values:
 
-```
+```bash
 curl -X POST -H "x-ha-access: YOUR_PASSWORD" -H "Content-Type: application/json" -d '{ "entity_id": "input_text.haswitchplate_pagebutton1_label", "value": "scenes" }' http://localhost:8123/api/services/input_text/set_value
 curl -X POST -H "x-ha-access: YOUR_PASSWORD" -H "Content-Type: application/json" -d '{ "entity_id": "input_text.haswitchplate_pagebutton2_label", "value": "status" }' http://localhost:8123/api/services/input_text/set_value
 curl -X POST -H "x-ha-access: YOUR_PASSWORD" -H "Content-Type: application/json" -d '{ "entity_id": "input_text.haswitchplate_pagebutton3_label", "value": "alarm" }' http://localhost:8123/api/services/input_text/set_value

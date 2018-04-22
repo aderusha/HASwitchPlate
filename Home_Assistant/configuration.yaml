@@ -38,7 +38,7 @@ updater:
   # include_used_components: true
 
 # Discover some devices automatically
-discovery:
+#discovery:
 
 # Allows you to issue voice commands from the frontend in enabled browsers
 conversation:
@@ -61,44 +61,6 @@ tts:
 
 # Cloud
 cloud:
-
-# Sensors for weather and media player information
-sensor:
-  - platform: yweather
-    name: Weather
-    monitored_conditions:
-      - weather_current
-      - temperature
-      - temp_min
-      - temp_max
-      - humidity
-  - platform: template
-    sensors:
-      media_player_title:
-        value_template: '{{ states.media_player.media_player.attributes.media_title }}'
-      media_player_artist:
-        value_template: '{{ states.media_player.media_player.attributes.media_artist }}'
-      media_player_volume:
-        value_template: '{{ states.media_player.media_player.attributes.volume_level }}'
-# - platform: octoprint
-  # name: OctoPrint
-  # monitored_conditions:
-    # - Current State
-    # - Temperatures
-    # - Job Percentage
-
-# octoprint:
-  # host: octoprint.local
-  # api_key: YOUROCTOPRINTAPIKEY
-
-media_player:
-  - platform: gpmdp
-    name: "Media Player"
-    host: 127.0.0.1
-
-alarm_control_panel:
-  - platform: manual
-    code: 1234
 
 ##############################################################################
 # The input_text and input_number devices created below are essential to the
@@ -172,7 +134,69 @@ input_number:
 # Enable MQTT discovery: https://www.home-assistant.io/docs/mqtt/discovery/
 # This is essential for HASP to create the required devices
 mqtt:
-  discovery:
+  discovery: true
+
+##############################################################################
+# The following devices are used by the demo automations and can be modified
+# to suite your own use case.
+
+# Sensors for weather and media player information
+sensor:
+  - platform: yweather
+    name: Weather
+    monitored_conditions:
+      - weather_current
+      - temperature
+      - temp_min
+      - temp_max
+      - humidity
+  - platform: template
+    sensors:
+      media_player_title:
+        value_template: '{{ states.media_player.media_player.attributes.media_title }}'
+      media_player_artist:
+        value_template: '{{ states.media_player.media_player.attributes.media_artist }}'
+      media_player_volume:
+        value_template: '{{ states.media_player.media_player.attributes.volume_level }}'
+# - platform: octoprint
+  # name: OctoPrint
+  # monitored_conditions:
+    # - Current State
+    # - Temperatures
+    # - Job Percentage
+
+# octoprint:
+  # host: octoprint.local
+  # api_key: YOUROCTOPRINTAPIKEY
+
+media_player:
+  - platform: gpmdp
+    name: "Media Player"
+    host: 127.0.0.1
+
+alarm_control_panel:
+  - platform: manual
+    code: 1234
+
+light:
+  - platform: mqtt
+    name: "Light 1"
+    command_topic: "homeassistant/light/light1"
+    state_topic: "homeassistant/light/light1"
+    brightness_command_topic: "homeassistant/light/light1/bright"
+    brightness_state_topic: "homeassistant/light/light1/bright"
+  - platform: mqtt
+    name: "Light 2"
+    command_topic: "homeassistant/light/light2"
+    state_topic: "homeassistant/light/light2"
+    brightness_command_topic: "homeassistant/light/light2/bright"
+    brightness_state_topic: "homeassistant/light/light2/bright"
+  - platform: mqtt
+    name: "Light 3"
+    command_topic: "homeassistant/light/light3"
+    state_topic: "homeassistant/light/light3"
+    brightness_command_topic: "homeassistant/light/light3/bright"
+    brightness_state_topic: "homeassistant/light/light3/bright"
 
 group: !include groups.yaml
 script: !include scripts.yaml
