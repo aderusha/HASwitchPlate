@@ -1,0 +1,147 @@
+##############################################################################
+# Automations to display media player info on page 8
+
+automation:
+# Initialize button text/font for media controls on start
+  - alias: hasp_plate01_p8_MediaInit
+    trigger:
+    - platform: mqtt
+      topic: 'hasp/plate01/status'
+      payload: 'ON'
+    - platform: homeassistant
+      event: start
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[8].b[6].font'
+        payload: '4'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[8].b[7].font'
+        payload: '4'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[8].b[8].font'
+        payload: '4'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[8].b[6].txt'
+        payload: '"9"'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[8].b[7].txt'
+        payload: '";"'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[8].b[8].txt'
+        payload: '":"'
+  
+  # Play/Pause button action
+  - alias: hasp_plate01_p8_MediaPauseButton7
+    trigger:
+      platform: mqtt
+      topic: 'hasp/plate01/state/p[8].b[7]'
+      payload: 'ON'
+    action:
+      service: media_player.media_play_pause
+      entity_id: media_player.media_player
+  
+  # Prev Track button action
+  - alias: hasp_plate01_p8_MediaPrevTrackButton6
+    trigger:
+      platform: mqtt
+      topic: 'hasp/plate01/state/p[8].b[6]'
+      payload: 'ON'
+    action:
+      service: media_player.media_previous_track
+      entity_id: media_player.media_player
+      
+  # Next Track button action
+  - alias: hasp_plate01_p8_MediaNextTrackButton8
+    trigger:
+      platform: mqtt
+      topic: 'hasp/plate01/state/p[8].b[8]'
+      payload: 'ON'
+    action:
+      service: media_player.media_next_track
+      entity_id: media_player.media_player
+      
+  # Scale media information fonts to fit
+  # 0 consolas 24 - 20 chars x 2 lines (wrapped)
+  # 1 consolas 32 - 15 chars x 2 lines (wrapped)
+  # 2 consolas 48 - 10 chars x 1 line
+  # 3 consolas 80 - 6 chars x 1 line
+  - alias: hasp_plate01_p8_MediaArtist
+    trigger:
+    - platform: state
+      entity_id: sensor.media_player_artist
+    - platform: mqtt
+      topic: 'hasp/plate01/status'
+      payload: 'ON'
+    - platform: homeassistant
+      event: start
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[8].b[4].font'
+        payload_template: '{% if states.sensor.media_player_artist.state|length <= 6 -%}3{% elif (states.sensor.media_player_artist.state|length > 6) and (states.sensor.media_player_artist.state|length <= 10) %}2{% elif (states.sensor.media_player_artist.state|length > 10) and (states.sensor.media_player_artist.state|length <= 15) %}1{% else %}0{%- endif %}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[8].b[4].txt'
+        payload_template: '"{{ states.sensor.media_player_artist.state|wordwrap(20, wrapstring="\\r") }}"'
+  
+  - alias: hasp_plate01_p8_MediaTitle
+    trigger:
+    - platform: state
+      entity_id: sensor.media_player_title
+    - platform: mqtt
+      topic: 'hasp/plate01/status'
+      payload: 'ON'
+    - platform: homeassistant
+      event: start
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[8].b[5].font'
+        payload_template: '{% if states.sensor.media_player_title.state|length <= 6 -%}3{% elif (states.sensor.media_player_title.state|length > 6) and (states.sensor.media_player_title.state|length <= 10) %}2{% elif (states.sensor.media_player_title.state|length > 10) and (states.sensor.media_player_title.state|length <= 15) %}1{% else %}0{%- endif %}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[8].b[5].txt'
+        payload_template: '"{{ states.sensor.media_player_title.state|wordwrap(20, wrapstring="\\r") }}"'
+  
+  - alias: hasp_plate01_p8_MediaPlayPause
+    trigger:
+    - platform: state
+      entity_id: media_player.media_player
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[8].b[7].txt'
+        payload_template: "\"{%- if is_state('media_player.media_player', 'playing') %};{% elif is_state('media_player.media_player', 'paused') %}4{% endif -%}\""
+  
+  # Volume slider value published, apply published state
+  - alias: hasp_plate01_p8_MediaVolSliderUpdateHass
+    trigger:
+      platform: mqtt
+      topic: 'hasp/plate01/state/p[8].b[9].val'
+    action:
+    - service: media_player.volume_set
+      data_template:
+        entity_id: media_player.media_player
+        volume_level: '{{ (trigger.payload|int) / 100 }}'
+        
+  # Volume slider value changed by hass, update HASP 
+  - alias: hasp_plate01_p8__MediaVolSliderUpdateHASP 
+    trigger:
+    - platform: state
+      entity_id: sensor.media_player_volume
+    - platform: mqtt
+      topic: 'hasp/plate01/status'
+      payload: 'ON'
+    - platform: homeassistant
+      event: start
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[8].b[9].val'
+        payload_template: '{{ (states.sensor.media_player_volume.state * 100)|int }}'

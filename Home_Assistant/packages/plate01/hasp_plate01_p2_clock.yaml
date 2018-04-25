@@ -1,0 +1,49 @@
+##############################################################################
+# Automations to display the date and time on page 2
+
+automation:
+  # Set appropriate font for the time and date and send intial values on HASP init
+  - alias: hasp_plate01_p2_ClockInit
+    trigger:
+    - platform: mqtt
+      topic: 'hasp/plate01/status'
+      payload: 'ON'
+    - platform: homeassistant
+      event: start
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[2].b[4].font'
+        payload: '3'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[2].b[5].font'
+        payload: '1'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[2].b[4].txt'
+        payload_template: "\"{{now().strftime('%H:%M')}}\""
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[2].b[5].txt'
+        payload_template: "\"{{now().strftime('%A')}}\\r{{now().strftime('%B %-d')}}\""
+
+  # Send the current time every minute
+  - alias: hasp_plate01_p2_ClockUpdate
+    trigger:
+      platform: time
+      # Matches every minute
+      seconds: 00
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[2].b[4].txt'
+        payload_template: "\"{{now().strftime('%H:%M')}}\""
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[2].b[5].txt'
+        payload_template: "\"{{now().strftime('%A')}}\\r{{now().strftime('%B %-d')}}\""

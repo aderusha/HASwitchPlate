@@ -1,0 +1,31 @@
+##############################################################################
+# Automations to display the weather forecast and current temp on page 2
+
+automation:
+  # Display weather details on page 2 when weather updates or on HASP init
+  - alias: hasp_plate01_p2_Weather
+    trigger:
+    - platform: state
+      entity_id: sensor.weather_temperature
+    - platform: mqtt
+      topic: 'hasp/plate01/status'
+      payload: 'ON'
+    - platform: homeassistant
+      event: start
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[2].b[6].font'
+        payload: '3'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[2].b[6].txt'
+        payload_template: '"{{states.sensor.weather_temperature.state}}F"'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[2].b[7].font'
+        payload_template: '{% if states.sensor.weather_current.state|length <= 6 -%}3{% elif (states.sensor.weather_current.state|length > 6) and (states.sensor.weather_current.state|length <= 10) %}2{% elif (states.sensor.weather_current.state|length > 10) and (states.sensor.weather_current.state|length <= 15) %}1{% else %}0{%- endif %}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[2].b[7].txt'
+        payload_template: '"{{states.sensor.weather_current.state|wordwrap(20, wrapstring="\\r")}}"'

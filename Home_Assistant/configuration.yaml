@@ -2,8 +2,8 @@ homeassistant:
   # Name of the location where Home Assistant is running
   name: Home
   # Location required to calculate the time the sun rises and sets
-  latitude: 42.7864
-  longitude: -85.5506
+  latitude: 42.3410517
+  longitude: -83.0573569
   # Impacts weather/sunrise data (altitude above sea level in meters)
   elevation: 0
   # metric for Metric, imperial for Imperial
@@ -12,9 +12,23 @@ homeassistant:
   time_zone: America/Detroit
   # Customization file
   customize: !include customize.yaml
+  ############################################################################
+  # Include packages for HASP
+  packages: !include_dir_named packages
+  ############################################################################
+
+# Enable MQTT for HASP https://www.home-assistant.io/docs/mqtt/
+mqtt: 
+
+# Enable recorder to save state for input_text and input_number across reboots
+# https://www.home-assistant.io/components/recorder/
+recorder:
+
+##############################################################################
+# All settings below are mostly stock defaults, nothing important to the HASP
 
 # Show links to resources in log and frontend
-introduction:
+#introduction:
 
 # Enables the frontend
 frontend:
@@ -55,6 +69,10 @@ map:
 # Track the sun
 sun:
 
+# Weather prediction
+sensor:
+  - platform: yr
+
 # Text to speech
 tts:
   - platform: google
@@ -62,144 +80,6 @@ tts:
 # Cloud
 cloud:
 
-##############################################################################
-# The input_text and input_number devices created below are essential to the
-# page control automations and you'll probably want to carry them over to your
-# own configuration
-input_text:
-  haswitchplate_pagebutton1_label:
-    name: HASP Page Button 1 Label
-    icon: mdi:book-open-page-variant
-  haswitchplate_pagebutton2_label:
-    name: HASP Page Button 2 Label
-    icon: mdi:book-open-page-variant
-  haswitchplate_pagebutton3_label:
-    name: HASP Page Button 3 Label
-    icon: mdi:book-open-page-variant
-
-input_number:
-  haswitchplate_pagebutton1_page:
-    name: HASP Page Button 1 Page
-    icon: mdi:format-list-numbers
-    min: 0
-    max: 9
-    step: 1
-  haswitchplate_pagebutton2_page:
-    name: HASP Page Button 2 Page
-    icon: mdi:format-list-numbers
-    min: 0
-    max: 9
-    step: 1
-  haswitchplate_pagebutton3_page:
-    name: HASP Page Button 3 Page
-    icon: mdi:format-list-numbers
-    min: 0
-    max: 9
-    step: 1
-  haswitchplate_active_page:
-    name: HASP Active Page
-    icon: mdi:format-list-numbers
-    min: 0
-    max: 9
-    step: 1
-  haswitchplate_alarmcode1:
-    name: AlarmCode1
-    icon: mdi:format-list-numbers
-    min: -1
-    max: 9
-    step: 1
-    initial: -1
-  haswitchplate_alarmcode2:
-    name: AlarmCode2
-    icon: mdi:format-list-numbers
-    min: -1
-    max: 9
-    step: 1
-    initial: -1
-  haswitchplate_alarmcode3:
-    name: AlarmCode3
-    icon: mdi:format-list-numbers
-    min: -1
-    max: 9
-    step: 1
-    initial: -1
-  haswitchplate_alarmcode4:
-    name: AlarmCode4
-    icon: mdi:format-list-numbers
-    min: -1
-    max: 9
-    step: 1
-    initial: -1
-
-# Enable MQTT discovery: https://www.home-assistant.io/docs/mqtt/discovery/
-# This is essential for HASP to create the required devices
-mqtt:
-  discovery: true
-
-##############################################################################
-# The following devices are used by the demo automations and can be modified
-# to suite your own use case.
-
-# Sensors for weather and media player information
-sensor:
-  - platform: yweather
-    name: Weather
-    monitored_conditions:
-      - weather_current
-      - temperature
-      - temp_min
-      - temp_max
-      - humidity
-  - platform: template
-    sensors:
-      media_player_title:
-        value_template: '{{ states.media_player.media_player.attributes.media_title }}'
-      media_player_artist:
-        value_template: '{{ states.media_player.media_player.attributes.media_artist }}'
-      media_player_volume:
-        value_template: '{{ states.media_player.media_player.attributes.volume_level }}'
-# - platform: octoprint
-  # name: OctoPrint
-  # monitored_conditions:
-    # - Current State
-    # - Temperatures
-    # - Job Percentage
-
-# octoprint:
-  # host: octoprint.local
-  # api_key: YOUROCTOPRINTAPIKEY
-
-media_player:
-  - platform: gpmdp
-    name: "Media Player"
-    host: 127.0.0.1
-
-alarm_control_panel:
-  - platform: manual
-    code: 1234
-
-light:
-  - platform: mqtt
-    name: "Light 1"
-    command_topic: "homeassistant/light/light1"
-    state_topic: "homeassistant/light/light1"
-    brightness_command_topic: "homeassistant/light/light1/bright"
-    brightness_state_topic: "homeassistant/light/light1/bright"
-  - platform: mqtt
-    name: "Light 2"
-    command_topic: "homeassistant/light/light2"
-    state_topic: "homeassistant/light/light2"
-    brightness_command_topic: "homeassistant/light/light2/bright"
-    brightness_state_topic: "homeassistant/light/light2/bright"
-  - platform: mqtt
-    name: "Light 3"
-    command_topic: "homeassistant/light/light3"
-    state_topic: "homeassistant/light/light3"
-    brightness_command_topic: "homeassistant/light/light3/bright"
-    brightness_state_topic: "homeassistant/light/light3/bright"
-
 group: !include groups.yaml
+#automation: !include automations.yaml
 script: !include scripts.yaml
-
-automation: !include_dir_merge_list automations/
-scene: !include_dir_merge_list scenes/

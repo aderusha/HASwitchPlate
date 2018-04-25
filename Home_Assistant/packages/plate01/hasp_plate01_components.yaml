@@ -1,0 +1,170 @@
+##############################################################################
+# The devices created below are essential to the page control automations 
+# and you'll probably want to carry them over to your own configuration
+homeassistant:
+  customize:
+    input_number.hasp_plate01_alarmcode1:
+      hidden: true
+    input_number.hasp_plate01_alarmcode2:
+      hidden: true
+    input_number.hasp_plate01_alarmcode3:
+      hidden: true
+    input_number.hasp_plate01_alarmcode4:
+      hidden: true
+
+light:
+  - platform: mqtt
+    name: plate01 Backlight
+    command_topic: "hasp/plate01/light/switch"
+    state_topic: "hasp/plate01/light/status"
+    brightness_state_topic: "hasp/plate01/brightness/status"
+    brightness_command_topic: "hasp/plate01/brightness/set"
+
+binary_sensor:
+  - platform: mqtt
+    name: plate01 Connected
+    device_class: connectivity
+    state_topic: "hasp/plate01/status"
+    payload_on: "ON"
+    payload_off: "OFF"
+    availability_topic: "hasp/plate01/status"
+    payload_available: "ON"
+    payload_not_available: "OFF"
+
+input_text:
+  hasp_plate01_pagebutton1label:
+    name: plate01 Page 1 Label
+    icon: mdi:book-open-page-variant
+  hasp_plate01_pagebutton2label:
+    name: plate01 Page 2 Label
+    icon: mdi:book-open-page-variant
+  hasp_plate01_pagebutton3label:
+    name: plate01 Page 3 Label
+    icon: mdi:book-open-page-variant
+
+input_number:
+  hasp_plate01_pagebutton1page:
+    name: plate01 Page 1 Page
+    icon: mdi:format-list-numbers
+    min: 0
+    max: 9
+    step: 1
+  hasp_plate01_pagebutton2page:
+    name: plate01 Page 2 Page
+    icon: mdi:format-list-numbers
+    min: 0
+    max: 9
+    step: 1
+  hasp_plate01_pagebutton3page:
+    name: plate01 Page 3 Page
+    icon: mdi:format-list-numbers
+    min: 0
+    max: 9
+    step: 1
+  hasp_plate01_activepage:
+    name: plate01 Active Page
+    icon: mdi:format-list-numbers
+    min: 0
+    max: 9
+    step: 1
+  hasp_plate01_alarmcode1:
+    name: plate01 AlarmCode1
+    icon: mdi:format-list-numbers
+    min: -1
+    max: 9
+    step: 1
+    initial: -1
+  hasp_plate01_alarmcode2:
+    name: plate01 AlarmCode2
+    icon: mdi:format-list-numbers
+    min: -1
+    max: 9
+    step: 1
+    initial: -1
+  hasp_plate01_alarmcode3:
+    name: plate01 AlarmCode3
+    icon: mdi:format-list-numbers
+    min: -1
+    max: 9
+    step: 1
+    initial: -1
+  hasp_plate01_alarmcode4:
+    name: plate01 AlarmCode4
+    icon: mdi:format-list-numbers
+    min: -1
+    max: 9
+    step: 1
+    initial: -1
+
+group:
+  plate01:
+    name: plate01
+    view: yes
+    entities:
+      - binary_sensor.plate01_connected
+      - light.plate01_backlight
+      - group.plate01_pageselect
+      - group.plate01_automations
+  plate01_pageselect:
+    name: plate01 Page Selection
+    view: no
+    entities:
+      - input_number.hasp_plate01_activepage
+      - input_number.hasp_plate01_pagebutton1page
+      - input_text.hasp_plate01_pagebutton1label
+      - input_number.hasp_plate01_pagebutton2page
+      - input_text.hasp_plate01_pagebutton2label
+      - input_number.hasp_plate01_pagebutton3page
+      - input_text.hasp_plate01_pagebutton3label
+  plate01_automations:
+    name: plate01 automations
+    view: no
+    entities:
+      - automation.hasp_plate01_p0_activepagesliderchanged
+      - automation.hasp_plate01_p0_pagebutton1_text
+      - automation.hasp_plate01_p0_pagebutton1action
+      - automation.hasp_plate01_p0_pagebutton2_text
+      - automation.hasp_plate01_p0_pagebutton2action
+      - automation.hasp_plate01_p0_pagebutton3_text
+      - automation.hasp_plate01_p0_pagebutton3action
+      - automation.hasp_plate01_p0_pagebuttoncolors
+      - automation.hasp_plate01_p0_panelpagechanged
+      - automation.hasp_plate01_p0_restoreactivepage
+      - automation.hasp_plate01_p1_scenebutton4
+      - automation.hasp_plate01_p1_scenebutton5
+      - automation.hasp_plate01_p1_scenebutton6
+      - automation.hasp_plate01_p1_scenebutton7
+      - automation.hasp_plate01_p1_scenesinit
+      - automation.hasp_plate01_p2_clockinit
+      - automation.hasp_plate01_p2_clockupdate
+      - automation.hasp_plate01_p2_weather
+      - automation.hasp_plate01_p4_dimmer7updatehasp
+      - automation.hasp_plate01_p4_dimmer7updatehass
+      - automation.hasp_plate01_p4_dimmer8updatehasp
+      - automation.hasp_plate01_p4_dimmer8updatehass
+      - automation.hasp_plate01_p4_dimmer9updatehasp
+      - automation.hasp_plate01_p4_dimmer9updatehass
+      - automation.hasp_plate01_p4_dimmersinit
+      - automation.hasp_plate01_p7_alarmarm
+      - automation.hasp_plate01_p7_alarmarmed
+      - automation.hasp_plate01_p7_alarmcodeentry0
+      - automation.hasp_plate01_p7_alarmcodeentry1to9
+      - automation.hasp_plate01_p7_alarmdisarm
+      - automation.hasp_plate01_p7_alarmdisarmed
+      - automation.hasp_plate01_p7_alarminit
+      - automation.hasp_plate01_p7_alarmstatuspending
+      - automation.hasp_plate01_p8__mediavolsliderupdatehasp
+      - automation.hasp_plate01_p8_mediaartist
+      - automation.hasp_plate01_p8_mediainit
+      - automation.hasp_plate01_p8_medianexttrackbutton8
+      - automation.hasp_plate01_p8_mediapausebutton7
+      - automation.hasp_plate01_p8_mediaplaypause
+      - automation.hasp_plate01_p8_mediaprevtrackbutton6
+      - automation.hasp_plate01_p8_mediatitle
+      - automation.hasp_plate01_p8_mediavolsliderupdatehass
+      - automation.hasp_plate01_p9_3dprinterinit
+      - automation.hasp_plate01_p9_3dprinteroperational
+      - automation.hasp_plate01_p9_3dprinterpaused
+      - automation.hasp_plate01_p9_3dprinterprinting
+      - automation.hasp_plate01_p9_3dprintertempgraph
+      - automation.hasp_plate01_p9_3dprintertemptext
