@@ -15,7 +15,7 @@ If you don't already have an MQTT broker configured, adding this one line will e
 
 ## Recorder
 
-The [Home Assistant Recorder](https://www.home-assistant.io/components/recorder/) component is required to allow Home Assistant to save configuration and state of some HASP controls across reboots.  You will need to enable Home Assistant MQTT support by adding the following line to your `configuration.yaml`:
+The [Home Assistant Recorder](https://www.home-assistant.io/components/recorder/) component is required to allow Home Assistant to save configuration and state of some HASP controls across reboots.  You will can enable Home Assistant Recorder by adding the following line to your `configuration.yaml`:
 
 ```yaml
 # Example configuration.yaml entry
@@ -31,4 +31,6 @@ homeassistant:
   packages: !include_dir_named packages
 ```
 
-Now, copy the entire [`packages` folder structure](../Home_Assistant/packages) to your `.homeassistant` folder and restart Home Assistant to pull in your changes.  From the web UI, find the "hasp_demo_FirstTimeSetup" automation, click on it, and select `TRIGGER` to setup the example configuration.
+Now, copy the entire [`packages` folder structure](../Home_Assistant/packages) to your `.homeassistant` folder and restart Home Assistant to pull in your changes.
+
+From the web UI, find the "hasp_demo_FirstTimeSetup" automation, click on it, and select `TRIGGER` to setup the example configuration.
