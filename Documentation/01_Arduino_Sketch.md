@@ -10,7 +10,7 @@ Next you will need to add several libraries to your Arduino environment.  [Follo
 
 Flash the sketch to your device, power it up, and connect to the WiFi AP displayed on the LCD panel using the password also displayed on the panel.  You should be prompted to open a [configuration website](http://192.168.4.1) to find your WiFi network, enter WiFi password, and define your MQTT broker.  You can also set an MQTT broker username/password (if required) and define or change the OTA firmware update password.
 
-![WiFi Config 1](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_1.png?raw=true) ![WiFi Config 2](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_2.png?raw=true)
+![WiFi Config 0](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_0.png?raw=true) ![WiFi Config 1](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_1.png?raw=true) ![WiFi Config 2](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_2.png?raw=true)
 
 After the initial Arduino deployment via USB you should be able to [apply future updates to the ESP8266 using OTA updates](https://randomnerdtutorials.com/esp8266-ota-updates-with-arduino-ide-over-the-air/), allowing you to update code while the device is installed.
 
