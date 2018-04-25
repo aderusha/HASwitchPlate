@@ -31,6 +31,12 @@ homeassistant:
   packages: !include_dir_named packages
 ```
 
-Now, copy the entire [`packages` folder structure](../Home_Assistant/packages) to your `.homeassistant` folder and restart Home Assistant to pull in your changes.
+Now, copy the entire [`packages` folder structure](../Home_Assistant/packages) to your `.homeassistant` folder and restart Home Assistant to pull in your changes.  You can do this on your Home Assistant installation with the following commands:
 
-From the web UI, find the "hasp_demo_FirstTimeSetup" automation, click on it, and select `TRIGGER` to setup the example configuration.
+```bash
+cd ~/.homeassistant
+wget https://github.com/aderusha/HASwitchPlate/raw/master/Home_Assistant/packages.zip
+unzip packages.zip
+```
+
+Once Home Assistant has restarted, launch the web UI, find the "hasp_demo_FirstTimeSetup" automation, click on it, and select `TRIGGER` to setup the example configuration.
