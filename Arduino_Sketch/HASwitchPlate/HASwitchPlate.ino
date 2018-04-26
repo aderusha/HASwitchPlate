@@ -36,7 +36,7 @@ char mqttUser[32] = "";
 char mqttPassword[32] = "";
 char haspNode[16] = "plate01";
 char configUser[32] = "admin";
-char configPassword[32] = "hasp";
+char configPassword[32] = "";
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Serial debug output control, comment out to disable
@@ -1000,9 +1000,9 @@ void webHandleRoot()
   httpMessage += String(F("<br/><b>MQTT Port</b> <i><small>(required)</small></i><input id='mqttPort' required name='mqttPort' type='number' maxlength=5 placeholder='mqttPort' value='")) + String(mqttPort) + "'>";
   httpMessage += String(F("<br/><b>MQTT User</b> <i><small>(optional)</small></i><input id='mqttUser' name='mqttUser' maxlength=31 placeholder='mqttUser' value='")) + String(mqttUser) + "'>";
   httpMessage += String(F("<br/><b>MQTT Password</b> <i><small>(optional)</small></i><input id='mqttPassword' name='mqttPassword' type='password' maxlength=31 placeholder='mqttPassword'>"));
-  httpMessage += String(F("<br/><br/><b>HASP Node Name</b> <i><small>(required)</small></i><input id='haspNode' required name='haspNode' maxlength=15 placeholder='haspNode' value='")) + String(haspNode) + "'>";
-  httpMessage += String(F("<br/><br/><b>HASP Admin Username</b> <i><small>(optional)</small></i><input id='configUser' name='configUser' maxlength=31 placeholder='configUser' value='")) + String(configUser) + "'>";
-  httpMessage += String(F("<br/><b>HASP Admin Password</b> <i><small>(optional)</small></i><input id='configPassword' name='configPassword' type='password' maxlength=31>"));
+  httpMessage += String(F("<br/><br/><b>HASP Node Name</b> <i><small>(required)</small></i><input id='haspNode' required name='haspNode' maxlength=15 placeholder='HASP Node Name' value='")) + String(haspNode) + "'>";
+  httpMessage += String(F("<br/><br/><b>HASP Admin Username</b> <i><small>(optional)</small></i><input id='configUser' name='configUser' maxlength=31 placeholder='Admin User' value='")) + String(configUser) + "'>";
+  httpMessage += String(F("<br/><b>HASP Admin Password</b> <i><small>(optional)</small></i><input id='configPassword' name='configPassword' type='password' maxlength=31 placeholder='Admin User Password' value='")) + String(configPassword) + "'>";
   httpMessage += String(F("<br/><br/><button type='submit'>save settings</button></form>"));
 
   httpMessage += String(F("<br/><hr><br/><form method='get' action='resetConfig'>"));
