@@ -32,15 +32,15 @@ then
   echo "WARNING: Sanitized device name to \"$hasp_device\""
 fi
 
-# create a temp dir
+# Create a temp dir
 hasp_temp_dir=`mktemp -d`
 
-# download latest packages
+# Download latest packages
 wget -q -P $hasp_temp_dir https://github.com/aderusha/HASwitchPlate/raw/master/Home_Assistant/hasppackages.tar.gz
-tar -zxf hasppackages.tar.gz -C $hasp_temp_dir
+tar -zxf $hasp_temp_dir/hasppackages.tar.gz -C $hasp_temp_dir
 rm $hasp_temp_dir/hasppackages.tar.gz
 
-# rename things if we are calling it something other than plate01
+# Rename things if we are calling it something other than plate01
 if [[ "$hasp_input_name" != "plate01" ]]
 then
   # rename text in contents of files
@@ -50,6 +50,6 @@ then
   mv $hasp_temp_dir/packages/plate01 $hasp_temp_dir/packages/$hasp_device
 fi
 
-# copy everything over and burn the evidence
+# Copy everything over and burn the evidence
 cp -rf $hasp_temp_dir/* .
 rm -rf $hasp_temp_dir
