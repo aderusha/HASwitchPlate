@@ -6,8 +6,7 @@ hasp_input_name="$@"
 
 if [ "$hasp_input_name" == "" ]
 then
-  echo -n "Enter the new device name and press [RETURN]: "
-  read hasp_input_name
+  read -e -p "Enter the new HASP device name and press [RETURN]: " -i "plate01" hasp_input_name
 fi
 
 # If it's still empty just pout and quit
@@ -45,7 +44,7 @@ rm $hasp_temp_dir/hasppackages.tar.gz
 if [[ "$hasp_input_name" != "plate01" ]]
 then
   # rename text in contents of files
-  sed -i -- 's/hasp_plate01_/hasp_'"$hasp_device"'_/' $hasp_temp_dir/packages/plate01/hasp_plate01_*.yaml
+  sed -i -- 's/plate01/'"$hasp_device"'/g' $hasp_temp_dir/packages/plate01/hasp_plate01_*.yaml
   # rename files and folder
   prename 's/hasp_plate01_/hasp_'"$hasp_device"'_/' $hasp_temp_dir/packages/plate01/hasp_plate01_*.yaml
   mv $hasp_temp_dir/packages/plate01 $hasp_temp_dir/packages/$hasp_device

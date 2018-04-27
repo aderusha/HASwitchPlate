@@ -120,6 +120,7 @@ group:
     name: plate01 automations
     view: no
     entities:
+      - automation.hasp_plate01_00_firsttimesetup
       - automation.hasp_plate01_p0_activepagesliderchanged
       - automation.hasp_plate01_p0_pagebutton1_text
       - automation.hasp_plate01_p0_pagebutton1action
@@ -168,3 +169,40 @@ group:
       - automation.hasp_plate01_p9_3dprinterprinting
       - automation.hasp_plate01_p9_3dprintertempgraph
       - automation.hasp_plate01_p9_3dprintertemptext
+
+automation:
+##############################################################################
+# Set default values for input_text/number sliders
+  - alias: hasp_plate01_00_FirstTimeSetup
+    trigger:
+      - platform: event
+        event_type: DUMMY_EVENT_USE_MANUAL_TRIGGER
+    action:
+      - service: input_text.set_value
+        data:
+          entity_id: 'input_text.hasp_plate01_pagebutton1label'
+          value: 'scenes'
+      - service: input_text.set_value
+        data:
+          entity_id: 'input_text.hasp_plate01_pagebutton2label'
+          value: 'status'
+      - service: input_text.set_value
+        data:
+          entity_id: 'input_text.hasp_plate01_pagebutton3label'
+          value: 'alarm'
+      - service: input_number.set_value
+        data:
+          entity_id: 'input_number.hasp_plate01_pagebutton1page'
+          value: 1
+      - service: input_number.set_value
+        data:
+          entity_id: 'input_number.hasp_plate01_pagebutton2page'
+          value: 2
+      - service: input_number.set_value
+        data:
+          entity_id: 'input_number.hasp_plate01_pagebutton3page'
+          value: 7
+      - service: input_number.set_value
+        data:
+          entity_id: 'input_number.hasp_plate01_activepage'
+          value: 1      

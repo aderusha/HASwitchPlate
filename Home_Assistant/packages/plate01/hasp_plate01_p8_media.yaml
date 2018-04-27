@@ -131,7 +131,7 @@ automation:
         volume_level: '{{ (trigger.payload|int) / 100 }}'
         
   # Volume slider value changed by hass, update HASP 
-  - alias: hasp_plate01_p8__MediaVolSliderUpdateHASP 
+  - alias: hasp_plate01_p8_MediaVolSliderUpdateHASP 
     trigger:
     - platform: state
       entity_id: sensor.media_player_volume
