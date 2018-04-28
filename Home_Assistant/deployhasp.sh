@@ -46,8 +46,23 @@ then
   # rename text in contents of files
   sed -i -- 's/plate01/'"$hasp_device"'/g' $hasp_temp_dir/packages/plate01/hasp_plate01_*.yaml
   # rename files and folder
-  prename 's/hasp_plate01_/hasp_'"$hasp_device"'_/' $hasp_temp_dir/packages/plate01/hasp_plate01_*.yaml
-  mv $hasp_temp_dir/packages/plate01 $hasp_temp_dir/packages/$hasp_device
+  #prename 's/hasp_plate01_/hasp_'"$hasp_device"'_/' $hasp_temp_dir/packages/plate01/hasp_plate01_*.yaml
+  mkdir $hasp_temp_dir/packages/$hasp_device
+  for file in $hasp_temp_dir/packages/plate01/*
+  do
+      new_file=`echo $file | sed s/plate01/$hasp_device/g`
+      echo "Moving $file to $new_file"
+      if [ -f $file ]
+      then
+          mv $file $new_file
+          if [ $? -ne 0 ]
+          then
+              echo "Could not copy $file to $new_file"
+              exit 1
+          fi
+      fi
+  done
+  rm -rf $hasp_temp_dir/packages/plate01
 fi
 
 # Copy everything over and burn the evidence
