@@ -1,5 +1,5 @@
 ##############################################################################
-# The devices created below are essential to the page control automations 
+# The devices created below are essential to the page control automations
 # and you'll probably want to carry them over to your own configuration
 homeassistant:
   customize:
@@ -11,6 +11,16 @@ homeassistant:
       hidden: true
     input_number.hasp_plate01_alarmcode4:
       hidden: true
+
+# Enable this iframe to integrate the HASP web admin panel in Hass.
+# This will not work if you have SSL enabled, see details here:
+# https://www.home-assistant.io/components/panel_iframe/
+#
+# panel_iframe:
+#   plate01:
+#     title: "plate01"
+#     url: "http://plate01"
+#     icon: "mdi:cellphone-text"
 
 light:
   - platform: mqtt
@@ -205,4 +215,4 @@ automation:
       - service: input_number.set_value
         data:
           entity_id: 'input_number.hasp_plate01_activepage'
-          value: 1      
+          value: 1
