@@ -144,4 +144,4 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[8].b[9].val'
-        payload_template: '{{ (states.sensor.media_player_volume.state * 100)|int }}'
+        payload_template: '{{ states.sensor.media_player_volume.state | multiply(100) | int }}'

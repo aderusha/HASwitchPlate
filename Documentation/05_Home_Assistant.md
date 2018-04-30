@@ -41,7 +41,7 @@ Now you'll need to copy over the [packages directory](https://github.com/aderush
 
 ```bash
 cd ~/.homeassistant
-bash <(wget -qO- https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
+bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
 ```
 
 Finally, you'll need to restart Home Assistant to apply your changes.
