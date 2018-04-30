@@ -8,7 +8,7 @@ The HA SwitchPlate project is a moderately complicated build and requires some b
 
 The end result is a thing that connects to live voltage and will be placed into your wall for years to come. It will not carry any sort of UL/CE/etc certification.  Proceed with extreme caution.
 
-##With that out of the way, let's get started!
+## With that out of the way, let's get started!
 
 If you want to jump right in, follow the steps below in order to build and setup your device.  Keep reading after that for some background on how this all actually works.
 
