@@ -25,6 +25,8 @@ Now proceed to [First-time Setup](#first-time-setup) to connect to your wireless
 
 [Download the IDE for your platform](https://www.arduino.cc/en/Main/Software) and [follow these instructions to add support for the ESP8266 platform](https://github.com/esp8266/Arduino#installing-with-boards-manager).
 
+### Required Libraries
+
 Next you will need to add several libraries to your Arduino environment.  [Follow this guide for the general process](https://www.arduino.cc/en/Guide/Libraries) and add the following libraries to your IDE:
 
 * [ArduinoJson](https://arduinojson.org/?utm_source=meta&utm_medium=library.properties)
@@ -36,7 +38,7 @@ To enable future firmware updates you'll need to modify settings in the Arudino 
 
 ## First-time Setup
 
-Once your device has been flashed, restart it, power it up, and connect to the WiFi SSID and password displayed on the LCD panel (or serial output if you don't have the LCD ready).  You should be prompted to open a [configuration website](http://192.168.4.1) to find your WiFi network and password.  You can also set the MQTT broker information and admin credentials now, or use the web interface to do so later.  Once you `save settings` the device will connect to your network.  Congratulations, you are now online!
+Once your device has been flashed, restart it and connect to the WiFi SSID and password displayed on the LCD panel (or serial output if you don't have the LCD ready).  You should be prompted to open a [configuration website](http://192.168.4.1) to find your WiFi network and password.  You can set the MQTT broker information and admin credentials now, or use the web interface to do so later.  Once you `save settings` the device will connect to your network.  Congratulations, you are now online!
 
 ![WiFi Config 0](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_0.png?raw=true) ![WiFi Config 1](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_1.png?raw=true) ![WiFi Config 2](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_2.png?raw=true)
 
