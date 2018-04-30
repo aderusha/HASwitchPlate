@@ -1,6 +1,6 @@
 # Flash firmware to ESP8266
 
-The first order of business will be to flash the provided firmware to the ESP8266.  You can do this using the [NodeMCU Flasher](#NodeMCU%20Flasher) (easy, Windows-only) or the [Arduino IDE](#Arduino%20IDE) (less easy, but cross-platform).  You should only need to run through this process once as future firmware updates can be applied through the provided web interface.
+The first order of business will be to flash the provided firmware to the ESP8266.  You can do this using the [NodeMCU Flasher](#nodemcu-flasher) (easy, Windows-only) or the [Arduino IDE](#arduino-ide) (less easy, but cross-platform).  You should only need to run through this process once as future firmware updates can be applied through the provided web interface.
 
 ## NodeMCU Flasher
 
@@ -19,7 +19,7 @@ If you're running Windows and you just want to get started without dealing with 
 * Navigate to the HASP firmware image you downloaded and click `Open` to select it
 * Switch back to the `Operation` tab and click `Flash(F)`
 
-Now proceed to [First-time Setup](#First-time%20Setup) to connect to your wireless network.
+Now proceed to [First-time Setup](#first-time-setup) to connect to your wireless network.
 
 ## Arduino IDE
 
@@ -33,7 +33,6 @@ Next you will need to add several libraries to your Arduino environment.  [Follo
 
 To enable future firmware updates you'll need to modify settings in the Arudino IDE for 1M SPIFFs, leaving 3M free for code and updates.  In the Arduino IDE select `Tools` > `Flash Size:` > `4M (1M SPIFFS)`.  If you're using [PlatformIO](https://platformio.org/) instead of Arduino, [modify the build flags](http://docs.platformio.org/en/latest/platforms/espressif8266.html#flash-size) to include `-Wl,-Teagle.flash.4m1m.ld`
 ![Arduino Erase All Flash Contents](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Arduino_1M_SPIFFS.png?raw=true)
-
 
 ## First-time Setup
 
