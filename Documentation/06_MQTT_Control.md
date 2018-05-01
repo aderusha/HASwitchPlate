@@ -18,6 +18,8 @@ Messages sent to the panel under the `command` topic will be handled based on th
 * **`'[...]/command/p[1].b[4].txt' '"Lamp On"'`** A `command` with a subtopic will set the attribute named in the subtopic to the value sent in the payload.  You can send these messages with `retain` enabled and the broker will remember these settings for you.
 * **`'[...]/command/p[1].b[4].txt' ''`** A `command` with a subtopic and an empty payload will request the current value of the attribute named in the subtopic from the panel.  The value will be returned under the `state` topic as `'[...]/state/p[1].b[4].txt' '"Lamp On"'`
 
+## Nextion Commands over MQTT
+
 [Detailed documentation on the Nextion command instruction set can be found here](https://www.itead.cc/wiki/Nextion_Instruction_Set).  Note that some values require quotes, while others don't, and different shells (and Home Assistant config files) eat quotes differently.  As a general rule, attributes which accept an numeric value cannot have quotes, all other attributes must be enclosed in double quotes.
 
 Objects are referenced by page number (not page name) and object ID (not object name) as shown in the Nextion editor.  The Nextion notation for each object is of the form `p[1]b[2]` meaning page number 1, object number 2.  Confusingly, button objects will be named starting at b0 but it might be object 2, or 7, etc. Other objects will be named similarly with different letters.  For example, the first text field on the page will be automatically named t0.  These names have nothing to do with the object ID, and all objects regardless of type are still referenced as `p[<page number>].b[<object id>]`
