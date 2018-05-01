@@ -25,7 +25,7 @@ A complete build that's ready to install will require the following components:
 * [5V Power supply](https://www.findchips.com/search/IRM-03-5)
 * [Screw terminal connectors](https://www.amazon.com/gp/product/B011QFLS0S)
 * [PCB](PCB/)
-* [Three 20mm M2 flathead screws](https://www.amazon.com/Stainless-Machine-Finish-Phillips-Threads/dp/B000FN3Q94) and [three heat-set threaded inserts](https://www.amazon.com/uxcell-Female-Knurled-Threaded-Embedment/dp/B01IYWTCWW) to fasten things together (feel free to improvise here)
+* [Three 20mm M2 flathead screws](https://www.amazon.com/gp/product/B000FN3Q94) and [three heat-set threaded inserts](https://www.amazon.com/gp/product/B01IZ157KS) to fasten things together (feel free to improvise here)
 
 The end result is a highly-customized touchscreen solution for controlling your home, mounted in the wall in a functional and attractive enclosure.
 

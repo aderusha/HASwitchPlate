@@ -14,7 +14,7 @@ I printed these two parts with [Atomic Filament Bright White PLA](https://atomic
 
 ### Heat-set inserts
 
-To hold the two halves on the enclosure together I've used [three 20mm M2 flat-head screws](https://www.amazon.com/uxcell-M2x20mm-Phillips-Countersunk-Machine/dp/B01DKI5QIO) through the rear of the enclosure into a set of three [3mm M2 heat-set threaded inserts](https://www.amazon.com/uxcell-Female-Knurled-Threaded-Embedment/dp/B01IYWTCWW).  For installation I'm using a conical tip on my soldering iron set at 350°F to heat up the insert and press into the front plate.
+To hold the two halves on the enclosure together I've used [three 20mm M2 flat-head screws](https://www.amazon.com/gp/product/B000FN3Q94) through the rear of the enclosure into a set of three [3mm M2 heat-set threaded inserts](https://www.amazon.com/gp/product/B01IZ157KS).  For installation I'm using a conical tip on my soldering iron set at 350°F to heat up the insert and press into the front plate.
 
 ![Installing threaded inserts](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Assembly_Installing_Inserts.jpg?raw=true)
 
