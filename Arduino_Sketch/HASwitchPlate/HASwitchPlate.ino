@@ -68,7 +68,7 @@ MQTTClient mqttClient(256);
 ESP8266WebServer webServer(80);
 ESP8266HTTPUpdateServer httpOTAUpdate;
 
-const char *haspVersion = "0.24";   // Current HASP software release version
+const char *haspVersion = "0.25";   // Current HASP software release version
 byte nextionReturnBuffer[100];      // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;     // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;      // Track active LCD page
@@ -90,10 +90,10 @@ String mqttLightBrightStateTopic;   // MQTT topic for outgoing panel backlight d
 // Additional CSS style to match Hass theme
 const char HASP_STYLE[] = "<style>button{background-color:#03A9F4;}</style>";
 // Default link to compiled Arduino firmware
-const char ESPFIRMWARE_URL[] = "http://haswitchplate.com/HASwitchPlate.ino.d1_mini.bin";
+const char ESPFIRMWARE_URL[] = "http://haswitchplate.com/update/HASwitchPlate.ino.d1_mini.bin";
 
 // Default link to compiled Nextion firmware
-const char LCDFIRMWARE_URL[] = "http://haswitchplate.com/HASwitchPlate.tft";
+const char LCDFIRMWARE_URL[] = "http://haswitchplate.com/update/HASwitchPlate.tft";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup()
