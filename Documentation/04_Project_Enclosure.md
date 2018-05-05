@@ -12,7 +12,7 @@ The AC power cables should be at least 18AWG 300V stranded cable with a white ja
 
 ### Heat-set inserts
 
-To hold the two halves on the enclosure together I've used [four 20mm M2 flat-head screws](https://www.amazon.com/gp/product/B000FN3Q94) through the rear of the enclosure into a set of four [3mm M2 heat-set threaded inserts](https://www.amazon.com/gp/product/B01IZ157KS).  For installation I'm using a conical tip on my soldering iron set at 350°F to heat up the insert and press into the front plate.
+To hold the two halves on the enclosure together I've used [four 20mm M2 flat-head screws](https://www.amazon.com/gp/product/B000FN3Q94) through the rear of the enclosure into a set of [four 3mm M2 heat-set threaded inserts](https://www.amazon.com/gp/product/B01IZ157KS).  For installation I'm using a conical tip on my soldering iron set at 350°F to heat up the insert and press into the front plate.
 
 ![Installing threaded inserts](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Assembly_Installing_Inserts.jpg?raw=true)
 

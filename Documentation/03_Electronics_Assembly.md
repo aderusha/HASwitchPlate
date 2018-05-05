@@ -5,7 +5,6 @@
 * [85-305VAC to 5VDC power supply](https://www.arrow.com/en/products/irm-03-5/mean-well-enterprises)
 * [Nextion 2.4" LCD touchscreen display](https://www.itead.cc/nextion-nx3224t024.html)
 * [WeMos D1 Mini ESP8266 WiFi microcontroller](https://wiki.wemos.cc/products:d1:d1_mini)
-* [5.08mm pitch screw terminal connectors](https://www.amazon.com/gp/product/B011QFLS0S)
 * [4-pin male "JST-XH" header](https://www.aliexpress.com/wholesale?SearchText=jst+xh+2.54+male+4+pin) *(note that these are the knockoff 2.54mm versions of the 2.50 XH series from JST.  What they lack for in authenticity they make up for in ubiquiti and dirt cheap pricing)*
 * [PCB](../PCB)
 
@@ -19,9 +18,9 @@ This is what your PCB should look like from the top before you've placed any of 
 
 ## PCB Assembled
 
-Now place the components, taking care to align the WeMos D1 Mini and JST-XH header as shown in the image below.
+Now place the components, taking care to orient the WeMos D1 Mini and JST-XH header as shown in the image below.
 
-![PCB Unassembled](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASP_PCB_Front_Assembled.png?raw=true)
+![PCB Assembled](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASP_PCB_Front_Assembled.png?raw=true)
 
 ## Schematic for protoboard assembly
 
