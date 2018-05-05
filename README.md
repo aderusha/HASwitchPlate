@@ -20,12 +20,14 @@ A complete build that's ready to install will require the following components:
 
 * [Nextion 2.4" LCD Touchscreen display](https://www.itead.cc/nextion-nx3224t024.html)
 * [WeMos D1 Mini ESP8266 WiFi microcontroller](https://wiki.wemos.cc/products:d1:d1_mini)
-* [3D printed switch plate](https://github.com/aderusha/HASwitchPlate/blob/master/3D_Printable_Models/HASwitchPlate_front.stl)
-* [3D printed rear cover](https://github.com/aderusha/HASwitchPlate/blob/master/3D_Printable_Models/HASwitchPlate_rear.stl)
+* [3D printed switch plate](3D_Printable_Models/HASwitchPlate_front_single.stl)
+* [3D printed rear cover](3D_Printable_Models/HASwitchPlate_rear_nolcdmod.stl)
 * [5V Power supply](https://www.findchips.com/search/IRM-03-5)
-* [Screw terminal connectors](https://www.amazon.com/gp/product/B011QFLS0S)
 * [PCB](PCB/)
-* [Three 20mm M2 flathead screws](https://www.amazon.com/gp/product/B000FN3Q94) and [three heat-set threaded inserts](https://www.amazon.com/gp/product/B01IZ157KS) to fasten things together (feel free to improvise here)
+* [Rubber grommet](https://www.mcmaster.com/#9600k41)
+* [Two M2 self-tapping 6MM screws](https://www.amazon.com/gp/product/B01FXGHO2M) (or just any 4-6mm M2 machine screws)
+* 6" each of white and black 300V 18AWG stranded power cables (I just stripped some wire out of a power cord)
+* [Four 20mm M2 flathead screws](https://www.amazon.com/gp/product/B000FN3Q94) and [four heat-set threaded inserts](https://www.amazon.com/gp/product/B01IZ157KS) to fasten things together (feel free to improvise here)
 
 The end result is a highly-customized touchscreen solution for controlling your home, mounted in the wall in a functional and attractive enclosure.
 
