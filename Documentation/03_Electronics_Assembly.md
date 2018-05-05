@@ -22,6 +22,10 @@ Now place the components, taking care to orient the WeMos D1 Mini and JST-XH hea
 
 ![PCB Assembled](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASP_PCB_Front_Assembled.png?raw=true)
 
+## High voltage AC cabling
+
+The AC power cables should be at least 18AWG 300V stranded cable with a white jacket soldered to the `AC/N` pad on the PCB and a similar wire with a black jacket soldered to `AN/L`.  These are fed through a [rubber push-in grommet](https://www.mcmaster.com/#9600k41) mounted into the rear enclosure.  I've had good luck stripping an existing 3 conductor power cord and using the black/white wires inside.
+
 ## Schematic for protoboard assembly
 
 This project was initially built on a [4x6 protoboard](https://www.amazon.com/gp/product/B06XTPGBS5) and the enclosure should still accomodate this approach if you have boards on hand.  Note that this approach is probably dangerous as 120VAC and protoboards are often a bad mix.
