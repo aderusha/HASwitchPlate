@@ -41,6 +41,21 @@ binary_sensor:
     payload_available: "ON"
     payload_not_available: "OFF"
 
+sensor:
+  - platform: mqtt
+    name: plate01 Status
+    state_topic: "hasp/plate01/status"
+    value_template: '{{ value_json.status }}'
+    availability_topic: "hasp/plate01/status"
+    payload_available: "ON"
+    payload_not_available: "OFF"
+    json_attributes:
+      - espVersion
+      - updateESPAvailable
+      - espUptime
+      - signalStrength
+      - haspIP
+
 input_text:
   hasp_plate01_pagebutton1label:
     name: plate01 Page 1 Label
@@ -131,6 +146,7 @@ group:
     view: no
     entities:
       - automation.hasp_plate01_00_firsttimesetup
+      - automation.hasp_plate01_00_autofirmwareupdate
       - automation.hasp_plate01_p0_activepagesliderchanged
       - automation.hasp_plate01_p0_pagebutton1_text
       - automation.hasp_plate01_p0_pagebutton1action
@@ -164,7 +180,6 @@ group:
       - automation.hasp_plate01_p7_alarmdisarmed
       - automation.hasp_plate01_p7_alarminit
       - automation.hasp_plate01_p7_alarmstatuspending
-      - automation.hasp_plate01_p8__mediavolsliderupdatehasp
       - automation.hasp_plate01_p8_mediaartist
       - automation.hasp_plate01_p8_mediainit
       - automation.hasp_plate01_p8_medianexttrackbutton8
@@ -172,6 +187,7 @@ group:
       - automation.hasp_plate01_p8_mediaplaypause
       - automation.hasp_plate01_p8_mediaprevtrackbutton6
       - automation.hasp_plate01_p8_mediatitle
+      - automation.hasp_plate01_p8_mediavolsliderupdatehasp
       - automation.hasp_plate01_p8_mediavolsliderupdatehass
       - automation.hasp_plate01_p9_3dprinterinit
       - automation.hasp_plate01_p9_3dprinteroperational
@@ -216,3 +232,18 @@ automation:
         data:
           entity_id: 'input_number.hasp_plate01_activepage'
           value: 1
+
+##############################################################################
+# Auto update firmware at 3:00am every day if a new version is available
+  - alias: hasp_plate01_00_AutoFirmwareUpdate
+    trigger:
+      - platform: time
+        at: '3:00:00'
+    condition:
+      - condition: template
+        value_template: '{{ states.sensor.plate01_status.attributes.updateESPAvailable == true }}'
+    action:
+      - service: mqtt.publish
+        data_template:
+          topic: 'hasp/plate01/command/espupdate'
+          payload: ''

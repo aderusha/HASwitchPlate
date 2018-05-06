@@ -28,9 +28,11 @@
 
 // OPTIONAL: Assign default values here.
 const char *wifiSSID = ""; // Leave unset for wireless autoconfig.
-const char *wifiPass = ""; // YOU PROBABLY SHOULD NOT CHANGE THIS!
+const char *wifiPass = ""; // Note that these values will be lost if auto-update is used,
+                           // and that's probably OK because they will be saved in EEPROM.
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-char mqttServer[64] = ""; // These may be overwritten by values saved from the web interface
+char mqttServer[64] = ""; // These defaults may be overwritten with values saved by the web interface
 char mqttPort[6] = "1883";
 char mqttUser[32] = "";
 char mqttPassword[32] = "";
@@ -42,7 +44,7 @@ char configPassword[32] = "";
 // Serial debug output control, comment out to disable
 #define DEBUGSERIAL
 // Open a super-insecure (but read-only) telnet debug port
-// #define DEBUGTELNET
+//#define DEBUGTELNET
 
 #include <FS.h>
 #include <ESP8266WiFi.h>
@@ -68,37 +70,46 @@ MQTTClient mqttClient(256);
 ESP8266WebServer webServer(80);
 ESP8266HTTPUpdateServer httpOTAUpdate;
 
-const char *haspVersion = "0.25";   // Current HASP software release version
-byte nextionReturnBuffer[100];      // Byte array to pass around data coming from the panel
-uint8_t nextionReturnIndex = 0;     // Index for nextionReturnBuffer
-uint8_t nextionActivePage = 0;      // Track active LCD page
-char wifiConfigPass[9];             // AP config password, always 8 chars + NUL
-char wifiConfigAP[19];              // AP config SSID, haspNode + 3 chars
-bool shouldSaveConfig = false;      // Flag to save json config to SPIFFS
-bool suppressPageReport = false;    // Flag to temporarily supporess page change reports
-byte espMac[6];                     // Byte array to store our MAC address
-String mqttClientId;                // Auto-generated MQTT ClientID
-String mqttGetSubtopic;             // MQTT subtopic for incoming commands requesting .val
-String mqttStateTopic;              // MQTT topic for outgoing panel interactions
-String mqttCommandTopic;            // MQTT topic for incoming panel commands
-String mqttBinarySensorStateTopic;  // MQTT topic for publishing device connectivity state
-String mqttLightCommandTopic;       // MQTT topic for incoming panel backlight on/off commands
-String mqttLightStateTopic;         // MQTT topic for outgoing panel backlight on/off state
-String mqttLightBrightCommandTopic; // MQTT topic for incoming panel backlight dimmer commands
-String mqttLightBrightStateTopic;   // MQTT topic for outgoing panel backlight dimmer state
+float haspVersion = 0.26;                  // Current HASP software release version
+byte nextionReturnBuffer[100];             // Byte array to pass around data coming from the panel
+uint8_t nextionReturnIndex = 0;            // Index for nextionReturnBuffer
+uint8_t nextionActivePage = 0;             // Track active LCD page
+char wifiConfigPass[9];                    // AP config password, always 8 chars + NUL
+char wifiConfigAP[19];                     // AP config SSID, haspNode + 3 chars
+bool shouldSaveConfig = false;             // Flag to save json config to SPIFFS
+bool suppressPageReport = false;           // Flag to temporarily supporess page change reports
+const long updateCheckInterval = 43200000; // Time in msec between update checks (12 hours)
+bool startupDelayFlag = true;              // Lousy hack for boot-time update check failures
+long startupDelayTime = 30000;             // Lousy hack for boot-time update check failures
+long updateCheckTimer = 0;                 // Timer for update check
+bool updateESPAvailable = false;           // Flag for update check to report new ESP FW version
+float updateESPAvailableVersion;           // Float to hold the new ESP FW version number
+const long statusUpdateInterval = 300000;  // Time in msec between publishing MQTT status updates (5 minutes)
+long statusUpdateTimer = 0;                // Timer for update check
+byte espMac[6];                            // Byte array to store our MAC address
+String mqttClientId;                       // Auto-generated MQTT ClientID
+String mqttGetSubtopic;                    // MQTT subtopic for incoming commands requesting .val
+String mqttStateTopic;                     // MQTT topic for outgoing panel interactions
+String mqttCommandTopic;                   // MQTT topic for incoming panel commands
+String mqttStatusTopic;                    // MQTT topic for publishing device connectivity state
+String mqttLightCommandTopic;              // MQTT topic for incoming panel backlight on/off commands
+String mqttLightStateTopic;                // MQTT topic for outgoing panel backlight on/off state
+String mqttLightBrightCommandTopic;        // MQTT topic for incoming panel backlight dimmer commands
+String mqttLightBrightStateTopic;          // MQTT topic for outgoing panel backlight dimmer state
 
 // Additional CSS style to match Hass theme
 const char HASP_STYLE[] = "<style>button{background-color:#03A9F4;}</style>";
+// URL for auto-update "version.json"
+const char UPDATE_URL[] = "http://haswitchplate.com/update/version.json";
 // Default link to compiled Arduino firmware
 const char ESPFIRMWARE_URL[] = "http://haswitchplate.com/update/HASwitchPlate.ino.d1_mini.bin";
-
 // Default link to compiled Nextion firmware
 const char LCDFIRMWARE_URL[] = "http://haswitchplate.com/update/HASwitchPlate.tft";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup()
 { // System setup
-  delay(1000);
+
   Serial.begin(115200);  // Serial - LCD RX (after swap), debug TX
   Serial1.begin(115200); // Serial1 - LCD TX, no RX
   debugPrintln(F("\r\nSYSTEM: Hardware initialized, starting program load"));
@@ -107,9 +118,8 @@ void setup()
   // clearSavedConfig();
 
   initializeNextion(); // initialize display
-
-  readSavedConfig(); // Check filesystem for a saved config.json
-  setupWifi();       // Start up networking
+  readSavedConfig();   // Check filesystem for a saved config.json
+  setupWifi();         // Start up networking
 
   if (configPassword)
   {
@@ -134,7 +144,7 @@ void setup()
 
   // Create server and assign callbacks for MQTT
   mqttClient.begin(mqttServer, atoi(mqttPort), wifiClient);
-  mqttClient.onMessage(mqtt_callback);
+  mqttClient.onMessage(mqttCallback);
   mqttConnect();
 
 #ifdef DEBUGTELNET
@@ -173,6 +183,23 @@ void loop()
   ArduinoOTA.handle();      // Arduino OTA loop
   webServer.handleClient(); // webServer loop
 
+  if ((millis() - statusUpdateTimer) >= statusUpdateInterval)
+  { // Run periodic status update
+    statusUpdateTimer = millis();
+    mqttStatusUpdate();
+  }
+
+  if (((millis() - updateCheckTimer) >= updateCheckInterval) || ((millis() <= startupDelayTime) && startupDelayFlag))
+  { // Run periodic update check
+    updateCheckTimer = millis();
+    if (updateCheck())
+    { // If updateCheck hasn't returned an error, clear the startupDelay flag and update MQTT status
+      startupDelayFlag = false;
+      debugPrintln(F("UPDATE: Update check completed"));
+      mqttStatusUpdate();
+    }
+  }
+
 #ifdef DEBUGTELNET
   // telnetClient loop
   handleTelnetClient();
@@ -185,10 +212,11 @@ void loop()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void mqttConnect()
 { // MQTT connection and subscriptions
+
   // MQTT topic string definitions
   mqttStateTopic = "hasp/" + String(haspNode) + "/state";
   mqttCommandTopic = "hasp/" + String(haspNode) + "/command";
-  mqttBinarySensorStateTopic = "hasp/" + String(haspNode) + "/status";
+  mqttStatusTopic = "hasp/" + String(haspNode) + "/status";
   mqttLightCommandTopic = "hasp/" + String(haspNode) + "/light/switch";
   mqttLightStateTopic = "hasp/" + String(haspNode) + "/light/status";
   mqttLightBrightCommandTopic = "hasp/" + String(haspNode) + "/brightness/set";
@@ -212,7 +240,7 @@ void mqttConnect()
     mqttClient.setOptions(5, true, 5000);
 
     // declare LWT
-    mqttClient.setWill(mqttBinarySensorStateTopic.c_str(), "OFF");
+    mqttClient.setWill(mqttStatusTopic.c_str(), "OFF");
 
     if (mqttClient.connect(mqttClientId.c_str(), mqttUser, mqttPassword))
     { // Attempt to connect to broker, setting last will and testament
@@ -230,8 +258,8 @@ void mqttConnect()
         debugPrintln(String(F("MQTT: subscribed to ")) + mqttLightSubscription);
       }
 
-      debugPrintln(String(F("MQTT: binary_sensor state: [")) + mqttBinarySensorStateTopic + "] : [ON]");
-      mqttClient.publish(mqttBinarySensorStateTopic, "ON", true, 1);
+      debugPrintln(String(F("MQTT: binary_sensor state: [")) + mqttStatusTopic + "] : [ON]");
+      mqttClient.publish(mqttStatusTopic, "ON", true, 1);
 
       // Update panel with MQTT status
       setNextionAttr("p[0].b[1].txt", "\"WiFi connected\\r" + WiFi.localIP().toString() + "\\rMQTT Connected\\r" + String(mqttServer) + "\"");
@@ -257,7 +285,7 @@ void mqttConnect()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void mqtt_callback(String &strTopic, String &strPayload)
+void mqttCallback(String &strTopic, String &strPayload)
 { // Handle incoming commands from MQTT
 
   // strTopic: homeassistant/haswitchplate/devicename/command/p[1].b[4].txt
@@ -268,7 +296,10 @@ void mqtt_callback(String &strTopic, String &strPayload)
   // '[...]/device/command' -m '' = undefined
   // '[...]/device/command' -m 'dim 50' = sendNextionCmd("dim 50")
   // '[...]/device/command/page' -m '1' = sendNextionCmd("page 1")
-  // '[...]/device/command/update' -m 'http://192.168.0.10/local/HASwitchPlate.tft' = startNextionOTA("http://192.168.0.10/local/HASwitchPlate.tft")
+  // '[...]/device/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' = startNextionOTA("http://192.168.0.10/local/HASwitchPlate.tft")
+  // '[...]/device/command/lcdupdate' -m '' = startNextionOTA("LCDFIRMWARE_URL")
+  // '[...]/device/command/espupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin' = startEspOTA("http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin")
+  // '[...]/device/command/espupdate' -m '' = startEspOTA("ESPFIRMWARE_URL")
   // '[...]/device/command/p[1].b[4].txt' -m '' = getNextionAttr("p[1].b[4].txt")
   // '[...]/device/command/p[1].b[4].txt' -m '"Lights On"' = setNextionAttr("p[1].b[4].txt", "\"Lights On\"")
 
@@ -278,11 +309,11 @@ void mqtt_callback(String &strTopic, String &strPayload)
   { // '[...]/device/command' -m '' = undefined
     // currently undefined
   }
-  else if ((strTopic == mqttCommandTopic))
+  else if (strTopic == mqttCommandTopic)
   { // '[...]/device/command' -m 'dim 50' = sendNextionCmd("dim 50")
     sendNextionCmd(strPayload);
   }
-  else if ((strTopic == (mqttCommandTopic + "/page")))
+  else if (strTopic == (mqttCommandTopic + "/page"))
   { // '[...]/device/command/page' -m '1' = sendNextionCmd("page 1")
     if (nextionActivePage != strPayload.toInt())
     { // Hass likes to send duplicate responses to things like page requests and there are no plans to fix that behavior, so try and track it locally
@@ -290,16 +321,32 @@ void mqtt_callback(String &strTopic, String &strPayload)
       sendNextionCmd("page " + strPayload);
     }
   }
-  else if ((strTopic == (mqttCommandTopic + "/update")) && (strPayload != ""))
+  else if (strTopic == (mqttCommandTopic + "/lcdupdate"))
   { // '[...]/device/command/update' -m 'http://192.168.0.10/local/HASwitchPlate.tft' = startNextionOTA("http://192.168.0.10/local/HASwitchPlate.tft")
-    startNextionOTA(strPayload);
+    if (strPayload == "")
+    {
+      startNextionOTA(String(LCDFIRMWARE_URL));
+    }
+    else
+    {
+      startNextionOTA(strPayload);
+    }
+  }
+  else if (strTopic == (mqttCommandTopic + "/espupdate"))
+  { // '[...]/device/command/update' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin' = startEspOTA("http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin")
+    if (strPayload == "")
+    {
+      startEspOTA(String(ESPFIRMWARE_URL));
+    }
+    else
+    {
+      startEspOTA(strPayload);
+    }
   }
   else if ((strTopic == (mqttCommandTopic + "/reboot")))
   { // '[...]/device/command/reboot' = reboot microcontroller)
     debugPrintln(F("MQTT: Rebooting device"));
-    delay(2000);
-    ESP.reset();
-    delay(5000);
+    espReset();
   }
   else if ((strTopic == (mqttCommandTopic + "/factoryreset")))
   { // '[...]/device/command/factoryreset' = clear all saved settings)
@@ -334,6 +381,22 @@ void mqtt_callback(String &strTopic, String &strPayload)
     sendNextionCmd("dim=dims");
     mqttClient.publish(mqttLightStateTopic, "ON", true, 1);
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void mqttStatusUpdate()
+{ // Perdiodically publish a JSON string indicating system status
+  DynamicJsonBuffer updateBuffer(200);
+  JsonObject &statusUpdate = updateBuffer.createObject();
+  statusUpdate["status"] = "available";
+  statusUpdate["espVersion"] = haspVersion;
+  statusUpdate["updateESPAvailable"] = updateESPAvailable;
+  statusUpdate["espUptime"] = long(millis() / 1000);
+  statusUpdate["signalStrength"] = WiFi.RSSI();
+  statusUpdate["haspIP"] = WiFi.localIP().toString();
+  String mqttStatusPayload;
+  statusUpdate.printTo(mqttStatusPayload);
+  mqttClient.publish(mqttStatusTopic, mqttStatusPayload);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -630,9 +693,7 @@ void setupWifi()
     if (!wifiManager.autoConnect(wifiConfigAP, wifiConfigPass))
     { // Reset and try again
       debugPrintln(F("WIFI: Failed to connect and hit timeout"));
-      delay(2000);
-      ESP.reset();
-      delay(5000);
+      espReset();
     }
 
     // Read updated parameters
@@ -655,9 +716,15 @@ void setupWifi()
     WiFi.mode(WIFI_STA);
     WiFi.begin(wifiSSID, wifiPass);
 
+    long wifiReconnectTimer = millis();
     while (WiFi.status() != WL_CONNECTED)
     {
       delay(500);
+      if (millis() >= (wifiReconnectTimer + 180000))
+      { // If we've been trying to reconnect for 3 minutes, reboot and try again
+        debugPrintln(F("WIFI: Failed to connect and hit timeout"));
+        espReset();
+      }
     }
   }
   // If you get here you have connected to WiFi
@@ -813,9 +880,7 @@ void startNextionOTA(String otaURL)
       if ((total == FileSize) && otaReturnSuccess())
       {
         debugPrintln(String(F("LCD OTA: success, wrote ")) + String(total) + " of " + String(FileSize) + " bytes.");
-        delay(2000);
-        ESP.reset();
-        delay(5000);
+        espReset();
       }
       else
       {
@@ -982,11 +1047,7 @@ void clearSavedConfig()
   }
   setNextionAttr("p[0].b[1].txt", "\"Rebooting\\rsystem...\"");
   debugPrintln(F("RESET: Rebooting device"));
-  delay(2000);
-  sendNextionCmd("rest");
-  delay(100);
-  ESP.reset();
-  delay(5000);
+  espReset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1039,16 +1100,24 @@ void webHandleRoot()
   httpMessage += String(F("<br/><b>HASP Admin Password</b> <i><small>(optional)</small></i><input id='configPassword' name='configPassword' type='password' maxlength=31 placeholder='Admin User Password' value='")) + String(configPassword) + "'>";
   httpMessage += String(F("<br/><br/><button type='submit'>save settings</button></form>"));
 
-  httpMessage += String(F("<br/><hr><br/><form method='get' action='firmware'>"));
+  if (updateESPAvailable)
+  {
+    httpMessage += String(F("<br/><hr><font color='green'><center><h3>HASP Update available!</h3></center></font>"));
+    httpMessage += String(F("<form method='get' action='espfirmware'>"));
+    httpMessage += String(F("<input id='espFirmwareURL' type='hidden' name='espFirmware' value='")) + String(ESPFIRMWARE_URL) + "'>";
+    httpMessage += String(F("<button type='submit'>update HASP to v")) + String(updateESPAvailableVersion) + String(F("</button></form>"));
+  }
+
+  httpMessage += String(F("<hr><form method='get' action='firmware'>"));
   httpMessage += String(F("<button type='submit'>update firmware</button></form>"));
 
-  httpMessage += String(F("<br/><hr><br/><form method='get' action='reboot'>"));
+  httpMessage += String(F("<hr><form method='get' action='reboot'>"));
   httpMessage += String(F("<button type='submit'>reboot device</button></form>"));
 
-  httpMessage += String(F("<br/><hr><br/><form method='get' action='resetConfig'>"));
+  httpMessage += String(F("<hr><form method='get' action='resetConfig'>"));
   httpMessage += String(F("<button type='submit'>factory reset settings</button></form>"));
 
-  httpMessage += String(F("<br/><hr><br/><b>MQTT Status: </b>"));
+  httpMessage += String(F("<hr><b>MQTT Status: </b>"));
   if (mqttClient.connected())
   { // Check MQTT connection
     httpMessage += String(F("Connected"));
@@ -1132,9 +1201,7 @@ void webHandleSaveConfig()
     webServer.send(200, "text/html", httpMessage);
     saveUpdatedConfig();
     debugPrintln(F("RESET: Rebooting device"));
-    delay(2000);
-    ESP.reset();
-    delay(5000);
+    espReset();
   }
   else
   { // No change found, notify user and link back to config page
@@ -1251,37 +1318,7 @@ void webHandleESPFirmware()
   webServer.send(200, "text/html", httpMessage);
 
   debugPrintln("ESPFW: Attempting ESP firmware update from: " + String(webServer.arg("espFirmware")));
-  suppressPageReport = true;
-  sendNextionCmd("page 0");
-  setNextionAttr("p[0].b[1].txt", "\"HTTP update\\rstarting...\"");
-  String nextionPageRestore = "page " + String(nextionActivePage);
-
-  t_httpUpdate_return returnCode = ESPhttpUpdate.update(webServer.arg("espFirmware"), haspVersion);
-  switch (returnCode)
-  {
-  case HTTP_UPDATE_FAILED:
-    debugPrintln("ESPFW: HTTP_UPDATE_FAILED error " + String(ESPhttpUpdate.getLastError()) + " " + ESPhttpUpdate.getLastErrorString());
-    setNextionAttr("p[0].b[1].txt", "\"HTTP Update\\rFAILED\"");
-    delay(5000);
-    suppressPageReport = false;
-    sendNextionCmd(nextionPageRestore);
-    break;
-
-  case HTTP_UPDATE_NO_UPDATES:
-    debugPrintln(F("ESPFW: HTTP_UPDATE_NO_UPDATES"));
-    setNextionAttr("p[0].b[1].txt", "\"HTTP Update\\rNo update\"");
-    delay(5000);
-    suppressPageReport = false;
-    sendNextionCmd(nextionPageRestore);
-    break;
-
-  case HTTP_UPDATE_OK:
-    debugPrintln(F("ESPFW: HTTP_UPDATE_OK"));
-    setNextionAttr("p[0].b[1].txt", "\"HTTP Update\\rcomplete!\\r\\rRestarting.\"");
-    delay(2000);
-    ESP.reset();
-    delay(5000);
-  }
+  startEspOTA(webServer.arg("espFirmware"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1333,12 +1370,97 @@ void webHandleReboot()
   suppressPageReport = true;
   sendNextionCmd("page 0");
   setNextionAttr("p[0].b[1].txt", "\"Rebooting...\"");
+  espReset();
+}
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+bool updateCheck()
+{ // firmware update check loop
+  HTTPClient updateClient;
+  debugPrintln(String(F("UPDATE: Checking update URL: ")) + String(UPDATE_URL));
+  String updatePayload;
+  updateClient.setTimeout(900); // have to move quick or LWT will trigger
+  updateClient.begin(UPDATE_URL);
+
+  // start connection and send HTTP header
+  int httpCode = updateClient.GET();
+
+  // httpCode will be negative on error
+  if (httpCode > 0)
+  {
+    // file found at server
+    if (httpCode == HTTP_CODE_OK)
+    {
+      updatePayload = updateClient.getString();
+    }
+  }
+  else
+  {
+    debugPrintln(String(F("UPDATE: Update check failed: ")) + updateClient.errorToString(httpCode));
+    return false;
+  }
+  updateClient.end();
+
+  DynamicJsonBuffer updateJsonBuffer(sizeof(updatePayload));
+
+  // Parse JSON object
+  JsonObject &updateJson = updateJsonBuffer.parseObject(updatePayload);
+  if (!updateJson.success())
+  {
+    debugPrintln(F("UPDATE: JSON parsing failed"));
+    return false;
+  }
+  else
+  {
+    updateESPAvailableVersion = updateJson["d1_mini"]["version"].as<float>();
+    if (updateESPAvailableVersion > haspVersion)
+    {
+      updateESPAvailable = true;
+      debugPrintln(String(F("UPDATE: New version available: ")) + String(updateESPAvailableVersion));
+    }
+  }
+  return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void espReset()
+{
+  mqttClient.publish(mqttStatusTopic.c_str(), "OFF");
+  mqttClient.disconnect();
   delay(2000);
-  sendNextionCmd("rest");
-  delay(200);
   ESP.reset();
   delay(5000);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void startEspOTA(String espOTAURL)
+{ // Update ESP firmware from HTTP
+  suppressPageReport = true;
+  sendNextionCmd("page 0");
+  setNextionAttr("p[0].b[1].txt", "\"HTTP update\\rstarting...\"");
+  String nextionPageRestore = "page " + String(nextionActivePage);
+
+  t_httpUpdate_return returnCode = ESPhttpUpdate.update(espOTAURL);
+  switch (returnCode)
+  {
+  case HTTP_UPDATE_FAILED:
+    debugPrintln("ESPFW: HTTP_UPDATE_FAILED error " + String(ESPhttpUpdate.getLastError()) + " " + ESPhttpUpdate.getLastErrorString());
+    setNextionAttr("p[0].b[1].txt", "\"HTTP Update\\rFAILED\"");
+    break;
+
+  case HTTP_UPDATE_NO_UPDATES:
+    debugPrintln(F("ESPFW: HTTP_UPDATE_NO_UPDATES"));
+    setNextionAttr("p[0].b[1].txt", "\"HTTP Update\\rNo update\"");
+    break;
+
+  case HTTP_UPDATE_OK:
+    debugPrintln(F("ESPFW: HTTP_UPDATE_OK"));
+    setNextionAttr("p[0].b[1].txt", "\"HTTP Update\\rcomplete!\\r\\rRestarting.\"");
+    espReset();
+  }
+  delay(5000);
+  suppressPageReport = false;
+  sendNextionCmd(nextionPageRestore);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
