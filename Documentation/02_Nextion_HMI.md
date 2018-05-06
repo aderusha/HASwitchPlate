@@ -10,7 +10,6 @@ Two compiled TFT files are included for the [Basic](https://github.com/aderusha/
 
 Once the project is assembled, future updates to the LCD firmware can be handled over-the-air by [issuing an MQTT command](06_MQTT_Control.md#command-syntax) with a URL to the target TFT file.
 
-
 ## How to: Run this software with an ESP8266 but no LCD panel
 
 One feature of the Nextion Editor is the [Nextion Simulator](https://www.itead.cc/wiki/Nextion_Editor_Quick_Start_Guide#Debug.2C_online_simulator), which allows the user to debug an HMI being edited.  You've probably used this if you've worked on editing your own HMI file.  You can run through the screens using your mouse to issue touch commands and feed it commands and see output in the text boxes provided.
@@ -19,4 +18,4 @@ The Nextion simulator allows you to run [hardware-in-loop](https://en.wikipedia.
 
 Now the Simulator will accept input from and send output to your flashed ESP8266 without having an LCD panel on hand!
 
-![Nextion Editor Simulator]](Images/Nextion_Editor_Simulator.png?raw=true)
+![Nextion Editor Simulator](Images/Nextion_Editor_Simulator.png?raw=true)

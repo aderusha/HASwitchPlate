@@ -34,7 +34,6 @@ In any event, you're going to need to solder the cable harness included with the
 
 ![Nextion_LCD_modification](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Nextion_LCD_modification.jpg?raw=true)
 
-
 ## Schematic for protoboard assembly
 
 This project was initially built on a [4x6 protoboard](https://www.amazon.com/gp/product/B06XTPGBS5) and the enclosure should still accomodate this approach if you have boards on hand.  Note that this approach is probably dangerous as 120VAC and protoboards are often a bad mix.
