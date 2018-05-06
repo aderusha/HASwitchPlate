@@ -26,6 +26,15 @@ Now place the components, taking care to orient the WeMos D1 Mini and JST-XH hea
 
 The AC power cables should be at least 18AWG 300V stranded cable with a white jacket soldered to the `AC/N` pad on the PCB and a similar wire with a black jacket soldered to `AN/L`.  These are fed through a [rubber push-in grommet](https://www.mcmaster.com/#9600k41) mounted into the rear enclosure.  I've had good luck stripping an existing 3 conductor power cord and using the black/white wires inside.
 
+## Nextion LCD Modification
+
+The Nextion LCD can be modified to give a little extra room around the screw lugs which may help with mounting in some work boxes.  If you have the means to do so, you can use a hot air gun to remove the 4-pin JST XHP connector from the PCB and then use the `lcdmod` rear enclosure model for some extra room in your box.
+
+In any event, you're going to need to solder the cable harness included with the Nextion display directly to the pins as shown in the image below.  This demonstrates a panel with the connector removed, but you also solder the cable harness directly to the legs of the existing connector with a simple soldering iron with little trouble.
+
+![Nextion_LCD_modification](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Nextion_LCD_modification.jpg?raw=true)
+
+
 ## Schematic for protoboard assembly
 
 This project was initially built on a [4x6 protoboard](https://www.amazon.com/gp/product/B06XTPGBS5) and the enclosure should still accomodate this approach if you have boards on hand.  Note that this approach is probably dangerous as 120VAC and protoboards are often a bad mix.
