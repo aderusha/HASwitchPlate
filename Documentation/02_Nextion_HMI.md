@@ -19,5 +19,4 @@ The Nextion simulator allows you to run [hardware-in-loop](https://en.wikipedia.
 
 Now the Simulator will accept input from and send output to your flashed ESP8266 without having an LCD panel on hand!
 
-![Nextion Editor Simulator]](/Images/Nextion_Editor_Simulator.png?raw=true)
-
+![Nextion Editor Simulator]](Images/Nextion_Editor_Simulator.png?raw=true)
