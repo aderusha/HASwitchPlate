@@ -11,7 +11,7 @@ By default the device will subscribe to `hasp/<node_name>/command/#` to accept i
 
 Messages sent to the panel under the `command` topic will be handled based on the following rules:
 
-* **`-t 'hasp/plate01/command' -m 'dim 100'`** A `command` with no subtopic will send the command in the payload to the panel directly.
+* **`-t 'hasp/plate01/command' -m 'dim=50'`** A `command` with no subtopic will send the command in the payload to the panel directly.
 * **`-t 'hasp/plate01/command/page' -m '1'`** The `page` command subtopic will set the current page on the device to the page number included in the payload.
 * **`-t 'hasp/plate01/command/p[1].b[4].txt' -m '"Lamp On"'`** A `command` with a subtopic will set the attribute named in the subtopic to the value sent in the payload.  You can send these messages with `retain` enabled and the broker will remember these settings for you.
 * **`-t 'hasp/plate01/command/p[1].b[4].txt' -m ''`** A `command` with a subtopic and an empty payload will request the current value of the attribute named in the subtopic from the panel.  The value will be returned under the `state` topic as `'hasp/plate01/state/p[1].b[4].txt' -m '"Lamp On"'`
@@ -24,7 +24,7 @@ Messages sent to the panel under the `command` topic will be handled based on th
 
 ## Nextion Commands over MQTT
 
-[Detailed documentation on the Nextion command instruction set can be found here](https://www.itead.cc/wiki/Nextion_Instruction_Set).  Note that some values require quotes, while others don't, and different shells (and Home Assistant config files) eat quotes differently.  As a general rule, attributes which accept an numeric value cannot have quotes, all other attributes must be enclosed in double quotes.
+A [detailed guide to the Nextion control language can be found here](https://nextion.itead.cc/resources/documents/instruction-set/).  [A mostly-complete list of all available instructions and their use is available here](https://www.itead.cc/wiki/Nextion_Instruction_Set).  Note that some values require quotes, while others don't, and different shells (and Home Assistant config files) eat quotes differently.  As a general rule, attributes which accept an numeric value cannot have quotes, all other attributes must be enclosed in double quotes.
 
 ### Nextion Page and Object IDs
 
