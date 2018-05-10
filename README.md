@@ -6,7 +6,7 @@ This project utilizes a [Nextion 2.4" LCD Touchscreen display](https://www.itead
 
 ![HA SwitchPlate Isometric](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate_Techpen-Isometric.png?raw=true)![HA SwitchPlate Exploded](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate-animation-Explosion.gif?raw=true)
 
-The [Arduino code](Arduino_Sketch) for the ESP8266 provides a generic gateway between [MQTT](https://en.wikipedia.org/wiki/MQTT) and the [Nextion control language](https://www.itead.cc/wiki/Nextion_Instruction_Set).  A basic [Nextion HMI display file](Nextion_HMI) has been included with several pages of various layouts to provide user controls or to present information in response to MQTT messages sent to the device.
+The [Arduino code](Arduino_Sketch) for the ESP8266 provides a generic gateway between [MQTT](https://en.wikipedia.org/wiki/MQTT) and the [Nextion instruction set](https://www.itead.cc/wiki/Nextion_Instruction_Set).  A basic [Nextion HMI display file](Nextion_HMI) has been included with several pages of various layouts to provide user controls or to present information in response to MQTT messages sent to the device.
 
 ## Demo screens
 
@@ -14,7 +14,7 @@ The [Arduino code](Arduino_Sketch) for the ESP8266 provides a generic gateway be
 
 ## Bill of Materials
 
-To build a simple version of this project you will only need the [LCD panel]((https://www.itead.cc/nextion-nx3224t024.html)) and the [WeMos D1 Mini]((https://wiki.wemos.cc/products:d1:d1_mini)), 4 jumper wires, and a USB cable to power both devices.
+To build a simple version of this project you will only need the [Nextion display]((https://www.itead.cc/nextion-nx3224t024.html)) and the [WeMos D1 Mini]((https://wiki.wemos.cc/products:d1:d1_mini)), 4 jumper wires, and a USB cable to power both devices.
 
 A complete build that's ready to install will require the following components:
 

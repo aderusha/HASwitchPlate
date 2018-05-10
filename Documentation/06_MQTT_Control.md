@@ -17,14 +17,14 @@ Messages sent to the panel under the `command` topic will be handled based on th
 * **`-t 'hasp/plate01/command/p[1].b[4].txt' -m ''`** A `command` with a subtopic and an empty payload will request the current value of the attribute named in the subtopic from the panel.  The value will be returned under the `state` topic as `'hasp/plate01/state/p[1].b[4].txt' -m '"Lamp On"'`
 * **`-t 'hasp/plate01/command/reboot'`** The `reboot` command will reboot the HASP device.
 * **`-t 'hasp/plate01/command/factoryreset'`** The `factoryreset` command will wipe out saved WiFi, nodename, and MQTT broker details to reset the device back to default settings.
-* **`-t 'hasp/plate01/command/lcdupdate'`** The `lcdupdate` command subtopic with no message will attempt to update the Nextion LCD from the HASP GitHub repository.
-* **`-t 'hasp/plate01/command/lcdupdate' -m 'http://192.168.0.10:8123/local/HASwitchPlate.tft'`** The `lcdupdate` command subtopic attempts to update the Nextion LCD from the HTTP URL named in the payload.
+* **`-t 'hasp/plate01/command/lcdupdate'`** The `lcdupdate` command subtopic with no message will attempt to update the Nextion from the HASP GitHub repository.
+* **`-t 'hasp/plate01/command/lcdupdate' -m 'http://192.168.0.10:8123/local/HASwitchPlate.tft'`** The `lcdupdate` command subtopic attempts to update the Nextion from the HTTP URL named in the payload.
 * **`-t 'hasp/plate01/command/espdupdate'`** The `espdupdate` command subtopic with no message will attempt to update the ESP8266 from the HASP GitHub repository.
 * **`-t 'hasp/plate01/command/espdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin'`** The `espdupdate` command subtopic attempts to update the ESP8266 from the HTTP URL named in the payload.
 
-## Nextion Commands over MQTT
+## Nextion Instructions over MQTT
 
-A [detailed guide to the Nextion control language can be found here](https://nextion.itead.cc/resources/documents/instruction-set/).  [A mostly-complete list of all available instructions and their use is available here](https://www.itead.cc/wiki/Nextion_Instruction_Set).  Note that some values require quotes, while others don't, and different shells (and Home Assistant config files) eat quotes differently.  As a general rule, attributes which accept an numeric value cannot have quotes, all other attributes must be enclosed in double quotes.
+A [detailed guide to the Nextion instruction set can be found here](https://nextion.itead.cc/resources/documents/instruction-set/).  [A mostly-complete list of all available instructions and their use is available here](https://www.itead.cc/wiki/Nextion_Instruction_Set).  Note that some values require quotes, while others don't, and different shells (and Home Assistant config files) eat quotes differently.  As a general rule, attributes which accept an numeric value cannot have quotes, all other attributes must be enclosed in double quotes.
 
 ### Nextion Page and Object IDs
 
