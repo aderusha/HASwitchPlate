@@ -8,8 +8,6 @@ automation:
     - platform: mqtt
       topic: 'hasp/plate01/status'
       payload: 'ON'
-    - platform: homeassistant
-      event: start
     action:
     - service: mqtt.publish
       data:
@@ -78,8 +76,6 @@ automation:
     - platform: mqtt
       topic: 'hasp/plate01/status'
       payload: 'ON'
-    - platform: homeassistant
-      event: start
     action:
     - service: mqtt.publish
       data:
@@ -97,8 +93,6 @@ automation:
     - platform: mqtt
       topic: 'hasp/plate01/status'
       payload: 'ON'
-    - platform: homeassistant
-      event: start
     action:
     - service: mqtt.publish
       data:
@@ -138,8 +132,6 @@ automation:
     - platform: mqtt
       topic: 'hasp/plate01/status'
       payload: 'ON'
-    - platform: homeassistant
-      event: start
     action:
     - service: mqtt.publish
       data:

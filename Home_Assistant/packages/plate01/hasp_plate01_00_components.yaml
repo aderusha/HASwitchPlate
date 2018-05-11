@@ -16,11 +16,11 @@ homeassistant:
 # This will not work if you have SSL enabled, see details here:
 # https://www.home-assistant.io/components/panel_iframe/
 #
-# panel_iframe:
-#   plate01:
-#     title: "plate01"
-#     url: "http://plate01"
-#     icon: "mdi:cellphone-text"
+panel_iframe:
+  plate01:
+    title: "plate01"
+    url: "http://plate01"
+    icon: "mdi:cellphone-text"
 
 light:
   - platform: mqtt
@@ -127,6 +127,7 @@ group:
     view: yes
     entities:
       - binary_sensor.plate01_connected
+      - sensor.plate01_status
       - light.plate01_backlight
       - group.plate01_pageselect
       - group.plate01_automations

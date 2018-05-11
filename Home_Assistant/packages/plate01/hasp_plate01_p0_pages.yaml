@@ -21,11 +21,32 @@ automation:
   - alias: hasp_plate01_p0_PageButton1Action
     trigger:
     - platform: mqtt
-      topic: 'hasp/plate01/state/+'
+      topic: 'hasp/plate01/state/p[1].b[1]'
       payload: 'ON'
-    condition: 
-      condition: template
-      value_template: '{{ trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int == 1 }}'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[2].b[1]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[3].b[1]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[4].b[1]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[5].b[1]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[6].b[1]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[7].b[1]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[8].b[1]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[9].b[1]'
+      payload: 'ON'
     action:
     - service: input_number.set_value
       data_template:
@@ -37,11 +58,32 @@ automation:
   - alias: hasp_plate01_p0_PageButton2Action
     trigger:
     - platform: mqtt
-      topic: 'hasp/plate01/state/+'
+      topic: 'hasp/plate01/state/p[1].b[2]'
       payload: 'ON'
-    condition: 
-      condition: template
-      value_template: '{{ trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int == 2 }}'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[2].b[2]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[3].b[2]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[4].b[2]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[5].b[2]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[6].b[2]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[7].b[2]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[8].b[2]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[9].b[2]'
+      payload: 'ON'
     action:
     - service: input_number.set_value
       data_template:
@@ -53,11 +95,32 @@ automation:
   - alias: hasp_plate01_p0_PageButton3Action
     trigger:
     - platform: mqtt
-      topic: 'hasp/plate01/state/+'
+      topic: 'hasp/plate01/state/p[1].b[3]'
       payload: 'ON'
-    condition: 
-      condition: template
-      value_template: '{{ trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int == 3 }}'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[2].b[3]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[3].b[3]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[4].b[3]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[5].b[3]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[6].b[3]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[7].b[3]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[8].b[3]'
+      payload: 'ON'
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[9].b[3]'
+      payload: 'ON'
     action:
     - service: input_number.set_value
       data_template:
@@ -103,8 +166,6 @@ automation:
     - platform: mqtt
       topic: 'hasp/plate01/status'
       payload: 'ON'
-    - platform: homeassistant
-      event: start
     action:
     - service: mqtt.publish
       data:
@@ -151,8 +212,6 @@ automation:
     - platform: mqtt
       topic: 'hasp/plate01/status'
       payload: 'ON'
-    # - platform: homeassistant
-    #   event: start
     action:
     - service: mqtt.publish
       data:
@@ -199,8 +258,6 @@ automation:
     - platform: mqtt
       topic: 'hasp/plate01/status'
       payload: 'ON'
-    - platform: homeassistant
-      event: start
     action:
     - service: mqtt.publish
       data:
@@ -254,8 +311,6 @@ automation:
     - platform: mqtt
       topic: 'hasp/plate01/status'
       payload: 'ON'
-    - platform: homeassistant
-      event: start
     action:
     - service: mqtt.publish
       data_template:

@@ -8,8 +8,6 @@ automation:
     - platform: mqtt
       topic: 'hasp/plate01/status'
       payload: 'ON'
-    - platform: homeassistant
-      event: start
     action:
     - service: mqtt.publish
       data:
@@ -106,8 +104,6 @@ automation:
     - platform: mqtt
       topic: 'hasp/plate01/status'
       payload: 'ON'
-    - platform: homeassistant
-      event: start
     - platform: state
       entity_id: alarm_control_panel.ha_alarm
       to: 'disarmed'
@@ -155,8 +151,6 @@ automation:
     - platform: mqtt
       topic: 'hasp/plate01/status'
       payload: 'ON'
-    - platform: homeassistant
-      event: start
     - platform: state
       entity_id: alarm_control_panel.ha_alarm
       to: 'armed_away'
