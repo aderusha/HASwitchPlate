@@ -43,12 +43,9 @@ binary_sensor:
 
 sensor:
   - platform: mqtt
-    name: plate01 Status
-    state_topic: "hasp/plate01/status"
+    name: plate01 Sensor
+    state_topic: "hasp/plate01/sensor"
     value_template: '{{ value_json.status }}'
-    availability_topic: "hasp/plate01/status"
-    payload_available: "ON"
-    payload_not_available: "OFF"
     json_attributes:
       - espVersion
       - updateESPAvailable
@@ -127,7 +124,7 @@ group:
     view: yes
     entities:
       - binary_sensor.plate01_connected
-      - sensor.plate01_status
+      - sensor.plate01_sensor
       - light.plate01_backlight
       - group.plate01_pageselect
       - group.plate01_automations
@@ -165,7 +162,17 @@ group:
       - automation.hasp_plate01_p1_scenesinit
       - automation.hasp_plate01_p2_clockinit
       - automation.hasp_plate01_p2_clockupdate
+      - automation.hasp_plate01_p2_calendarupdate
       - automation.hasp_plate01_p2_weather
+      - automation.hasp_plate01_p3_toggleall
+      - automation.hasp_plate01_p3_togglecolor1
+      - automation.hasp_plate01_p3_togglecolor2
+      - automation.hasp_plate01_p3_togglecolor3
+      - automation.hasp_plate01_p3_togglecolorall
+      - automation.hasp_plate01_p3_toggleinit
+      - automation.hasp_plate01_p3_togglelight1
+      - automation.hasp_plate01_p3_togglelight2
+      - automation.hasp_plate01_p3_togglelight3
       - automation.hasp_plate01_p4_dimmer7updatehasp
       - automation.hasp_plate01_p4_dimmer7updatehass
       - automation.hasp_plate01_p4_dimmer8updatehasp
@@ -216,7 +223,7 @@ automation:
       - service: input_text.set_value
         data:
           entity_id: 'input_text.hasp_plate01_pagebutton3label'
-          value: 'alarm'
+          value: 'lights'
       - service: input_number.set_value
         data:
           entity_id: 'input_number.hasp_plate01_pagebutton1page'
@@ -228,7 +235,7 @@ automation:
       - service: input_number.set_value
         data:
           entity_id: 'input_number.hasp_plate01_pagebutton3page'
-          value: 7
+          value: 3
       - service: input_number.set_value
         data:
           entity_id: 'input_number.hasp_plate01_activepage'

@@ -1,0 +1,215 @@
+##############################################################################
+# Create a group of lights to be toggled
+group:
+  light_toggle_group:
+    name: Light Toggle Group
+    view: no
+    entities:
+      - light.light_1
+      - light.light_2
+      - light.light_3
+
+##############################################################################
+# Automations for handling toggle state buttons on page 3
+automation:
+  # Set font and text for toggle buttons on device connection
+  - alias: hasp_plate01_p3_ToggleInit
+    trigger:
+    - platform: mqtt
+      topic: 'hasp/plate01/status'
+      payload: 'ON'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[3].b[4].font'
+        payload: '2'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[3].b[4].txt'
+        payload: '"Light 1"'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[3].b[5].font'
+        payload: '2'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[3].b[5].txt'
+        payload: '"Light 2"'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[3].b[6].font'
+        payload: '2'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[3].b[6].txt'
+        payload: '"Light 3"'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[3].b[7].font'
+        payload: '2'
+
+  # Toggle light1 when p[3].b[4] pressed
+  - alias: hasp_plate01_p3_ToggleLight1
+    trigger:
+      platform: mqtt
+      topic: 'hasp/plate01/state/p[3].b[4]'
+      payload: 'ON'
+    action:
+      service: homeassistant.toggle
+      entity_id: light.light_1
+      
+  # Toggle light2 when p[3].b[5] pressed
+  - alias: hasp_plate01_p3_ToggleLight2
+    trigger:
+      platform: mqtt
+      topic: 'hasp/plate01/state/p[3].b[5]'
+      payload: 'ON'
+    action:
+      service: homeassistant.toggle
+      entity_id: light.light_2
+
+  # Toggle light3 when p[3].b[6] pressed
+  - alias: hasp_plate01_p3_ToggleLight3
+    trigger:
+      platform: mqtt
+      topic: 'hasp/plate01/state/p[3].b[6]'
+      payload: 'ON'
+    action:
+      service: homeassistant.toggle
+      entity_id: light.light_3
+
+  # Toggle all light_toggle_group when p[3].b[7] pressed
+  - alias: hasp_plate01_p3_ToggleAll
+    trigger:
+      platform: mqtt
+      topic: 'hasp/plate01/state/p[3].b[7]'
+      payload: 'ON'
+    action:
+      service_template: >
+          {% if states.group.light_toggle_group.state == "on" -%}
+            homeassistant.turn_off
+          {%- else -%}
+            homeassistant.turn_on
+          {%- endif %}
+      entity_id: group.light_toggle_group
+      
+  # Toggle colors on p[3].b[4] when light1 changes
+  - alias: hasp_plate01_p3_ToggleColor1
+    trigger:
+    - platform: mqtt
+      topic: 'hasp/plate01/status'
+      payload: 'ON'
+    - platform: state
+      entity_id: light.light_1
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[3].b[4].bco'
+        payload_template: >-
+          {% if states.light.light_1.state == "on" -%}
+            65535
+          {%- else -%}
+            25388
+          {%- endif %}
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/p[3].b[4].pco'
+        payload_template: >-
+          {% if states.light.light_1.state == "on" -%}
+            0
+          {%- else -%}
+            65535
+          {%- endif %}
+
+  # Toggle colors on p[3].b[5] when light1 changes
+  - alias: hasp_plate01_p3_ToggleColor2
+    trigger:
+    - platform: mqtt
+      topic: 'hasp/plate01/status'
+      payload: 'ON'
+    - platform: state
+      entity_id: light.light_2
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[3].b[5].bco'
+        payload_template: >-
+          {% if states.light.light_2.state == "on" -%}
+            65535
+          {%- else -%}
+            25388
+          {%- endif %}
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/p[3].b[5].pco'
+        payload_template: >-
+          {% if states.light.light_2.state == "on" -%}
+            0
+          {%- else -%}
+            65535
+          {%- endif %}
+
+  # Toggle colors on p[3].b[6] when light1 changes
+  - alias: hasp_plate01_p3_ToggleColor3
+    trigger:
+    - platform: mqtt
+      topic: 'hasp/plate01/status'
+      payload: 'ON'
+    - platform: state
+      entity_id: light.light_3
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[3].b[6].bco'
+        payload_template: >-
+          {% if states.light.light_3.state == "on" -%}
+            65535
+          {%- else -%}
+            25388
+          {%- endif %}
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/p[3].b[6].pco'
+        payload_template: >-
+          {% if states.light.light_3.state == "on" -%}
+            0
+          {%- else -%}
+            65535
+          {%- endif %}
+
+  # Set button 4 to "All Off" if any lights are on, otherwise set to "All On"
+  - alias: hasp_plate01_p3_ToggleColorAll
+    trigger:
+    - platform: mqtt
+      topic: 'hasp/plate01/status'
+      payload: 'ON'
+    - platform: state
+      entity_id: group.light_toggle_group
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[3].b[7].bco'
+        payload_template: >-
+          {% if states.group.light_toggle_group.state == "on" -%}
+            25388
+          {%- else -%}
+            65535
+          {%- endif %}
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/p[3].b[7].pco'
+        payload_template: >-
+          {% if states.group.light_toggle_group.state == "on" -%}
+            65535
+          {%- else -%}
+            0
+          {%- endif %}
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/p[3].b[7].txt'
+        payload_template: >-
+          {% if states.group.light_toggle_group.state == "on" -%}
+           "Lights Off"
+          {%- else -%}
+           "Lights On"
+          {%- endif %}

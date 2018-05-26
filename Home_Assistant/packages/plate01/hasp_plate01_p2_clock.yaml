@@ -15,16 +15,16 @@ automation:
         payload: '3'
     - service: mqtt.publish
       data:
-        topic: 'hasp/plate01/command/p[2].b[5].font'
-        payload: '1'
+        topic: 'hasp/plate01/command/p[2].b[4].txt'
+        payload_template: "\"{{now().strftime('%-I:%M')}}\""
     - service: mqtt.publish
       data:
-        topic: 'hasp/plate01/command/p[2].b[4].txt'
-        payload_template: "\"{{now().strftime('%H:%M')}}\""
+        topic: 'hasp/plate01/command/p[2].b[5].font'
+        payload_template: '{% if now().strftime("%B %-d")|length <= 6 -%}3{% elif (now().strftime("%B %-d")|length > 6) and (now().strftime("%B %-d")|length <= 10) %}2{% elif (now().strftime("%B %-d")|length > 10) and (now().strftime("%B %-d")|length <= 15) %}1{% else %}0{%- endif %}'
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[5].txt'
-        payload_template: "\"{{now().strftime('%A')}}\\r{{now().strftime('%B %-d')}}\""
+        payload_template: "\"{{now().strftime('%B %-d')}}\""
 
   # Send the current time every minute
   - alias: hasp_plate01_p2_ClockUpdate
@@ -40,8 +40,27 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[4].txt'
-        payload_template: "\"{{now().strftime('%H:%M')}}\""
+        payload_template: "\"{{now().strftime('%-I:%M')}}\""
+        
+  # Send "Month Day" every day, scaling font to fit
+  # 0 consolas 24 - 20 chars x 2 lines (wrapped)
+  # 1 consolas 32 - 15 chars x 2 lines (wrapped)
+  # 2 consolas 48 - 10 chars x 1 line
+  # 3 consolas 80 - 6 chars x 1 line
+  - alias: hasp_plate01_p2_CalendarUpdate
+    trigger:
+      platform: time
+      at: '00:00:00'
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[2].b[5].font'
+        payload_template: '{% if now().strftime("%B %-d")|length <= 6 -%}3{% elif (now().strftime("%B %-d")|length > 6) and (now().strftime("%B %-d")|length <= 10) %}2{% elif (now().strftime("%B %-d")|length > 10) and (now().strftime("%B %-d")|length <= 15) %}1{% else %}0{%- endif %}'
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[5].txt'
-        payload_template: "\"{{now().strftime('%A')}}\\r{{now().strftime('%B %-d')}}\""
+        payload_template: "\"{{now().strftime('%B %-d')}}\""
