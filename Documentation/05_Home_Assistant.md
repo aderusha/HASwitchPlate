@@ -8,7 +8,7 @@ Once these changes have been made for your first device, you can skip to the [`d
 
 ### Packages
 
-The configuration and automation files for the HASP are bundled as [Home Assistant Pacakges](https://www.home-assistant.io/docs/configuration/packages/).  Enable packages under the `homeassistant` section at the top of your `configuration.yaml` by adding the following line:
+The configuration and automation files for the HASP are bundled as [Home Assistant Packages](https://www.home-assistant.io/docs/configuration/packages/).  Enable packages under the `homeassistant` section at the top of your `configuration.yaml` by adding the following line:
 
 ```yaml
 homeassistant:

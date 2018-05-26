@@ -16,7 +16,6 @@ automation:
       data:
         topic: 'hasp/plate01/command/p[9].b[5].font'
         payload: '1'
-        retain: true
    
   # Update status while printing
   - alias: hasp_plate01_p9_3DPrinterPrinting
