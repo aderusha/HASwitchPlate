@@ -17,10 +17,18 @@ then
 fi
 
 # Confirm that we're working in the .homeassistant folder by checking for configuration.yaml
-if [ ! -f configuration.yaml ]
-then
-    echo "ERROR: 'configuration.yaml' not found in current directory.  Please run this script from '.homeassistant'"
-    exit 1
+if [ ! -f configuration.yaml ]; then
+	echo "ERROR: 'configuration.yaml' not found in current directory."
+	echo "Searching for Home-Assistant configuration".
+	configfile=$(sudo find /* | grep configuration.yaml)
+	count=$(echo "$configfile" | wc -l)
+	if [ $count == 1 ]; then
+		configdir=$(dirname "${configfile}")
+		cd $configdir
+	else
+		echo "Please run this script from '.homeassistant'"
+		exit 1
+	fi
 fi
 
 # Hass has a bug where packaged automations don't work unless you have at least one
