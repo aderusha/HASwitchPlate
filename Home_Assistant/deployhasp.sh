@@ -23,6 +23,21 @@ then
     exit 1
 fi
 
+# Hass has a bug where packaged automations don't work unless you have at least one
+# automation manually created outside of the packages.  Attempt to test for that and
+# create a dummy automation if an empty automations.yaml file is found.
+if [ -f automations.yaml ]
+then
+  if [[ $(< automations.yaml) == "[]" ]]
+  then
+    echo "WARNING: empty automations.yaml found, creating DUMMY automation for package compatibility"
+    echo "- action: []" > automations.yaml
+    echo "  id: DUMMY" >> automations.yaml
+    echo "  alias: DUMMY Can Be Deleted After First Automation Has Been Added" >> automations.yaml
+    echo "  trigger: []" >> automations.yaml
+  fi
+fi
+
 # Santize the requested devicename to work with hass
 hasp_device=`echo "$hasp_input_name" | tr '[:upper:]' '[:lower:]' | tr ' [:punct:]' '_'`
 
