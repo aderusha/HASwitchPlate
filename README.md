@@ -1,10 +1,10 @@
 # HA SwitchPlate
 
-The HA SwitchPlate is an LCD touchscreen you can mount into a standard "work box" in place of a light switch.  It connects to your WiFi to send [MQTT messages](https://en.wikipedia.org/wiki/MQTT) to your home automation system in response to user interactions on the screen.  Buttons and text displayed on the screen can be updated by incoming MQTT messages from your home automation system or other devices on your network.
-
-This project utilizes a [Nextion 2.4" LCD Touchscreen display](https://www.itead.cc/nextion-nx3224t024.html) mounted in a standard-sized single-gang workbox as a touchscreen panel for home control and information display.  An [ESP8266-based microcontroller](https://wiki.wemos.cc/products:d1:d1_mini) provides WiFi connectivity and system control.  The project has been developed to integrate with [Home Assistant](https://home-assistant.io/) but [should be compatible](Documentation/06_MQTT_Control.md) with any other MQTT-enabled automation platform such as [OpenHAB](https://github.com/openhab/openhab1-addons/wiki/MQTT-Binding), [Domoticz](https://www.domoticz.com/wiki/MQTT), [Node-Red](http://noderedguide.com/tag/mqtt/), [Wink](https://github.com/danielolson13/wink-mqtt), [SmartThings](https://github.com/stjohnjohnson/smartthings-mqtt-bridge), [Vera](https://github.com/jonferreira/vera-mqtt), [HomeKit](https://www.npmjs.com/package/homekit2mqtt), etc.
+The HA SwitchPlate is a user-programmable LCD touchscreen you can mount into a standard "work box" in place of a light switch.  It connects to your home automation system over WiFi to send and receive [MQTT messages](https://en.wikipedia.org/wiki/MQTT) in response to user interactions on the screen or events happening in your home.  The result is an attractive and highly-customizable controller for your home automation system which you can build yourself!
 
 ![HA SwitchPlate Models](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/HASwitchPlate_Three_Model_Variations.png?raw=true)
+
+The HA SwitchPlate ("HASP") utilizes a [Nextion 2.4" LCD Touchscreen display](https://www.itead.cc/nextion-nx3224t024.html) mounted in a 3D-printed enclosure as a touchscreen panel for home control and information display.  An [ESP8266-based microcontroller](https://wiki.wemos.cc/products:d1:d1_mini) provides WiFi connectivity and system control.  The project has been developed to integrate with [Home Assistant](https://home-assistant.io/) but [should be compatible](Documentation/06_MQTT_Control.md) with any other MQTT-enabled automation platform such as [OpenHAB](https://github.com/openhab/openhab1-addons/wiki/MQTT-Binding), [Domoticz](https://www.domoticz.com/wiki/MQTT), [Node-Red](http://noderedguide.com/tag/mqtt/), [Wink](https://github.com/danielolson13/wink-mqtt), [SmartThings](https://github.com/stjohnjohnson/smartthings-mqtt-bridge), [Vera](https://github.com/jonferreira/vera-mqtt), [HomeKit](https://www.npmjs.com/package/homekit2mqtt), etc.
 
 The [Arduino code](Arduino_Sketch) for the ESP8266 provides a generic gateway between [MQTT](https://en.wikipedia.org/wiki/MQTT) and the [Nextion instruction set](https://www.itead.cc/wiki/Nextion_Instruction_Set).  A basic [Nextion HMI display file](Nextion_HMI) has been included with several pages of various layouts to provide user controls or to present information in response to MQTT messages sent to the device.
 
@@ -28,8 +28,6 @@ A complete build that's ready to install will require the following components:
 * [Two M2 self-tapping 6MM screws](https://www.amazon.com/gp/product/B01FXGHO2M) (or just any 4-6mm M2 machine screws)
 * 6" each of white and black 300V 18AWG stranded power cables (I just stripped some wire out of a power cord)
 * [Four 20mm M2 flathead screws](https://www.amazon.com/gp/product/B000FN3Q94) and [four heat-set threaded inserts](https://www.amazon.com/gp/product/B01IZ157KS) to fasten things together (feel free to improvise here)
-
-The end result is a highly-customized touchscreen solution for controlling your home, mounted in the wall in a functional and attractive enclosure.
 
 ## Get Started!
 
