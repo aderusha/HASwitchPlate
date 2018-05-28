@@ -1,6 +1,6 @@
 # Home Assistant integration
 
-Configuring Home Assistant for the HASP requires making some basic changes to your configuration and downloading the pacakges to your installation.  The procedure will be a little different if you're running Hass.io, so [skip to that section](#hass.io) or continue below for a standard Home Assistant installation (hassbian, venv, whatever).
+Configuring Home Assistant for the HASP requires making some basic changes to your configuration and downloading the pacakges to your installation.  The procedure will be a little different if you're running Hass.io, so [skip to that section](#hassio) or continue below for a standard Home Assistant installation (hassbian, venv, whatever).
 
 ## Standard Home Assistant installation
 
@@ -52,8 +52,7 @@ Finally, you'll need to restart Home Assistant to apply your changes.
 
 ## Hass.io
 
-If you're running [Hass.io](https://www.home-assistant.io/hassio/), you'll need to install and configure the [`Mosquitto broker`](https://www.home-assistant.io/addons/mosquitto/) and 
- [`SSH server`](https://www.home-assistant.io/addons/ssh/) add-ons from the default repository.  Once those are installed and started, ssh to your hass.io installation and execute the following commands:
+If you're running [Hass.io](https://www.home-assistant.io/hassio/), you'll need to install and configure the [`Mosquitto broker`](https://www.home-assistant.io/addons/mosquitto/) and [`SSH server`](https://www.home-assistant.io/addons/ssh/) add-ons from the default repository.  Once those are installed and started, ssh to your hass.io installation and execute the following commands:
 
 ```bash
 cd /config
