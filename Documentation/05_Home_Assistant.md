@@ -60,6 +60,7 @@ sed -i 's/^homeassistant:.*/homeassistant:\n  packages: !include_dir_named packa
 echo "recorder:" >> configuration.yaml
 apk add tar wget
 bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
+reboot
 ```
 
 ## First time setup
