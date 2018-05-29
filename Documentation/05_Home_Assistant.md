@@ -70,8 +70,9 @@ If you're running [Hass.io](https://www.home-assistant.io/hassio/), you'll need 
 cd /config
 apk add tar wget
 bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
-reboot
 ```
+
+Once that process completes you can restart the Home Assistant server to apply all changes (`Configuration` > `General` > `Server Management` > `RESTART`).
 
 ---
 
