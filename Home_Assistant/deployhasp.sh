@@ -88,7 +88,7 @@ fi
 # Hass has a bug where packaged automations don't work unless you have at least one
 # automation manually created outside of the packages.  Attempt to test for that and
 # create a dummy automation if an empty automations.yaml file is found.
-if grep "^automation: \!include automations.yaml"
+if grep "^automation: \!include automations.yaml" configuration.yaml > /dev/null
 then
   if [ -f automations.yaml ]
   then
