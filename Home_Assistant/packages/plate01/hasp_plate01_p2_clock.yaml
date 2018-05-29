@@ -16,15 +16,15 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[4].txt'
-        payload_template: "\"{{now().strftime('%-I:%M')}}\""
+        payload_template: "\"{{(now().hour % 12 ~ now().strftime(':%M'))}}\""
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[5].font'
-        payload_template: '{% if now().strftime("%B %-d")|length <= 6 -%}3{% elif (now().strftime("%B %-d")|length > 6) and (now().strftime("%B %-d")|length <= 10) %}2{% elif (now().strftime("%B %-d")|length > 10) and (now().strftime("%B %-d")|length <= 15) %}1{% else %}0{%- endif %}'
+        payload_template: '{% if (now().strftime("%B ") ~ now().day)|length <= 6 -%}3{% elif ((now().strftime("%B ") ~ now().day)|length > 6) and ((now().strftime("%B ") ~ now().day)|length <= 10) %}2{% elif ((now().strftime("%B ") ~ now().day)|length > 10) and ((now().strftime("%B ") ~ now().day)|length <= 15) %}1{% else %}0{%- endif %}'
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[5].txt'
-        payload_template: "\"{{now().strftime('%B %-d')}}\""
+        payload_template: "\"{{now().strftime('%B ') ~ now().day}}\""
 
   # Send the current time every minute
   - alias: hasp_plate01_p2_ClockUpdate
@@ -40,7 +40,7 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[4].txt'
-        payload_template: "\"{{now().strftime('%-I:%M')}}\""
+        payload_template: "\"{{now().hour % 12 ~ now().strftime(':%M')}}\""
         
   # Send "Month Day" every day, scaling font to fit
   # 0 consolas 24 - 20 chars x 2 lines (wrapped)
@@ -59,8 +59,8 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[5].font'
-        payload_template: '{% if now().strftime("%B %-d")|length <= 6 -%}3{% elif (now().strftime("%B %-d")|length > 6) and (now().strftime("%B %-d")|length <= 10) %}2{% elif (now().strftime("%B %-d")|length > 10) and (now().strftime("%B %-d")|length <= 15) %}1{% else %}0{%- endif %}'
+        payload_template: '{% if (now().strftime("%B ") ~ now().day)|length <= 6 -%}3{% elif ((now().strftime("%B ") ~ now().day)|length > 6) and ((now().strftime("%B ") ~ now().day)|length <= 10) %}2{% elif ((now().strftime("%B ") ~ now().day)|length > 10) and ((now().strftime("%B ") ~ now().day)|length <= 15) %}1{% else %}0{%- endif %}'
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[5].txt'
-        payload_template: "\"{{now().strftime('%B %-d')}}\""
+        payload_template: "\"{{now().strftime('%B ') ~ now().day}}\""
