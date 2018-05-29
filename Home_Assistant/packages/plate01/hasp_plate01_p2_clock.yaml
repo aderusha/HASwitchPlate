@@ -16,7 +16,7 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[4].txt'
-        payload_template: "\"{{(now().hour % 12 ~ now().strftime(':%M'))}}\""
+        payload_template: "\"{{(now().hour ~ now().strftime(':%M'))}}\""
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[5].font'
@@ -40,7 +40,7 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[4].txt'
-        payload_template: "\"{{now().hour % 12 ~ now().strftime(':%M')}}\""
+        payload_template: "\"{{now().hour ~ now().strftime(':%M')}}\""
         
   # Send "Month Day" every day, scaling font to fit
   # 0 consolas 24 - 20 chars x 2 lines (wrapped)
