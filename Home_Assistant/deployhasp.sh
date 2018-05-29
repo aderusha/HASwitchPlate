@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # deployhasp.sh - download the latest HASP automation package and modify for the provided device name
-
 # Check that a new device name has been supplied and ask the user if we're missing
 hasp_input_name="$@"
 
@@ -17,17 +16,61 @@ then
 fi
 
 # Confirm that we're working in the .homeassistant folder by checking for configuration.yaml
-if [ ! -f configuration.yaml ]; then
-  echo "ERROR: 'configuration.yaml' not found in current directory."
-  echo "Searching for Home-Assistant configuration".
+if [ ! -f configuration.yaml ]
+then
+  echo "WARNING: 'configuration.yaml' not found in current directory."
+  echo "Searching for Home Assistant 'configuration.yaml'..."
   configfile=$(find / -name configuration.yaml 2>/dev/null)
   count=$(echo "$configfile" | wc -l)
-  if [ $count == 1 ]; then
+  if [ $count == 1 ]
+  then
     configdir=$(dirname "${configfile}")
     cd $configdir
   else
-    echo "Please run this script from '.homeassistant'"
+    echo "ERROR: Failed to locate the active 'configuration.yaml'"
+    echo "       Please run this script from the homeassistant"
+    echo "       configuration folder for your environment."
     exit 1
+  fi
+fi
+
+# Check for write access to configuration.yaml
+if [ ! -w configuration.yaml ]
+then
+  echo "ERROR: Cannot write to 'configuration.yaml'."
+  exit 1
+fi
+
+# Check to see if packages are being included
+if ! grep "^  packages: \!include_dir_named packages" configuration.yaml > /dev/null
+then
+  if grep "  packages: " configuration.yaml > /dev/null
+  then
+    echo "WARNING: Conflicting packages definition found in 'configuration.yaml'."
+    echo "         Please add the following statement to your configuration:"
+    echo ""
+    echo "homeassistant:"
+    echo "  packages: !include_dir_named packages"
+    echo ""
+  else
+    sed -i 's/^homeassistant:.*/homeassistant:\n  packages: !include_dir_named packages/' configuration.yaml
+  fi
+fi
+
+# Enable recorder if not enabled to persist slider values
+if ! grep "^recorder:" configuration.yaml > /dev/null
+then
+  echo "recorder:" >> configuration.yaml
+fi
+
+# Enable MQTT if not enabled
+if ! grep "^mqtt:" configuration.yaml > /dev/null
+then
+  echo "mqtt:" >> configuration.yaml
+  # Check to see if we're running hass.io
+  if [ -f /etc/alpine-release ]
+  then
+    echo "  broker: core-mosquitto" >> configuration.yaml
   fi
 fi
 
@@ -72,16 +115,16 @@ then
   mkdir $hasp_temp_dir/packages/$hasp_device
   for file in $hasp_temp_dir/packages/plate01/*
   do
-      new_file=`echo $file | sed s/plate01/$hasp_device/g`
-      if [ -f $file ]
+    new_file=`echo $file | sed s/plate01/$hasp_device/g`
+    if [ -f $file ]
+    then
+      mv $file $new_file
+      if [ $? -ne 0 ]
       then
-          mv $file $new_file
-          if [ $? -ne 0 ]
-          then
-              echo "ERROR: Could not copy $file to $new_file"
-              exit 1
-          fi
+        echo "ERROR: Could not copy $file to $new_file"
+        exit 1
       fi
+    fi
   done
   rm -rf $hasp_temp_dir/packages/plate01
 fi

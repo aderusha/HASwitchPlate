@@ -1,8 +1,23 @@
 # Home Assistant integration
 
-Configuring Home Assistant for the HASP requires making some basic changes to your configuration and downloading the pacakges to your installation.  The procedure will be a little different if you're running Hass.io, so [skip to that section](#hassio) or continue below for a standard Home Assistant installation (hassbian, venv, whatever).
+Configuring Home Assistant for the HASP requires making some basic changes to your configuration and downloading the packages to your installation.  The procedure will be a little different if you're running Hass.io, so [skip to that section](#hassio) or continue below for a standard Home Assistant installation (hassbian, venv, whatever).
 
-## Standard Home Assistant installation
+## Automatic Home Assistant installation
+
+For standard Home Assistant installations you can run an [automatic deployment script](../Home_Assistant/deployhasp.sh) which will attempt to make the required changes to your Home Assistant installation to support the HASP and a [Home Assistant Packages](../Home_Assistant/packages) bundle for each HASP device which you deploy.  If you'd rather make all the changes yourself, jump to the [Manual Home Assistant installation section](#manual-home-assistant-installation).
+
+You'll need to ssh to your Home Assistant installation as a user who has access to write to your home assistant installation.  For most installations, this will be the user `homeassistant`. 
+
+```bash
+cd ~/.homeassistant
+bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
+```
+
+You will be prompted for a device name and the script will do the rest.  Once it completes, restart your Home Assistant service to apply changes and then continue to the [First time setup](#first-time-setup) section below to initialize your environment.
+
+---
+
+## Manual Home Assistant installation
 
 ### `configuration.yaml` changes
 
@@ -41,27 +56,24 @@ recorder:
 
 ### `deployhasp.sh`
 
-Now you'll need to copy over the [packages directory](https://github.com/aderusha/HASwitchPlate/tree/master/Home_Assistant/packages) and modify it for your new device.  A script has been created for this process which you can execute from your Home Assistant server with the following commands:
+Now you'll need to copy over the [packages directory](https://github.com/aderusha/HASwitchPlate/tree/master/Home_Assistant/packages) and modify it for your new device.  The folder name, file names, and the contents of the `.yaml` files will all need to have `plate01` replaced with your new device name.
 
-```bash
-cd ~/.homeassistant
-bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
-```
+Finally, you'll need to restart Home Assistant to apply your changes then continue to the [First time setup](#first-time-setup) section below to initialize your environment.
 
-Finally, you'll need to restart Home Assistant to apply your changes.
+---
 
 ## Hass.io
 
-If you're running [Hass.io](https://www.home-assistant.io/hassio/), you'll need to install and configure the [`Mosquitto broker`](https://www.home-assistant.io/addons/mosquitto/) and [`SSH server`](https://www.home-assistant.io/addons/ssh/) add-ons from the default repository.  Once those are installed and started, ssh to your hass.io installation and execute the following commands:
+If you're running [Hass.io](https://www.home-assistant.io/hassio/), you'll need to install and configure the [`Mosquitto broker`](https://www.home-assistant.io/addons/mosquitto/) and [`SSH server`](https://www.home-assistant.io/addons/ssh/) add-ons from the default repository.  Be sure to follow the configuration instructions provided for both add-ons.  Once those are installed, configured, and started, you can ssh to your hass.io installation and execute the following commands:
 
 ```bash
 cd /config
-sed -i 's/^homeassistant:.*/homeassistant:\n  packages: !include_dir_named packages/' configuration.yaml
-echo "recorder:" >> configuration.yaml
 apk add tar wget
 bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
 reboot
 ```
+
+---
 
 ## First time setup
 
