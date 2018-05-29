@@ -67,6 +67,7 @@ then
   echo "recorder:" >> configuration.yaml
   echo "  include:" >> configuration.yaml
   echo "    domains:" >> configuration.yaml
+  echo "    - automation" >> configuration.yaml
   echo "    - input_boolean" >> configuration.yaml
   echo "    - input_number" >> configuration.yaml
   echo "    - input_select" >> configuration.yaml
