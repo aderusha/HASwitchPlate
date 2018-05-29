@@ -1,15 +1,4 @@
 ##############################################################################
-# Create a group of lights to be toggled
-group:
-  light_toggle_group:
-    name: Light Toggle Group
-    view: no
-    entities:
-      - light.light_1
-      - light.light_2
-      - light.light_3
-
-##############################################################################
 # Automations for handling toggle state buttons on page 3
 automation:
   # Set font and text for toggle buttons on device connection

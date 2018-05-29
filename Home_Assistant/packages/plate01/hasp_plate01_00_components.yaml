@@ -49,6 +49,8 @@ sensor:
     json_attributes:
       - espVersion
       - updateESPAvailable
+      - lcdVersion
+      - updateLcdAvailable
       - espUptime
       - signalStrength
       - haspIP
@@ -208,9 +210,7 @@ automation:
 ##############################################################################
 # Set default values for input_text/number sliders
   - alias: hasp_plate01_00_FirstTimeSetup
-    trigger:
-      - platform: event
-        event_type: DUMMY_EVENT_USE_MANUAL_TRIGGER
+    trigger: []
     action:
       - service: input_text.set_value
         data:
