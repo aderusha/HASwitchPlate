@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# deployhasp.sh - download the latest HASP automation package and modify for the provided device name
+###############################################################################
+# deployhasp.sh - Configure Home Assistnat for HASP integration, then download
+# the latest HASP automation package and modify for the provided device name
+###############################################################################
+
 # Check that a new device name has been supplied and ask the user if we're missing
 hasp_input_name="$@"
 
@@ -44,7 +48,7 @@ fi
 # Check to see if packages are being included
 if ! grep "^  packages: \!include_dir_named packages" configuration.yaml > /dev/null
 then
-  if grep "  packages: " configuration.yaml > /dev/null
+  if grep "^  packages: " configuration.yaml > /dev/null
   then
     echo "WARNING: Conflicting packages definition found in 'configuration.yaml'."
     echo "         Please add the following statement to your configuration:"
@@ -57,10 +61,17 @@ then
   fi
 fi
 
-# Enable recorder if not enabled to persist slider values
+# Enable recorder if not enabled to persist input values
 if ! grep "^recorder:" configuration.yaml > /dev/null
 then
   echo "recorder:" >> configuration.yaml
+  echo "  include:" >> configuration.yaml
+  echo "    domains:" >> configuration.yaml
+  echo "    - input_boolean" >> configuration.yaml
+  echo "    - input_number" >> configuration.yaml
+  echo "    - input_select" >> configuration.yaml
+  echo "    - input_datetime" >> configuration.yaml
+  echo "    - input_text" >> configuration.yaml
 fi
 
 # Enable MQTT if not enabled
@@ -77,15 +88,18 @@ fi
 # Hass has a bug where packaged automations don't work unless you have at least one
 # automation manually created outside of the packages.  Attempt to test for that and
 # create a dummy automation if an empty automations.yaml file is found.
-if [ -f automations.yaml ]
+if grep "^automation: \!include automations.yaml"
 then
-  if [[ $(< automations.yaml) == "[]" ]]
+  if [ -f automations.yaml ]
   then
-    echo "WARNING: empty automations.yaml found, creating DUMMY automation for package compatibility"
-    echo "- action: []" > automations.yaml
-    echo "  id: DUMMY" >> automations.yaml
-    echo "  alias: DUMMY Can Be Deleted After First Automation Has Been Added" >> automations.yaml
-    echo "  trigger: []" >> automations.yaml
+    if [[ $(< automations.yaml) == "[]" ]]
+    then
+      echo "WARNING: empty automations.yaml found, creating DUMMY automation for package compatibility"
+      echo "- action: []" > automations.yaml
+      echo "  id: DUMMY" >> automations.yaml
+      echo "  alias: DUMMY Can Be Deleted After First Automation Has Been Added" >> automations.yaml
+      echo "  trigger: []" >> automations.yaml
+    fi
   fi
 fi
 
