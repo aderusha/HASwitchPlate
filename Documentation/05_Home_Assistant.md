@@ -9,6 +9,7 @@ For standard Home Assistant installations you can run an [automatic deployment s
 You'll need to ssh to your Home Assistant installation as a user who has access to write to your home assistant installation.  For most installations, this will be the user `homeassistant`. 
 
 ```bash
+sudo su -s /bin/bash homeassistant
 cd ~/.homeassistant
 bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
 ```
