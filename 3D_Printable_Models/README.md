@@ -9,6 +9,7 @@ Above you'll find STL files ready for slicing and the source models editable in 
 * **[HASwitchPlate_front_single.stl](HASwitchPlate_front_single.stl)** Standard single-wide plate. `[HASP]`
 * **[HASwitchPlate_front_double_decora_right.stl](HASwitchPlate_front_double_decora_right.stl)** Double-wide plate with Decora switch to the right `[HASP|Decora]`
 * **[HASwitchPlate_front_double_toggle_right.stl](HASwitchPlate_front_double_toggle_right.stl)** Double-wide plate with toggle switch to the right `[HASP|toggle]`
+* **[HASwitchPlate_front_5x_decora_center.stl](HASwitchPlate_front_5x_decora_center.stl)** 5-wide plate with 4x Decora switches and HASP in center `[Decora|Decora|HASP|Decora|Decora]`
 
 ### Rear enclosure models
 
