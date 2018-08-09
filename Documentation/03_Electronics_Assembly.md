@@ -13,9 +13,11 @@ Once the [ESP8266](01_Arduino_Sketch.md) and [Nextion](02_Nextion_HMI.md) firmwa
 
 ### First-time Setup
 
-With your device has been flashed and wired up, plug the WeMos into a USB port to power up your HASP.  You should be presented with an initialization screen and then information regarindg WiFi access along with a QR code for easy connection.  Connect to the WiFi SSID and password displayed on the Nextion (or serial output if you don't have the Nextion ready).  You should be prompted to open a [configuration website](http://192.168.4.1) to find your WiFi network and password.  You can set the MQTT broker information and admin credentials now, or use the web interface to do so later.  Once you `save settings` the device will connect to your network.  Congratulations, you are now online!
+With your device flashed and wired up, plug the WeMos into a USB port to power up your HASP.  You should be presented with an initialization screen and then information regarding WiFi access along with a QR code for easy connection.  With a PC or mobile device, connect to the WiFi SSID and password displayed on the Nextion (or serial output if you don't have the Nextion ready).  You should be prompted to open a [configuration website](http://192.168.4.1) which will allow you to configure HASP to connect to your WiFi network.  You can set the MQTT broker information and admin credentials now, or use the web interface to do so later.  Once you `save settings` the device will connect to your network.  Congratulations, you are now online!
 
 ![WiFi Config 0](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_0.png?raw=true) ![WiFi Config 1](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_1.png?raw=true) ![WiFi Config 2](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_2.png?raw=true)
+
+If you are still testing the HASP before complete assembly, continue to the [Home Assistant section](../05_Home_assistant.md) to configure you Home Assistant installation to support your HASP device.
 
 ---
 

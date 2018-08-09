@@ -16,7 +16,7 @@ If you want to jump right in, follow the steps below in order to build and setup
 
 ### Step 1 - [Arduino Sketch](01_Arduino_Sketch.md)
 
-Get started with deploying your code to the ESP8266 and getting it connected to WiFi and your MQTT broker.
+Get started with deploying your code to the ESP8266.
 
 ### Step 2 - [Nextion HMI](02_Nextion_HMI.md)
 
