@@ -16,9 +16,11 @@ For advanced customization you will need to download the (Windows-only) [Nextion
 
 The Nextion accepts and sends commands over the serial interface.  A [detailed guide to the Nextion instruction set can be found here](https://nextion.itead.cc/resources/documents/instruction-set/).  [A mostly-complete list of all available instructions and their use is available here](https://www.itead.cc/wiki/Nextion_Instruction_Set).
 
-Once the project is assembled, future updates to the Nextion firmware can be handled over-the-air by [issuing an MQTT command](06_MQTT_Control.md#command-syntax) with a URL to the target TFT file.
+Once the project is assembled, future updates to the Nextion firmware can be handled over-the-air by utilizing the built-in web interface or by [issuing an MQTT command](06_MQTT_Control.md#command-syntax) with a URL to the target TFT file.
 
-## How to: Run this software with an ESP8266 only
+---
+
+## HOW TO: Run this software with an ESP8266 only
 
 One feature of the Nextion Editor is the [Nextion Simulator](https://www.itead.cc/wiki/Nextion_Editor_Quick_Start_Guide#Debug.2C_online_simulator), which allows the user to debug an HMI being edited.  You've probably used this if you've worked on editing your own HMI file.  You can run through the screens using your mouse to issue touch commands and feed it commands and see output in the text boxes provided.
 
