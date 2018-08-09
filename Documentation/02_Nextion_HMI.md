@@ -2,7 +2,7 @@
 
 ## Basic first-time use
 
-For most users the deployment of the Nextion firmware is straightforward - simply copy [the compiled firmware image](../Nextion_HMI/HASwitchPlate.tft) to a FAT32-formatted microSD card and apply 5VDC to the power pins on the panel with the card inserted.  It should power up the panel, recognize the .TFT file, and update the panel automatically.  Once the firmware update has completed you can eject the card and restart the device.
+For most users the deployment of the Nextion firmware is straightforward - simply copy [the compiled firmware image](../Nextion_HMI/HASwitchPlate.tft) to a FAT32-formatted microSD card, insert the micrSD card into the Nextion LCD, and then apply 5VDC to the power pins on the panel.  It should power up the panel, recognize the .TFT file, and update the panel automatically.  Once the firmware update has completed you can remove power and eject the micrSD card.
 
 Two compiled TFT files are included for the [Basic](https://github.com/aderusha/HASwitchPlate/raw/master/Nextion_HMI/HASwitchPlate.tft) and [Enhanced](https://github.com/aderusha/HASwitchPlate/raw/master/Nextion_HMI/HASwitchPlate-Enhanced.tft) versions of the panel.  This project does not currently utilize any features offered in the Enhanced panel.
 
