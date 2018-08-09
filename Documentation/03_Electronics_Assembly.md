@@ -17,7 +17,7 @@ With your device flashed and wired up, plug the WeMos into a USB port to power u
 
 ![WiFi Config 0](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_0.png?raw=true) ![WiFi Config 1](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_1.png?raw=true) ![WiFi Config 2](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_2.png?raw=true)
 
-If you are still testing the HASP before complete assembly, continue to the [Home Assistant section](../05_Home_Assistant.md) to configure your Home Assistant installation to support your HASP device.
+If you are still testing the HASP before complete assembly, continue to the [Home Assistant section](05_Home_Assistant.md) to configure your Home Assistant installation to support your HASP device.
 
 ---
 
