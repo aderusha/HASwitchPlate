@@ -19,7 +19,9 @@ If you're running Windows and you just want to get started without dealing with 
 * Navigate to the HASP firmware image you downloaded and click `Open` to select it
 * Switch back to the `Operation` tab and click `Flash(F)`
 
-Now proceed to [First-time Setup](#first-time-setup) to connect to your wireless network.
+Now proceed to the [Nextion HMI](02_Nextion_HMI.md) document to flash firmware to the LCD.
+
+---
 
 ## Arduino IDE
 
@@ -35,12 +37,6 @@ Next you will need to add several libraries to your Arduino environment.  [Follo
 
 To enable future firmware updates you'll need to modify settings in the Arudino IDE for 1M SPIFFs, leaving 3M free for code and updates.  In the Arduino IDE select `Tools` > `Flash Size:` > `4M (1M SPIFFS)`.  If you're using [PlatformIO](https://platformio.org/) instead of Arduino, [modify the build flags](http://docs.platformio.org/en/latest/platforms/espressif8266.html#flash-size) to include `-Wl,-Teagle.flash.4m1m.ld`
 ![Arduino Erase All Flash Contents](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Arduino_1M_SPIFFS.png?raw=true)
-
-## First-time Setup
-
-Once your device has been flashed, restart it and connect to the WiFi SSID and password displayed on the Nextion (or serial output if you don't have the Nextion ready).  You should be prompted to open a [configuration website](http://192.168.4.1) to find your WiFi network and password.  You can set the MQTT broker information and admin credentials now, or use the web interface to do so later.  Once you `save settings` the device will connect to your network.  Congratulations, you are now online!
-
-![WiFi Config 0](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_0.png?raw=true) ![WiFi Config 1](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_1.png?raw=true) ![WiFi Config 2](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/WiFi_Config_2.png?raw=true)
 
 ## Firmware updates
 
