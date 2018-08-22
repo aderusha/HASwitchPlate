@@ -8,30 +8,18 @@ automation:
       topic: 'hasp/plate01/status'
       payload: 'ON'
     action:
-    - service: mqtt.publish
+    - service: script.hasp_plate01_update_message
       data:
-        topic: 'hasp/plate01/command/p[3].b[4].font'
-        payload: '2'
-    - service: mqtt.publish
+        objectId: 'p[3].b[4]'
+        text: '"Light 1"'
+    - service: script.hasp_plate01_update_message
       data:
-        topic: 'hasp/plate01/command/p[3].b[4].txt'
-        payload: '"Light 1"'
-    - service: mqtt.publish
+        objectId: 'p[3].b[5]'
+        text: '"Light 2"'
+    - service: script.hasp_plate01_update_message
       data:
-        topic: 'hasp/plate01/command/p[3].b[5].font'
-        payload: '2'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[5].txt'
-        payload: '"Light 2"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[6].font'
-        payload: '2'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[6].txt'
-        payload: '"Light 3"'
+        objectId: 'p[3].b[6]'
+        text: '"Light 3"'
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[3].b[7].font'
@@ -46,7 +34,7 @@ automation:
     action:
       service: homeassistant.toggle
       entity_id: light.light_1
-      
+
   # Toggle light2 when p[3].b[5] pressed
   - alias: hasp_plate01_p3_ToggleLight2
     trigger:
@@ -81,7 +69,7 @@ automation:
             homeassistant.turn_on
           {%- endif %}
       entity_id: group.light_toggle_group
-      
+
   # Toggle colors on p[3].b[4] when light1 changes
   - alias: hasp_plate01_p3_ToggleColor1
     trigger:
