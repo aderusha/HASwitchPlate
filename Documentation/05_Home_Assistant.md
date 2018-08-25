@@ -6,7 +6,7 @@ Configuring Home Assistant for the HASP requires making some basic changes to yo
 
 For standard Home Assistant installations you can run an [automatic deployment script](../Home_Assistant/deployhasp.sh) which will attempt to make the required changes to your Home Assistant installation to support the HASP and a [Home Assistant Packages](../Home_Assistant/packages) bundle for each HASP device which you deploy.  If you'd rather make all the changes yourself, jump to the [Manual Home Assistant installation section](#manual-home-assistant-installation).
 
-You'll need to ssh to your Home Assistant installation as a user who has access to write to your home assistant installation.  For most installations, this will be the user `homeassistant`. 
+You'll need to ssh to your Home Assistant installation as a user who has access to write to your home assistant installation.  For most installations, this will be the user `homeassistant`.
 
 ```bash
 sudo su -s /bin/bash homeassistant
@@ -55,9 +55,21 @@ The [Home Assistant Recorder](https://www.home-assistant.io/components/recorder/
 recorder:
 ```
 
+### Python Script
+
+The [Python Script](https://www.home-assistant.io/components/python_script/) component is required to simplify all of the automations for HASP.  You can enable Python Script by adding the following line to your `configuration.yaml`:
+
+```yaml
+# Example configuration.yaml entry
+python_script:
+```
+
+You'll also need to make a folder named `python_scripts` at the root of your configuration folder (where `configuration.yaml` lives)
+
 ### `deployhasp.sh`
 
 Now you'll need to copy over the [packages directory](https://github.com/aderusha/HASwitchPlate/tree/master/Home_Assistant/packages) and modify it for your new device.  The folder name, file names, and the contents of the `.yaml` files will all need to have `plate01` replaced with your new device name.
+You'll also need to copy over the hasp_update_message.py file into the python_scripts folder. No matter how many HASP units you are using, you'll only need this copy this file once.
 
 Finally, you'll need to restart Home Assistant to apply your changes then continue to the [First time setup](#first-time-setup) section below to initialize your environment.
 

@@ -9,14 +9,16 @@ automation:
       topic: 'hasp/plate01/status'
       payload: 'ON'
     action:
-    - service: script.hasp_plate01_update_message
-      data:
-        objectId: 'p[2].b[4]'
-        text: "\"{{(now().strftime('%I')|int)~now().strftime(':%M')}}\""
-    - service: script.hasp_plate01_update_message
-      data:
-        objectId: 'p[2].b[5]'
-        text: "\"{{now().strftime('%B ') ~ now().day}}\""
+    - service: python_script.hasp_update_message
+      data_template:
+        nodename: plate01
+        object_id: 'p[2].b[4]'
+        text: "{{(now().strftime('%I')|int)~now().strftime(':%M')}}"
+    - service: python_script.hasp_update_message
+      data_template:
+        nodename: plate01
+        object_id: 'p[2].b[5]'
+        text: "{{now().strftime('%B ') ~ now().day}}"
 
   # Send the current time every minute
   - alias: hasp_plate01_p2_ClockUpdate
@@ -29,10 +31,11 @@ automation:
       entity_id: 'binary_sensor.plate01_connected'
       state: 'on'
     action:
-    - service: script.hasp_plate01_update_message
-      data:
-        objectId: 'p[2].b[4]'
-        text: "\"{{(now().strftime('%I')|int)~now().strftime(':%M')}}\""
+    - service: python_script.hasp_update_message
+      data_template:
+        nodename: plate01
+        object_id: 'p[2].b[4]'
+        text: "{{(now().strftime('%I')|int)~now().strftime(':%M')}}"
 
   # Send "Month Day" every day, scaling font to fit
   # 0 consolas 24 - 20 chars x 2 lines (wrapped)
@@ -48,7 +51,8 @@ automation:
       entity_id: 'binary_sensor.plate01_connected'
       state: 'on'
     action:
-    - service: script.hasp_plate01_update_message
-      data:
-        objectId: 'p[2].b[5]'
-        text: "\"{{now().strftime('%B ') ~ now().day}}\""
+    - service: python_script.hasp_update_message
+      data_template:
+        nodename: plate01
+        object_id: 'p[2].b[5]'
+        text: "{{now().strftime('%B ') ~ now().day}}"

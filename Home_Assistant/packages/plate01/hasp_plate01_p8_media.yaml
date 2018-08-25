@@ -77,10 +77,11 @@ automation:
       topic: 'hasp/plate01/status'
       payload: 'ON'
     action:
-    - service: script.hasp_plate01_update_message
-      data:
-        objectId: 'p[8].b[4]'
-        text: '"{{ states.sensor.media_player_artist.state|wordwrap(20, wrapstring="\\r") }}"'
+    - service: python_script.hasp_update_message
+      data_template:
+        nodename: plate01
+        object_id: 'p[8].b[4]'
+        text: '{{ states.sensor.media_player_artist.state|wordwrap(20, wrapstring="\\r") }}'
 
   - alias: hasp_plate01_p8_MediaTitle
     trigger:
@@ -90,20 +91,30 @@ automation:
       topic: 'hasp/plate01/status'
       payload: 'ON'
     action:
-    - service: script.hasp_plate01_update_message
-      data:
-        objectId: 'p[8].b[5]'
-        text: '"{{ states.sensor.media_player_title.state|wordwrap(20, wrapstring="\\r") }}"'
+    - service: python_script.hasp_update_message
+      data_template:
+        nodename: plate01
+        object_id: 'p[8].b[5]'
+        text: '{{ states.sensor.media_player_title.state|wordwrap(20, wrapstring="\\r") }}'
 
   - alias: hasp_plate01_p8_MediaPlayPause
     trigger:
     - platform: state
       entity_id: media_player.media_player
     action:
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[8].b[7].txt'
-        payload_template: "\"{%- if is_state('media_player.media_player', 'playing') %};{% elif is_state('media_player.media_player', 'paused') %}4{% endif -%}\""
+    - service: python_script.hasp_update_message
+      data_template:
+        nodename: plate01
+        object_id: 'p[8].b[7]'
+        text: >
+          {% if is_state('media_player.media_player', 'playing') %}
+          ;
+          {% elif is_state('media_player.media_player', 'paused') %}
+          4
+          {% else %}
+          ;
+          {% endif %}
+        update_font: 'false'
 
   # Volume slider value published, apply published state
   - alias: hasp_plate01_p8_MediaVolSliderUpdateHass

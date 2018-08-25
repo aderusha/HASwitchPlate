@@ -7,18 +7,21 @@ automation:
       topic: 'hasp/plate01/status'
       payload: 'ON'
     action:
-    - service: script.hasp_plate01_update_message
+    - service: python_script.hasp_update_message
       data:
-        objectId: 'p[4].b[4]'
-        text: '"Light 1"'
-    - service: script.hasp_plate01_update_message
+        nodename: plate01
+        object_id: 'p[4].b[4]'
+        text: 'Light 1'
+    - service: python_script.hasp_update_message
       data:
-        objectId: 'p[4].b[5]'
-        text: '"Light 2"'
-    - service: script.hasp_plate01_update_message
+        nodename: plate01
+        object_id: 'p[4].b[5]'
+        text: 'Light 2'
+    - service: python_script.hasp_update_message
       data:
-        objectId: 'p[4].b[6]'
-        text: '"Light 3"'
+        nodename: plate01
+        object_id: 'p[4].b[6]'
+        text: 'Light 3'
 
   - alias: hasp_plate01_p4_Dimmer7UpdateHass
     trigger:

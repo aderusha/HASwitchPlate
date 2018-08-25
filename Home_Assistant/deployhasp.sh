@@ -75,6 +75,12 @@ then
   echo "    - input_text" >> configuration.yaml
 fi
 
+# Enable python_script if not enabled to simplify HASP automations
+if ! grep "^python_script:" configuration.yaml > /dev/null
+then
+  echo "python_script:" >> configuration.yaml
+fi
+
 # Enable MQTT if not enabled
 if ! grep "^mqtt:" configuration.yaml > /dev/null
 then
@@ -147,3 +153,14 @@ fi
 # Copy everything over and burn the evidence
 cp -rf $hasp_temp_dir/* .
 rm -rf $hasp_temp_dir
+
+# Create the python_scripts folder if it doesn't already exist
+if [ ! -d python_scripts ]
+then
+  mkdir python_scripts
+fi
+# Download the hasp_update_message python script if it doesn't already exist
+if [ ! -f python_scripts/hasp_update_message.py ]
+then
+  wget -q -P python_scripts https://github.com/aderusha/HASwitchPlate/raw/master/Home_Assistant/python_scripts/hasp_update_message.py
+fi

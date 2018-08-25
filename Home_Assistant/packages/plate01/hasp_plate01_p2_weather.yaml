@@ -11,11 +11,13 @@ automation:
       topic: 'hasp/plate01/status'
       payload: 'ON'
     action:
-    - service: script.hasp_plate01_update_message
-      data:
-        objectId: 'p[2].b[6]'
-        text: '"{{states.sensor.weather_temperature.state}}F"'
-    - service: script.hasp_plate01_update_message
-      data:
-        objectId: 'p[2].b[7]'
-        text: '"{{states.sensor.weather_current.state|wordwrap(20, wrapstring="\\r")}}"'
+    - service: python_script.hasp_update_message
+      data_template:
+        nodename: plate01
+        object_id: 'p[2].b[6]'
+        text: '{{states.sensor.weather_temperature.state}}F'
+    - service: python_script.hasp_update_message
+      data_template:
+        nodename: plate01
+        object_id: 'p[2].b[7]'
+        text: '{{states.sensor.weather_current.state|wordwrap(20, wrapstring="\\r")}}'
