@@ -18,7 +18,7 @@ As this build requires some specialist skills and tools, I will occasionally be 
 
 ## Bill of Materials
 
-To build a simple version of this project you will only need the [Nextion display]((https://www.itead.cc/nextion-nx3224t024.html)) and the [WeMos D1 Mini]((https://wiki.wemos.cc/products:d1:d1_mini)), 4 jumper wires, and a USB cable to power both devices.
+To build a simple version of this project you will minimally need the [Nextion display]((https://www.itead.cc/nextion-nx3224t024.html)) and the [WeMos D1 Mini]((https://wiki.wemos.cc/products:d1:d1_mini)), 4 jumper wires, and a USB cable to power both devices.
 
 A complete build that's ready to install will require the following components:
 
