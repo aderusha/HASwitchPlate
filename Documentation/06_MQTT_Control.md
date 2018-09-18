@@ -2,8 +2,7 @@
 
 ## MQTT Namespace
 
-By default the device will subscribe to `hasp/<node_name>/command/#` to accept incoming commands.
-The device will also subscribe to `hasp/<group_name>/command/#` to accept incoming commands aimed at a group of devices.
+By default the device will subscribe to `hasp/<node_name>/command/#` to accept incoming commands.  The device will also subscribe to `hasp/<group_name>/command/#` to accept incoming commands aimed at a group of devices.
 
 There are two subtopics to send commands to and receive messages from the panel:
 

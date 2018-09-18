@@ -72,7 +72,7 @@ MQTTClient mqttClient(256);
 ESP8266WebServer webServer(80);
 ESP8266HTTPUpdateServer httpOTAUpdate;
 
-const float haspVersion = 0.29;                  // Current HASP software release version
+const float haspVersion = 0.291;                 // Current HASP software release version
 byte nextionReturnBuffer[128];                   // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;                  // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                   // Track active LCD page
@@ -186,11 +186,13 @@ void loop()
     processNextionInput();
   }
 
-  if (WiFi.status() != WL_CONNECTED)
-  { // Check WiFi connection
-    setNextionAttr("p[0].b[1].txt", "\"WiFi Connecting\"");
+  while ((WiFi.status() != WL_CONNECTED) || (WiFi.localIP().toString() == "0.0.0.0"))
+  { // Check WiFi is connected and that we have a valid IP, retry until we do.
+    if (WiFi.status() == WL_CONNECTED)
+    { // If we're currently connected, disconnect so we can try again
+      WiFi.disconnect();
+    }
     setupWifi();
-    setNextionAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\"");
   }
 
   if (!mqttClient.connected())
@@ -273,6 +275,9 @@ void mqttConnect()
   // Loop until we're reconnected to MQTT
   while (!mqttClient.connected())
   {
+    // Create a reconnect counter
+    static uint8_t mqttReconnectCount = 0;
+
     // Generate an MQTT client ID as haspNode + our MAC address
     mqttClientId = String(haspNode) + "-" + String(espMac[0], HEX) + String(espMac[1], HEX) + String(espMac[2], HEX) + String(espMac[3], HEX) + String(espMac[4], HEX) + String(espMac[5], HEX);
     sendNextionCmd("page 0");
@@ -320,6 +325,8 @@ void mqttConnect()
       debugPrintln(String(F("MQTT: binary_sensor state: [")) + mqttStatusTopic + "] : [ON]");
       mqttClient.publish(mqttStatusTopic, "ON", true, 1);
 
+      mqttReconnectCount = 0;
+
       // Update panel with MQTT status
       setNextionAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\\rMQTT Connected:\\r" + String(mqttServer) + "\"");
       debugPrintln(F("MQTT: connected"));
@@ -329,9 +336,14 @@ void mqttConnect()
       }
     }
     else
-    { // Wait 10 seconds before retrying
-      debugPrintln(String(F("MQTT connection failed, rc=")) + String(mqttClient.returnCode()) + String(F(".  Trying again in 10 seconds.")));
-      delay(1000);
+    { // Retry until we give up and restart
+      mqttReconnectCount++;
+      if (mqttReconnectCount > 5)
+      {
+        debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Restarting device.")));
+        espReset();
+      }
+      debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Trying again in 10 seconds.")));
       unsigned long mqttReconnectTimeout = 10000;  // timeout for MQTT reconnect
       unsigned long mqttReconnectTimer = millis(); // record current time for our timeout
       while ((millis() - mqttReconnectTimer) < mqttReconnectTimeout)
@@ -378,14 +390,12 @@ void mqttCallback(String &strTopic, String &strPayload)
     // '[...]/group/command' -m '' = undefined
     // currently undefined
   }
-  else if (strTopic == mqttCommandTopic
-        || strTopic == mqttGroupCommandTopic)
+  else if (strTopic == mqttCommandTopic || strTopic == mqttGroupCommandTopic)
   { // '[...]/device/command' -m 'dim 50' == sendNextionCmd("dim 50")
     // '[...]/group/command' -m 'dim 50' == sendNextionCmd("dim 50")
     sendNextionCmd(strPayload);
   }
-  else if (strTopic == (mqttCommandTopic + "/page")
-        || strTopic == (mqttGroupCommandTopic + "/page"))
+  else if (strTopic == (mqttCommandTopic + "/page") || strTopic == (mqttGroupCommandTopic + "/page"))
   { // '[...]/device/command/page' -m '1' == sendNextionCmd("page 1")
     // '[...]/group/command/page' -m '1' == sendNextionCmd("page 1")
     if (nextionActivePage != strPayload.toInt())
@@ -394,14 +404,12 @@ void mqttCallback(String &strTopic, String &strPayload)
       sendNextionCmd("page " + strPayload);
     }
   }
-  else if (strTopic == (mqttCommandTopic + "/statusupdate")
-        || strTopic == (mqttGroupCommandTopic + "/statusupdate"))
+  else if (strTopic == (mqttCommandTopic + "/statusupdate") || strTopic == (mqttGroupCommandTopic + "/statusupdate"))
   { // '[...]/device/command/statusupdate' == mqttStatusUpdate()
     // '[...]/group/command/statusupdate' == mqttStatusUpdate()
     mqttStatusUpdate(); // return status JSON via MQTT;
   }
-  else if (strTopic == (mqttCommandTopic + "/lcdupdate")
-        || strTopic == (mqttGroupCommandTopic + "/lcdupdate"))
+  else if (strTopic == (mqttCommandTopic + "/lcdupdate") || strTopic == (mqttGroupCommandTopic + "/lcdupdate"))
   { // '[...]/device/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' == startNextionOtaDownload("http://192.168.0.10/local/HASwitchPlate.tft")
     // '[...]/group/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' == startNextionOtaDownload("http://192.168.0.10/local/HASwitchPlate.tft")
     if (strPayload == "")
@@ -413,8 +421,7 @@ void mqttCallback(String &strTopic, String &strPayload)
       startNextionOtaDownload(strPayload);
     }
   }
-  else if (strTopic == (mqttCommandTopic + "/espupdate")
-        || strTopic == (mqttGroupCommandTopic + "/espupdate"))
+  else if (strTopic == (mqttCommandTopic + "/espupdate") || strTopic == (mqttGroupCommandTopic + "/espupdate"))
   { // '[...]/device/command/espupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin' == startEspOTA("http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin")
     // '[...]/group/command/espupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin' == startEspOTA("http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin")
     if (strPayload == "")
@@ -426,15 +433,13 @@ void mqttCallback(String &strTopic, String &strPayload)
       startEspOTA(strPayload);
     }
   }
-  else if (strTopic == (mqttCommandTopic + "/reboot")
-        || strTopic == (mqttGroupCommandTopic + "/reboot"))
+  else if (strTopic == (mqttCommandTopic + "/reboot") || strTopic == (mqttGroupCommandTopic + "/reboot"))
   { // '[...]/device/command/reboot' == reboot microcontroller)
     // '[...]/group/command/reboot' == reboot microcontroller)
     debugPrintln(F("MQTT: Rebooting device"));
     espReset();
   }
-  else if (strTopic == (mqttCommandTopic + "/factoryreset")
-        || strTopic == (mqttGroupCommandTopic + "/factoryreset"))
+  else if (strTopic == (mqttCommandTopic + "/factoryreset") || strTopic == (mqttGroupCommandTopic + "/factoryreset"))
   { // '[...]/device/command/factoryreset' == clear all saved settings)
     // '[...]/group/command/factoryreset' == clear all saved settings)
     clearSavedConfig();
@@ -857,8 +862,12 @@ void setupWifi()
     }
   }
   // If you get here you have connected to WiFi
+  setNextionAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\"");
   debugPrintln(String(F("WIFI: Connected succesfully and assigned IP: ")) + WiFi.localIP().toString());
-  sendNextionCmd("page " + String(nextionActivePage));
+  if (nextionActivePage)
+  {
+    sendNextionCmd("page " + String(nextionActivePage));
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -943,10 +952,13 @@ void startNextionOtaDownload(String otaUrl)
       debugPrintln(String(F("LCD OTA: File found at Server. Size ")) + String(lcdOtaRemaining) + String(F(" bytes in ")) + String(lcdOtaParts) + String(F(" 4k chunks.")));
 
       WiFiUDP::stopAll(); // Keep mDNS responder and MQTT traffic from breaking things
-      debugPrintln(F("LCD OTA: LCD firmware upload starting, closing MQTT connection."));
-      mqttClient.publish(mqttStatusTopic, "OFF");
-      mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
-      mqttClient.disconnect();
+      if (mqttClient.connected())
+      {
+        debugPrintln(F("LCD OTA: LCD firmware upload starting, closing MQTT connection."));
+        mqttClient.publish(mqttStatusTopic, "OFF");
+        mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
+        mqttClient.disconnect();
+      }
 
       // get tcp stream
       WiFiClient *stream = lcdOtaHttp.getStreamPtr();
@@ -1589,10 +1601,13 @@ void webHandleLcdUpload()
     webServer.send(200, "text/html", httpMessage);
 
     WiFiUDP::stopAll(); // Keep mDNS responder and MQTT traffic from breaking things
-    debugPrintln(F("LCD OTA: LCD firmware upload starting, closing MQTT connection."));
-    mqttClient.publish(mqttStatusTopic, "OFF");
-    mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
-    mqttClient.disconnect();
+    if (mqttClient.connected())
+    {
+      debugPrintln(F("LCD OTA: LCD firmware upload starting, closing MQTT connection."));
+      mqttClient.publish(mqttStatusTopic, "OFF");
+      mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
+      mqttClient.disconnect();
+    }
 
     debugPrintln(String(F("LCD OTA: Attempting firmware upload")));
     debugPrintln(String(F("LCD OTA: upload.filename: ")) + String(upload.filename));
@@ -1846,9 +1861,12 @@ bool updateCheck()
 void espReset()
 {
   debugPrintln(F("RESET: HASP reset"));
-  mqttClient.publish(mqttStatusTopic, "OFF");
-  mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
-  mqttClient.disconnect();
+  if (mqttClient.connected())
+  {
+    mqttClient.publish(mqttStatusTopic, "OFF");
+    mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
+    mqttClient.disconnect();
+  }
   delay(2000);
   Serial1.print("rest");
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
