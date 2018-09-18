@@ -52,7 +52,7 @@ automation:
       data_template:
         entity_id: 'input_number.hasp_plate01_activepage'
         value: '{{states.input_number.hasp_plate01_pagebutton1page.state|int}}'
-      
+
 ##############################################################################
 # select hasp_plate01_pagebutton2page in response to page button 2
   - alias: hasp_plate01_p0_PageButton2Action
@@ -89,7 +89,7 @@ automation:
       data_template:
         entity_id: 'input_number.hasp_plate01_activepage'
         value: '{{states.input_number.hasp_plate01_pagebutton2page.state|int}}'
-      
+
 ##############################################################################
 # select hasp_plate01_pagebutton3page in response to page button 3
   - alias: hasp_plate01_p0_PageButton3Action
@@ -154,7 +154,7 @@ automation:
       data_template:
         topic: 'hasp/plate01/command/page'
         payload: '{{ states.input_number.hasp_plate01_activepage.state | int }}'
-      
+
 ##############################################################################
 # Set page button text across all pages to the value selected in the interface
 
@@ -312,55 +312,49 @@ automation:
       topic: 'hasp/plate01/status'
       payload: 'ON'
     action:
-    - service: mqtt.publish
+    - service: python_script.hasp_update_colors
       data_template:
-        topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[1].bco'
-        payload_template: >-
+        nodename: plate01
+        object_id: 'p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[1]'
+        background: >-
           {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton1page.state|int -%}
             65535
           {%- else -%}
             25388
           {%- endif %}
-    - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[1].pco'
-        payload_template: >-
+        foreground: >-
           {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton1page.state|int -%}
             0
           {%- else -%}
             65535
           {%- endif %}
-    - service: mqtt.publish
+    - service: python_script.hasp_update_colors
       data_template:
-        topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[2].bco'
-        payload_template: >-
+        nodename: plate01
+        object_id: 'p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[2]'
+        background: >-
           {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton2page.state|int -%}
             65535
           {%- else -%}
             25388
           {%- endif %}
-    - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[2].pco'
-        payload_template: >-
+        foreground: >-
           {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton2page.state|int -%}
            0
           {%- else -%}
             65535
           {%- endif %}
-    - service: mqtt.publish
+    - service: python_script.hasp_update_colors
       data_template:
-        topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[3].bco'
-        payload_template: >-
+        nodename: plate01
+        object_id: 'p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[3]'
+        background: >-
           {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton3page.state|int -%}
             65535
           {%- else -%}
             25388
           {%- endif %}
-    - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[3].pco'
-        payload_template: >-
+        foreground: >-
           {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton3page.state|int -%}
             0
           {%- else -%}

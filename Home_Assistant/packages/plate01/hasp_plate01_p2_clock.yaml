@@ -9,22 +9,14 @@ automation:
       topic: 'hasp/plate01/status'
       payload: 'ON'
     action:
-    - service: mqtt.publish
+    - service: script.hasp_plate01_update_message
       data:
-        topic: 'hasp/plate01/command/p[2].b[4].font'
-        payload: '3'
-    - service: mqtt.publish
+        objectId: 'p[2].b[4]'
+        text: "\"{{(now().strftime('%I')|int)~now().strftime(':%M')}}\""
+    - service: script.hasp_plate01_update_message
       data:
-        topic: 'hasp/plate01/command/p[2].b[4].txt'
-        payload_template: "\"{{(now().strftime('%I')|int)~now().strftime(':%M')}}\""
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[2].b[5].font'
-        payload_template: '{% set datelength = (now().strftime("%B ") ~ now().day)|length %}{% if datelength <= 6 -%}3{% elif (datelength > 6) and (datelength <= 10) %}2{% elif (datelength > 10) and (datelength <= 15) %}1{% else %}0{%- endif %}'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[2].b[5].txt'
-        payload_template: "\"{{now().strftime('%B ') ~ now().day}}\""
+        objectId: 'p[2].b[5]'
+        text: "\"{{now().strftime('%B ') ~ now().day}}\""
 
   # Send the current time every minute
   - alias: hasp_plate01_p2_ClockUpdate
@@ -37,11 +29,11 @@ automation:
       entity_id: 'binary_sensor.plate01_connected'
       state: 'on'
     action:
-    - service: mqtt.publish
+    - service: script.hasp_plate01_update_message
       data:
-        topic: 'hasp/plate01/command/p[2].b[4].txt'
-        payload_template: "\"{{(now().strftime('%I')|int)~now().strftime(':%M')}}\""
-        
+        objectId: 'p[2].b[4]'
+        text: "\"{{(now().strftime('%I')|int)~now().strftime(':%M')}}\""
+
   # Send "Month Day" every day, scaling font to fit
   # 0 consolas 24 - 20 chars x 2 lines (wrapped)
   # 1 consolas 32 - 15 chars x 2 lines (wrapped)
@@ -56,11 +48,7 @@ automation:
       entity_id: 'binary_sensor.plate01_connected'
       state: 'on'
     action:
-    - service: mqtt.publish
+    - service: script.hasp_plate01_update_message
       data:
-        topic: 'hasp/plate01/command/p[2].b[5].font'
-        payload_template: '{% set datelength = (now().strftime("%B ") ~ now().day)|length %}{% if datelength <= 6 -%}3{% elif (datelength > 6) and (datelength <= 10) %}2{% elif (datelength > 10) and (datelength <= 15) %}1{% else %}0{%- endif %}'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[2].b[5].txt'
-        payload_template: "\"{{now().strftime('%B ') ~ now().day}}\""
+        objectId: 'p[2].b[5]'
+        text: "\"{{now().strftime('%B ') ~ now().day}}\""

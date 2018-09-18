@@ -97,7 +97,7 @@ automation:
       data:
         topic: 'hasp/plate01/command/p[7].b[15].font'
         payload: '0'
-  
+
   # set key labels at system start when system is disarmed, or when switching to disarmed
   - alias: hasp_plate01_p7_AlarmDisarmed
     trigger:
@@ -107,7 +107,7 @@ automation:
     - platform: state
       entity_id: alarm_control_panel.ha_alarm
       to: 'disarmed'
-    condition: 
+    condition:
       condition: state
       entity_id: alarm_control_panel.ha_alarm
       state: 'disarmed'
@@ -120,14 +120,12 @@ automation:
       data:
         topic: 'hasp/plate01/command/p[7].b[13].font'
         payload: '0'
-    - service: mqtt.publish
+    - service: python_script.hasp_update_colors
       data:
-        topic: 'hasp/plate01/command/p[7].b[13].pco'
-        payload: '63488'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[13].bco'
-        payload: '65535'
+        nodename: plate01
+        object_id: 'p[7].b[13]'
+        background: '65535'
+        foregound: '63488'
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[7].b[15].txt'
@@ -136,15 +134,13 @@ automation:
       data:
         topic: 'hasp/plate01/command/p[7].b[15].font'
         payload: '1'
-    - service: mqtt.publish
+    - service: python_script.hasp_update_colors
       data:
-        topic: 'hasp/plate01/command/p[7].b[15].pco'
-        payload: '65535'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[15].bco'
-        payload: '63488'
-  
+        nodename: plate01
+        object_id: 'p[7].b[15]'
+        background: '63488'
+        foregound: '65535'
+
   # set key labels at system start when system is armed_away, or when switching to armed_away
   - alias: hasp_plate01_p7_AlarmArmed
     trigger:
@@ -154,7 +150,7 @@ automation:
     - platform: state
       entity_id: alarm_control_panel.ha_alarm
       to: 'armed_away'
-    condition: 
+    condition:
       condition: state
       entity_id: alarm_control_panel.ha_alarm
       state: 'armed_away'
@@ -167,14 +163,12 @@ automation:
       data:
         topic: 'hasp/plate01/command/p[7].b[13].font'
         payload: '0'
-    - service: mqtt.publish
+    - service: python_script.hasp_update_colors
       data:
-        topic: 'hasp/plate01/command/p[7].b[13].pco'
-        payload: '65535'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[13].bco'
-        payload: '63488'
+        nodename: plate01
+        object_id: 'p[7].b[13]'
+        background: '63488'
+        foregound: '65535'
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[7].b[15].txt'
@@ -183,15 +177,13 @@ automation:
       data:
         topic: 'hasp/plate01/command/p[7].b[15].font'
         payload: '0'
-    - service: mqtt.publish
+    - service: python_script.hasp_update_colors
       data:
-        topic: 'hasp/plate01/command/p[7].b[13].pco'
-        payload: '63488'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[13].bco'
-        payload: '65535'
-        
+        nodename: plate01
+        object_id: 'p[7].b[13]'
+        background: '65535'
+        foregound: '63488'
+
   # This automation catches the key presses 1-9 and sets our input numbers in response.
   # Button p[7]b[4] is labeled 1, so I'm grabbing buttons p[7]b[4] through p[7]b[13]
   # then subtracting 3.  The math doesn't work out for button "0" so that will be handled
@@ -202,7 +194,7 @@ automation:
     - platform: mqtt
       topic: 'hasp/plate01/state/+'
       payload: 'ON'
-    condition: 
+    condition:
       condition: template
       value_template: '{{ (trigger.topic.split("/")[-1].split("p[")[1].split("]")[0]|int == 7) and ( 4 <= trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int <= 12) }}'
     action:
@@ -245,7 +237,7 @@ automation:
       data:
         entity_id: input_number.hasp_plate01_alarmcode4
         value: '0'
-  
+
   # Alarm panel is pending arm so update panel text
   - alias: hasp_plate01_p7_AlarmStatusPending
     trigger:
@@ -257,15 +249,15 @@ automation:
       data:
         topic: 'hasp/plate01/command/p[7].b[13].txt'
         payload: '"ARMING"'
-  
+
   # User is attempting to disarm the panel.  Send the alarm service our collected code then
-  # reset all the sliders.      
+  # reset all the sliders.
   - alias: hasp_plate01_p7_AlarmDisarm
     trigger:
       platform: mqtt
       topic: 'hasp/plate01/state/p[7].b[15]'
       payload: 'OFF'
-    condition: 
+    condition:
       condition: state
       entity_id: alarm_control_panel.ha_alarm
       state: 'armed_away'
@@ -290,7 +282,7 @@ automation:
       data_template:
         entity_id: input_number.hasp_plate01_alarmcode4
         value: '-1'
-        
+
   # User is attempting to arm the panel.  Send the alarm service our collected code then
   # reset all the sliders.
   - alias: hasp_plate01_p7_AlarmArm
@@ -298,7 +290,7 @@ automation:
       platform: mqtt
       topic: 'hasp/plate01/state/p[7].b[15]'
       payload: 'OFF'
-    condition: 
+    condition:
       condition: state
       entity_id: alarm_control_panel.ha_alarm
       state: 'disarmed'

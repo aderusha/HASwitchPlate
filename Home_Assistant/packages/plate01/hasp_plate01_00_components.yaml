@@ -240,3 +240,41 @@ automation:
         data:
           entity_id: 'input_number.hasp_plate01_activepage'
           value: 1
+
+script:
+##############################################################################
+# Selects the font size to best fit the input text
+# Required arguments:
+#   topic: the topic to publish to
+#   text: the text that should be sized
+  hasp_plate01_font_size_select:
+    sequence:
+      - service: mqtt.publish
+        data:
+          topic: "{{topic}}"
+          payload_template: >
+            {% set string_length = text)|length %}
+            {% if string_length <= 6 -%}
+              3
+            {% elif (string_length > 6) and (string_length <= 10) %}
+              2
+            {% elif (string_length > 10) and (string_length <= 15) %}
+              1
+            {% else %}
+              0
+            {%- endif %}"
+
+# Updates the message on the specified object making sure that the text fits
+# Required arguments:
+#   objectId: the id of the object on the HASP you want to update, eg: p[2].b[5]
+#   text: the text that should be sent
+  hasp_plate01_update_message:
+    sequence:
+      - service: script.hasp_plate01_font_size_select
+        data:
+          topic: "hasp/plate01/command/{{objectId}}.font"
+          text: "{{text}}"
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/{{objectId}}.txt"
+          payload_template: "{{text}}"

@@ -11,19 +11,11 @@ automation:
       topic: 'hasp/plate01/status'
       payload: 'ON'
     action:
-    - service: mqtt.publish
+    - service: script.hasp_plate01_update_message
       data:
-        topic: 'hasp/plate01/command/p[2].b[6].font'
-        payload: '3'
-    - service: mqtt.publish
+        objectId: 'p[2].b[6]'
+        text: '"{{states.sensor.weather_temperature.state}}F"'
+    - service: script.hasp_plate01_update_message
       data:
-        topic: 'hasp/plate01/command/p[2].b[6].txt'
-        payload_template: '"{{states.sensor.weather_temperature.state}}F"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[2].b[7].font'
-        payload_template: '{% if states.sensor.weather_current.state|length <= 6 -%}3{% elif (states.sensor.weather_current.state|length > 6) and (states.sensor.weather_current.state|length <= 10) %}2{% elif (states.sensor.weather_current.state|length > 10) and (states.sensor.weather_current.state|length <= 15) %}1{% else %}0{%- endif %}'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[2].b[7].txt'
-        payload_template: '"{{states.sensor.weather_current.state|wordwrap(20, wrapstring="\\r")}}"'
+        objectId: 'p[2].b[7]'
+        text: '"{{states.sensor.weather_current.state|wordwrap(20, wrapstring="\\r")}}"'
