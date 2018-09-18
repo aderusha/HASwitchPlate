@@ -16,14 +16,14 @@ automation:
       data:
         topic: 'hasp/plate01/command/p[9].b[5].font'
         payload: '1'
-
+   
   # Update status while printing
   - alias: hasp_plate01_p9_3DPrinterPrinting
     trigger:
     - platform: template
       value_template: "{% if is_state('sensor.octoprint_current_state', 'Printing') %}true{% endif %}"
     - platform: state
-      entity_id: sensor.octoprint_job_percentage
+      entity_id: sensor.octoprint_job_percentage    
     action:
     - service: mqtt.publish
       data:
@@ -33,10 +33,14 @@ automation:
       data:
         topic: 'hasp/plate01/command/p[9].b[4].pco'
         payload: '65535'
-    - service: script.hasp_plate01_update_message
+    - service: mqtt.publish
       data:
-        objectId: 'p[9].b[4]'
-        text: '"Status:Printing\rProgress:{{(states.sensor.octoprint_job_percentage.state)|default(0)|round(1)}}%"'
+        topic: 'hasp/plate01/command/p[9].b[4].font'
+        payload: '1'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[9].b[4].txt'
+        payload_template: '"Status:Printing\rProgress:{{(states.sensor.octoprint_job_percentage.state)|default(0)|round(1)}}%"'
 
   # Update status while printer is online but not printing
   - alias: hasp_plate01_p9_3DPrinterOperational
@@ -52,11 +56,15 @@ automation:
       data:
         topic: 'hasp/plate01/command/p[9].b[4].pco'
         payload: '5285'
-    - service: script.hasp_plate01_update_message
+    - service: mqtt.publish
       data:
-        objectId: 'p[9].b[4]'
-        text: '"Online"'
-
+        topic: 'hasp/plate01/command/p[9].b[4].font'
+        payload: '2'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[9].b[4].txt'
+        payload_template: '"Online"'
+  
   # Update status while printer is paused
   - alias: hasp_plate01_p9_3DPrinterPaused
     trigger:
@@ -71,11 +79,15 @@ automation:
       data:
         topic: 'hasp/plate01/command/p[9].b[4].pco'
         payload: '63488'
-    - service: script.hasp_plate01_update_message
+    - service: mqtt.publish
       data:
-        objectId: 'p[9].b[4]'
-        text: '"Paused"'
-
+        topic: 'hasp/plate01/command/p[9].b[4].font'
+        payload: '2'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[9].b[4].txt'
+        payload_template: '"Paused"'
+  
   # Show the head and bed temps.  My locale is set for deg F, and I want deg C, so
   # the values are being converted in the template code
   - alias: hasp_plate01_p9_3DPrinterTempText
@@ -97,8 +109,8 @@ automation:
       data:
         topic: 'hasp/plate01/command/p[9].b[5].txt'
         payload_template: '"Head: {{((states.sensor.octoprint_actual_tool0_temp.state|float-32)*(5/9))|round(1)}}/{{((states.sensor.octoprint_target_tool0_temp.state|float-32)*(5/9))|int}}\r Bed: {{((states.sensor.octoprint_actual_bed_temp.state|float-32)*(5/9))|round(1)}}/{{((states.sensor.octoprint_target_bed_temp.state|float-32)*(5/9))|int}}"'
-
-  # Every 30 seconds (default octoprint polling interval in Hass), add one pixel to the graph.
+  
+  # Every 30 seconds (default octoprint polling interval in Hass), add one pixel to the graph.      
   # The graph on page 9 has 4 divisions, so we're calling the origin (y=0 in the graph) 50deg C and the top line 250deg C
   # each pixel is one data point, the object on the page is 133 points tall
   # my Location is using deg F, so I need to convert from F to C then map 50-250 into a range of 1-133
