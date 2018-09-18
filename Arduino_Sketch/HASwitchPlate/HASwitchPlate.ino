@@ -37,6 +37,7 @@ char mqttPort[6] = "1883";
 char mqttUser[32] = "";
 char mqttPassword[32] = "";
 char haspNode[16] = "plate01";
+char groupName[16] = "plates";
 char configUser[32] = "admin";
 char configPassword[32] = "";
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,6 +101,7 @@ String mqttClientId;                             // Auto-generated MQTT ClientID
 String mqttGetSubtopic;                          // MQTT subtopic for incoming commands requesting .val
 String mqttStateTopic;                           // MQTT topic for outgoing panel interactions
 String mqttCommandTopic;                         // MQTT topic for incoming panel commands
+String mqttGroupCommandTopic;                    // MQTT topic for incoming group panel commands
 String mqttStatusTopic;                          // MQTT topic for publishing device connectivity state
 String mqttSensorTopic;                          // MQTT topic for publishing device information in JSON format
 String mqttLightCommandTopic;                    // MQTT topic for incoming panel backlight on/off commands
@@ -255,6 +257,7 @@ void mqttConnect()
   // MQTT topic string definitions
   mqttStateTopic = "hasp/" + String(haspNode) + "/state";
   mqttCommandTopic = "hasp/" + String(haspNode) + "/command";
+  mqttGroupCommandTopic = "hasp/" + String(groupName) + "/command";
   mqttStatusTopic = "hasp/" + String(haspNode) + "/status";
   mqttSensorTopic = "hasp/" + String(haspNode) + "/sensor";
   mqttLightCommandTopic = "hasp/" + String(haspNode) + "/light/switch";
@@ -263,6 +266,7 @@ void mqttConnect()
   mqttLightBrightStateTopic = "hasp/" + String(haspNode) + "/brightness/status";
 
   const String mqttCommandSubscription = mqttCommandTopic + "/#";
+  const String mqttGroupCommandSubscription = mqttGroupCommandTopic + "/#";
   const String mqttLightSubscription = "hasp/" + String(haspNode) + "/light/#";
   const String mqttLightBrightSubscription = "hasp/" + String(haspNode) + "/brightness/#";
 
@@ -288,9 +292,17 @@ void mqttConnect()
       {
         debugPrintln(String(F("MQTT: subscribed to ")) + mqttCommandTopic);
       }
+      if (mqttClient.subscribe(mqttGroupCommandTopic))
+      {
+        debugPrintln(String(F("MQTT: subscribed to ")) + mqttGroupCommandTopic);
+      }
       if (mqttClient.subscribe(mqttCommandSubscription))
       {
         debugPrintln(String(F("MQTT: subscribed to ")) + mqttCommandSubscription);
+      }
+      if (mqttClient.subscribe(mqttGroupCommandSubscription))
+      {
+        debugPrintln(String(F("MQTT: subscribed to ")) + mqttGroupCommandSubscription);
       }
       if (mqttClient.subscribe(mqttStatusTopic))
       {
@@ -342,39 +354,56 @@ void mqttCallback(String &strTopic, String &strPayload)
 
   // Incoming Namespace:
   // '[...]/device/command' -m '' = undefined
+  // '[...]/group/command' -m '' = undefined
   // '[...]/device/command' -m 'dim 50' = sendNextionCmd("dim 50")
   // '[...]/device/command/page' -m '1' = sendNextionCmd("page 1")
+  // '[...]/group/command/page' -m '1' = sendNextionCmd("page 1")
   // '[...]/device/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' = startNextionOtaDownload("http://192.168.0.10/local/HASwitchPlate.tft")
+  // '[...]/group/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' = startNextionOtaDownload("http://192.168.0.10/local/HASwitchPlate.tft")
   // '[...]/device/command/lcdupdate' -m '' = startNextionOtaDownload("lcdFirmwareUrl")
+  // '[...]/group/command/lcdupdate' -m '' = startNextionOtaDownload("lcdFirmwareUrl")
   // '[...]/device/command/espupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin' = startEspOTA("http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin")
+  // '[...]/group/command/espupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin' = startEspOTA("http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin")
   // '[...]/device/command/espupdate' -m '' = startEspOTA("espFirmwareUrl")
+  // '[...]/group/command/espupdate' -m '' = startEspOTA("espFirmwareUrl")
   // '[...]/device/command/p[1].b[4].txt' -m '' = getNextionAttr("p[1].b[4].txt")
+  // '[...]/group/command/p[1].b[4].txt' -m '' = getNextionAttr("p[1].b[4].txt")
   // '[...]/device/command/p[1].b[4].txt' -m '"Lights On"' = setNextionAttr("p[1].b[4].txt", "\"Lights On\"")
+  // '[...]/group/command/p[1].b[4].txt' -m '"Lights On"' = setNextionAttr("p[1].b[4].txt", "\"Lights On\"")
 
   debugPrintln(String(F("MQTT IN:  '")) + strTopic + "' : '" + strPayload + "'");
 
-  if ((strTopic == mqttCommandTopic) && (strPayload == ""))
+  if (((strTopic == mqttCommandTopic) || (strTopic == mqttGroupCommandTopic)) && (strPayload == ""))
   { // '[...]/device/command' -m '' = undefined
+    // '[...]/group/command' -m '' = undefined
     // currently undefined
   }
-  else if (strTopic == mqttCommandTopic)
+  else if (strTopic == mqttCommandTopic
+        || strTopic == mqttGroupCommandTopic)
   { // '[...]/device/command' -m 'dim 50' == sendNextionCmd("dim 50")
+    // '[...]/group/command' -m 'dim 50' == sendNextionCmd("dim 50")
     sendNextionCmd(strPayload);
   }
-  else if (strTopic == (mqttCommandTopic + "/page"))
+  else if (strTopic == (mqttCommandTopic + "/page")
+        || strTopic == (mqttGroupCommandTopic + "/page"))
   { // '[...]/device/command/page' -m '1' == sendNextionCmd("page 1")
+    // '[...]/group/command/page' -m '1' == sendNextionCmd("page 1")
     if (nextionActivePage != strPayload.toInt())
     { // Hass likes to send duplicate responses to things like page requests and there are no plans to fix that behavior, so try and track it locally
       nextionActivePage = strPayload.toInt();
       sendNextionCmd("page " + strPayload);
     }
   }
-  else if (strTopic == (mqttCommandTopic + "/statusupdate"))
-  {                     // '[...]/device/command/statusupdate' == mqttStatusUpdate()
+  else if (strTopic == (mqttCommandTopic + "/statusupdate")
+        || strTopic == (mqttGroupCommandTopic + "/statusupdate"))
+  { // '[...]/device/command/statusupdate' == mqttStatusUpdate()
+    // '[...]/group/command/statusupdate' == mqttStatusUpdate()
     mqttStatusUpdate(); // return status JSON via MQTT;
   }
-  else if (strTopic == (mqttCommandTopic + "/lcdupdate"))
+  else if (strTopic == (mqttCommandTopic + "/lcdupdate")
+        || strTopic == (mqttGroupCommandTopic + "/lcdupdate"))
   { // '[...]/device/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' == startNextionOtaDownload("http://192.168.0.10/local/HASwitchPlate.tft")
+    // '[...]/group/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' == startNextionOtaDownload("http://192.168.0.10/local/HASwitchPlate.tft")
     if (strPayload == "")
     {
       startNextionOtaDownload(lcdFirmwareUrl);
@@ -384,8 +413,10 @@ void mqttCallback(String &strTopic, String &strPayload)
       startNextionOtaDownload(strPayload);
     }
   }
-  else if (strTopic == (mqttCommandTopic + "/espupdate"))
+  else if (strTopic == (mqttCommandTopic + "/espupdate")
+        || strTopic == (mqttGroupCommandTopic + "/espupdate"))
   { // '[...]/device/command/espupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin' == startEspOTA("http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin")
+    // '[...]/group/command/espupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin' == startEspOTA("http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin")
     if (strPayload == "")
     {
       startEspOTA(espFirmwareUrl);
@@ -395,13 +426,17 @@ void mqttCallback(String &strTopic, String &strPayload)
       startEspOTA(strPayload);
     }
   }
-  else if (strTopic == (mqttCommandTopic + "/reboot"))
+  else if (strTopic == (mqttCommandTopic + "/reboot")
+        || strTopic == (mqttGroupCommandTopic + "/reboot"))
   { // '[...]/device/command/reboot' == reboot microcontroller)
+    // '[...]/group/command/reboot' == reboot microcontroller)
     debugPrintln(F("MQTT: Rebooting device"));
     espReset();
   }
-  else if (strTopic == (mqttCommandTopic + "/factoryreset"))
+  else if (strTopic == (mqttCommandTopic + "/factoryreset")
+        || strTopic == (mqttGroupCommandTopic + "/factoryreset"))
   { // '[...]/device/command/factoryreset' == clear all saved settings)
+    // '[...]/group/command/factoryreset' == clear all saved settings)
     clearSavedConfig();
   }
   else if (strTopic.startsWith(mqttCommandTopic) && (strPayload == ""))
@@ -410,9 +445,20 @@ void mqttCallback(String &strTopic, String &strPayload)
     mqttGetSubtopic = "/" + subTopic;
     getNextionAttr(subTopic);
   }
+  else if (strTopic.startsWith(mqttGroupCommandTopic) && (strPayload == ""))
+  { // '[...]/group/command/p[1].b[4].txt' -m '' == getNextionAttr("p[1].b[4].txt")
+    String subTopic = strTopic.substring(mqttGroupCommandTopic.length() + 1);
+    mqttGetSubtopic = "/" + subTopic;
+    getNextionAttr(subTopic);
+  }
   else if (strTopic.startsWith(mqttCommandTopic))
   { // '[...]/device/command/p[1].b[4].txt' -m '"Lights On"' == setNextionAttr("p[1].b[4].txt", "\"Lights On\"")
     String subTopic = strTopic.substring(mqttCommandTopic.length() + 1);
+    setNextionAttr(subTopic, strPayload);
+  }
+  else if (strTopic.startsWith(mqttGroupCommandTopic))
+  { // '[...]/group/command/p[1].b[4].txt' -m '"Lights On"' == setNextionAttr("p[1].b[4].txt", "\"Lights On\"")
+    String subTopic = strTopic.substring(mqttGroupCommandTopic.length() + 1);
     setNextionAttr(subTopic, strPayload);
   }
   else if (strTopic == mqttLightBrightCommandTopic)
@@ -722,6 +768,7 @@ void setupWifi()
     // id/name, placeholder/prompt, default value, length, extra tags
     WiFiManagerParameter custom_haspNodeHeader("<br/><br/><b>HASP Node Name</b>");
     WiFiManagerParameter custom_haspNode("haspNode", "HASP Node (required)", haspNode, 15, " maxlength=15 required");
+    WiFiManagerParameter custom_groupName("groupName", "Group Name (required)", groupName, 15, " maxlength=15 required");
     WiFiManagerParameter custom_mqttHeader("<br/><br/><b>MQTT Broker</b>");
     WiFiManagerParameter custom_mqttServer("mqttServer", "MQTT Server", mqttServer, 63, " maxlength=39");
     WiFiManagerParameter custom_mqttPort("mqttPort", "MQTT Port", mqttPort, 5, " maxlength=5 type='number'");
@@ -742,6 +789,7 @@ void setupWifi()
     // Add all your parameters here
     wifiManager.addParameter(&custom_haspNodeHeader);
     wifiManager.addParameter(&custom_haspNode);
+    wifiManager.addParameter(&custom_groupName);
     wifiManager.addParameter(&custom_mqttHeader);
     wifiManager.addParameter(&custom_mqttServer);
     wifiManager.addParameter(&custom_mqttPort);
@@ -782,6 +830,7 @@ void setupWifi()
     strcpy(mqttUser, custom_mqttUser.getValue());
     strcpy(mqttPassword, custom_mqttPassword.getValue());
     strcpy(haspNode, custom_haspNode.getValue());
+    strcpy(groupName, custom_groupName.getValue());
     strcpy(configUser, custom_configUser.getValue());
     strcpy(configPassword, custom_configPassword.getValue());
 
@@ -1059,6 +1108,10 @@ void readSavedConfig()
           {
             strcpy(haspNode, configJson["haspNode"]);
           }
+          if (configJson["groupName"].success())
+          {
+            strcpy(groupName, configJson["groupName"]);
+          }
           if (configJson["configUser"].success())
           {
             strcpy(configUser, configJson["configUser"]);
@@ -1102,6 +1155,7 @@ void saveUpdatedConfig()
   json["mqttUser"] = mqttUser;
   json["mqttPassword"] = mqttPassword;
   json["haspNode"] = haspNode;
+  json["groupName"] = groupName;
   json["configUser"] = configUser;
   json["configPassword"] = configPassword;
 
@@ -1193,6 +1247,7 @@ void webHandleRoot()
   httpMessage += String(F("<b>WiFi SSID</b> <i><small>(required)</small></i><input id='wifiSSID' required name='wifiSSID' maxlength=32 placeholder='WiFi SSID' value='")) + String(WiFi.SSID()) + "'>";
   httpMessage += String(F("<br/><b>WiFi Password</b> <i><small>(required)</small></i><input id='wifiPass' required name='wifiPass' type='password' maxlength=64 placeholder='WiFi Password' value='")) + String("********") + "'>";
   httpMessage += String(F("<br/><br/><b>HASP Node Name</b> <i><small>(required)</small></i><input id='haspNode' required name='haspNode' maxlength=15 placeholder='HASP Node Name' value='")) + String(haspNode) + "'>";
+  httpMessage += String(F("<br/><br/><b>Group Name</b> <i><small>(required)</small></i><input id='groupName' required name='groupName' maxlength=15 placeholder='Group Name' value='")) + String(groupName) + "'>";
   httpMessage += String(F("<br/><br/><b>MQTT Broker</b> <i><small>(required)</small></i><input id='mqttServer' required name='mqttServer' maxlength=63 placeholder='mqttServer' value='")) + String(mqttServer) + "'>";
   httpMessage += String(F("<br/><b>MQTT Port</b> <i><small>(required)</small></i><input id='mqttPort' required name='mqttPort' type='number' maxlength=5 placeholder='mqttPort' value='")) + String(mqttPort) + "'>";
   httpMessage += String(F("<br/><b>MQTT User</b> <i><small>(optional)</small></i><input id='mqttUser' name='mqttUser' maxlength=31 placeholder='mqttUser' value='")) + String(mqttUser) + "'>";
@@ -1284,6 +1339,11 @@ void webHandleSaveConfig()
   { // Handle haspNode
     shouldSaveConfig = true;
     webServer.arg("haspNode").toCharArray(haspNode, 16);
+  }
+  if (webServer.arg("groupName") != "" && webServer.arg("groupName") != String(groupName))
+  { // Handle groupName
+    shouldSaveConfig = true;
+    webServer.arg("groupName").toCharArray(groupName, 16);
   }
   // Check optional values
   if (webServer.arg("mqttUser") != String(mqttUser))
