@@ -72,7 +72,7 @@ MQTTClient mqttClient(256);
 ESP8266WebServer webServer(80);
 ESP8266HTTPUpdateServer httpOTAUpdate;
 
-const float haspVersion = 0.291;                 // Current HASP software release version
+const float haspVersion = 0.30;                  // Current HASP software release version
 byte nextionReturnBuffer[128];                   // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;                  // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                   // Track active LCD page
@@ -133,7 +133,7 @@ void setup()
   sendNextionCmd("rest"); // reset the LCD
 
   // Uncomment for testing, clears all saved settings on each boot
-  // clearSavedConfig();
+  //clearSavedConfig();
 
   readSavedConfig(); // Check filesystem for a saved config.json
   setupWifi();       // Start up networking
@@ -1716,9 +1716,22 @@ void webHandleLcdUpload()
       else
       {
         debugPrintln(F("LCD OTA: Failure"));
+        delay(5000); // delay for user to read output
         espReset();
       }
     }
+  }
+  else if (upload.status == UPLOAD_FILE_ABORTED)
+  {
+    debugPrintln(F("LCD OTA: ERROR: upload.status returned: UPLOAD_FILE_ABORTED"));
+    delay(5000); // delay for user to read output
+    espReset();
+  }
+  else
+  {
+    debugPrintln(String(F("LCD OTA: upload.status returned: ")) + String(upload.status));
+    delay(5000); // delay for user to read output
+    espReset();
   }
 }
 
