@@ -7,7 +7,7 @@ By default the device will subscribe to `hasp/<node_name>/command/#` to accept i
 There are two subtopics to send commands to and receive messages from the panel:
 
 * `command` will send commands or set attribute of the display, such as button text or screen dim. The specific attribute must be appended as a subtopic, with the value to be set delivered as the payload.  For example, the following command will set the text displayed on page 1/button 4 to "Lamp On": `mosquitto_pub -h mqtt -t hasp/plate01/command/p[1].b[4].txt -m '"Lamp On"'`
-* `state` topics will be sent by the panel in response to local user interactions or received commands which provide output in return.  For example, a user pressing button 4 on page 1 will cause the panel to publish a message: `'hasp/plate01/command/p[1].b[4]' 'ON'`
+* `state` topics will be sent by the panel in response to local user interactions or received commands which provide output in return.  For example, a user pressing button 4 on page 1 will cause the panel to publish a message: `'hasp/plate01/state/p[1].b[4]' 'ON'`
 
 ## `command` Syntax
 

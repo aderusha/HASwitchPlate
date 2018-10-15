@@ -21,6 +21,8 @@ If you're running Windows and you just want to get started without dealing with 
 
 Now proceed to [First-time Setup](#first-time-setup) to connect to your wireless network.
 
+---
+
 ## Arduino IDE
 
 [Download the IDE for your platform](https://www.arduino.cc/en/Main/Software) and [follow these instructions to add support for the ESP8266 platform](https://github.com/esp8266/Arduino#installing-with-boards-manager).
