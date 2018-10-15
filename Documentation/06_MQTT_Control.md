@@ -2,9 +2,11 @@
 
 ## MQTT Namespace
 
-By default the device will subscribe to `hasp/<node_name>/command/#` to accept incoming commands.  There are two subtopics to send commands to and receive messages from the panel:
+By default the device will subscribe to `hasp/<node_name>/command/#` to accept incoming commands.  The device will also subscribe to `hasp/<group_name>/command/#` to accept incoming commands aimed at a group of devices.
 
-* `command` will send commands or set attribute of the display, such as button text or screen dim.  The specific attribute must be appended as a subtopic, with the value to be set delivered as the payload.  For example, the following command will set the text displayed on page 1/button 4 to "Lamp On": `mosquitto_pub -h mqtt -t hasp/plate01/command/p[1].b[4].txt -m '"Lamp On"'`
+There are two subtopics to send commands to and receive messages from the panel:
+
+* `command` will send commands or set attribute of the display, such as button text or screen dim. The specific attribute must be appended as a subtopic, with the value to be set delivered as the payload.  For example, the following command will set the text displayed on page 1/button 4 to "Lamp On": `mosquitto_pub -h mqtt -t hasp/plate01/command/p[1].b[4].txt -m '"Lamp On"'`
 * `state` topics will be sent by the panel in response to local user interactions or received commands which provide output in return.  For example, a user pressing button 4 on page 1 will cause the panel to publish a message: `'hasp/plate01/command/p[1].b[4]' 'ON'`
 
 ## `command` Syntax
@@ -19,8 +21,10 @@ Messages sent to the panel under the `command` topic will be handled based on th
 * **`-t 'hasp/plate01/command/factoryreset'`** The `factoryreset` command will wipe out saved WiFi, nodename, and MQTT broker details to reset the device back to default settings.
 * **`-t 'hasp/plate01/command/lcdupdate'`** The `lcdupdate` command subtopic with no message will attempt to update the Nextion from the HASP GitHub repository.
 * **`-t 'hasp/plate01/command/lcdupdate' -m 'http://192.168.0.10:8123/local/HASwitchPlate.tft'`** The `lcdupdate` command subtopic attempts to update the Nextion from the HTTP URL named in the payload.
-* **`-t 'hasp/plate01/command/espdupdate'`** The `espdupdate` command subtopic with no message will attempt to update the ESP8266 from the HASP GitHub repository.
-* **`-t 'hasp/plate01/command/espdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin'`** The `espdupdate` command subtopic attempts to update the ESP8266 from the HTTP URL named in the payload.
+* **`-t 'hasp/plate01/command/espupdate'`** The `espupdate` command subtopic with no message will attempt to update the ESP8266 from the HASP GitHub repository.
+* **`-t 'hasp/plate01/command/espupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin'`** The `espdupdate` command subtopic attempts to update the ESP8266 from the HTTP URL named in the payload.
+
+In each of those commands, you can substitute the `<node_name>` for the `<group_name>` if you want to target all devices in a group.
 
 ## Nextion Instructions over MQTT
 
