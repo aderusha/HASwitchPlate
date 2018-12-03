@@ -4,6 +4,8 @@
 
 Above you'll find STL files ready for slicing and the source models editable in the free edition of [SketchUp Make](https://www.sketchup.com/download).  There are several models presented here for various plate configurations on the front and two options for the rear enclosure.
 
+For most users, you'll want to print [HASwitchPlate_front_single.stl](HASwitchPlate_front_single.stl) and [HASwitchPlate_rear_nolcdmod.stl](HASwitchPlate_rear_nolcdmod.stl)
+
 ### Front plate models
 
 * **[HASwitchPlate_front_single.stl](HASwitchPlate_front_single.stl)** Standard single-wide plate. `[HASP]`
@@ -16,7 +18,7 @@ Above you'll find STL files ready for slicing and the source models editable in 
 ### Rear enclosure models
 
 * **[HASwitchPlate_rear_lcdmod.stl](HASwitchPlate_rear_lcdmod.stl)** The `lcdmod` enclosure requires the removal of the 4-pin XHP connector from the Nextion LCD panel.  This option allows for better clearance around the screw posts which may help in tight work boxes, but the process of safely removing the connecter may require a hot air station.
-* **[HASwitchPlate_rear_nolcdmod.stl](HASwitchPlate_rear_lcdmod.stl)** The `nolcdmod` enclosure does not require removing the 4-pin XHP connector from the Nextion LCD panel.  This simplifies the build process but has just a little less room behind the device for the work box screws.  We're not talking a lot here, so if you don't have the hot air station this option will probably work fine for you.
+* **[HASwitchPlate_rear_nolcdmod.stl](HASwitchPlate_rear_nolcdmod.stl)** The `nolcdmod` enclosure does not require removing the 4-pin XHP connector from the Nextion LCD panel.  This simplifies the build process but has just a little less room behind the device for the work box screws.  We're not talking a lot here, so if you don't have the hot air station this option will probably work fine for you.
 
 ![HASP_3D_Print_Models](../Documentation/Images/HASP_3D_Print_Models.png?raw=true)
 
@@ -36,4 +38,4 @@ The mounting holes for the Nextion panel are sized to fit [M2 x 3mm heat-set thr
 
 ### SketchUp
 
-The SketchUp file included here is dimensioned in meters but 1m == 1mm due to issues with how SketchUp (doesn't) handle small dimensions.  If you intend to modify the provided SketchUp model, export to STL in meters then import for print in mm (the standard setting for most slicers) and you'll be fine.  The included STL is ready to slice as-is.
+The SketchUp file included here is dimensioned in meters but 1m == 1mm due to issues with how SketchUp (doesn't) handle small dimensions.  If you intend to modify the provided SketchUp model, export to STL in meters then import for print in mm (the standard setting for most slicers) and you'll be fine.  The included STLs are ready to slice as-is.
