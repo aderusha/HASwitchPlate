@@ -4,7 +4,7 @@
 
 Above you'll find STL files ready for slicing and the source models editable in the free edition of [SketchUp Make](https://www.sketchup.com/download).  There are several models presented here for various plate configurations on the front and two options for the rear enclosure.
 
-For most users, you'll want to print [HASwitchPlate_front_single.stl](HASwitchPlate_front_single.stl) and [HASwitchPlate_rear_nolcdmod.stl](HASwitchPlate_rear_nolcdmod.stl)
+For most users, you'll want to print [HASwitchPlate_front_single.stl](HASwitchPlate_front_single.stl) and [HASwitchPlate_rear_nolcdmod.stl](HASwitchPlate_rear_nolcdmod.stl).
 
 ### Front plate models
 
@@ -14,11 +14,13 @@ For most users, you'll want to print [HASwitchPlate_front_single.stl](HASwitchPl
 * **[HASwitchPlate_front_triple_hasp_decora_decora.stl](HASwitchPlate_front_triple_hasp_decora_decora.stl)** Triple-wide plate with Decora switches to the right `[HASP|Decora|Decora]`
 * **[HASwitchPlate_front_triple_hasp_toggle_toggle.stl](HASwitchPlate_front_triple_hasp_toggle_toggle.stl)** Triple-wide plate with toggle switches to the right `[HASP|toggle|toggle]`
 * **[HASwitchPlate_front_5x_decora_decora_hasp_decora_decora](HASwitchPlate_front_5x_decora_decora_hasp_decora_decora)** 5-wide plate with 4x Decora switches and HASP in center `[Decora|Decora|HASP|Decora|Decora]`
+* **[HASwitchPlate_front_single_dev.stl](HASwitchPlate_front_single_dev.stl)** Standard single-wide plate with SD card exposed for development use (unsafe!) `[HASP]`
 
 ### Rear enclosure models
 
 * **[HASwitchPlate_rear_lcdmod.stl](HASwitchPlate_rear_lcdmod.stl)** The `lcdmod` enclosure requires the removal of the 4-pin XHP connector from the Nextion LCD panel.  This option allows for better clearance around the screw posts which may help in tight work boxes, but the process of safely removing the connecter may require a hot air station.
 * **[HASwitchPlate_rear_nolcdmod.stl](HASwitchPlate_rear_nolcdmod.stl)** The `nolcdmod` enclosure does not require removing the 4-pin XHP connector from the Nextion LCD panel.  This simplifies the build process but has just a little less room behind the device for the work box screws.  We're not talking a lot here, so if you don't have the hot air station this option will probably work fine for you.
+* **[HASwitchPlate_rear_dev.stl](HASwitchPlate_rear_dev.stl)** The `dev` enclosure has USB, SD card, and Nextion XHP connector exposed for development/test purposes.  This is unsafe to install in your workbox.
 
 ![HASP_3D_Print_Models](../Documentation/Images/HASP_3D_Print_Models.png?raw=true)
 
