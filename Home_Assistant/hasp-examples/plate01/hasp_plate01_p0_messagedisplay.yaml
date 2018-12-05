@@ -1,0 +1,131 @@
+##############################################################################
+# Automations and required components to display information messages on HASP
+
+input_text:
+  hasp_plate01_messagetext:
+    name: plate01 Message Text
+    icon: mdi:playlist-edit
+    max: 126
+  hasp_plate01_messageqr:
+    name: plate01 Message QR
+    icon: mdi:qrcode-edit
+    max: 47
+
+input_number:
+  hasp_plate01_messagetime:
+    name: plate01 Message Time
+    icon: mdi:clock-end
+    mode: box
+    min: 1
+    max: 600
+    step: 1
+
+group:
+  plate01_messagedisplay:
+    name: plate01 Message Display
+    view: no
+    entities:
+      - input_text.hasp_plate01_messagetext
+      - input_text.hasp_plate01_messageqr
+      - input_number.hasp_plate01_messagetime
+      - automation.hasp_plate01_00_messagedisplaytext
+      - automation.hasp_plate01_00_messagedisplayqr
+      - automation.hasp_plate01_00_messagedisplaytextqr
+
+automation:
+##############################################################################
+# Display text message only
+  - alias: hasp_plate01_00_messagedisplaytext
+    trigger: []
+    action:
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/p[0].b[1].txt'
+        payload: '"{{ states.input_text.hasp_plate01_messagetext.state }}"'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/page'
+        payload: '0'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command'
+        payload: 'vis 3,0'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command'
+        payload: 'vis 1,1'
+    - delay: '00:00:{{ states.input_number.hasp_plate01_messagetime.state | int }}'
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/page'
+        payload: '{{ states.input_number.hasp_plate01_activepage.state | int }}'
+
+##############################################################################
+# Display qr message only
+  - alias: hasp_plate01_00_messagedisplayqr
+    trigger: []
+    action:
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/p[0].b[3].txt'
+        payload: '"{{ states.input_text.hasp_plate01_messageqr.state }}"'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/page'
+        payload: '0'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command'
+        payload: 'vis 1,0'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command'
+        payload: 'vis 3,1'
+    - delay: '00:00:{{ states.input_number.hasp_plate01_messagetime.state | int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command'
+        payload: 'vis 3,0'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command'
+        payload: 'vis 1,1'
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/page'
+        payload: '{{ states.input_number.hasp_plate01_activepage.state | int }}'
+
+##############################################################################
+# Display text and qr message
+  - alias: hasp_plate01_00_messagedisplaytextqr
+    trigger: []
+    action:
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/p[0].b[1].txt'
+        payload: '"{{ states.input_text.hasp_plate01_messagetext.state }}"'
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/p[0].b[3].txt'
+        payload: '"{{ states.input_text.hasp_plate01_messageqr.state }}"'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/page'
+        payload: '0'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command'
+        payload: 'vis 1,1'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command'
+        payload: 'vis 3,1'
+    - delay: '00:00:{{ states.input_number.hasp_plate01_messagetime.state | int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command'
+        payload: 'vis 3,0'
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/page'
+        payload: '{{ states.input_number.hasp_plate01_activepage.state | int }}'
