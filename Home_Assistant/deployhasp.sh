@@ -4,6 +4,33 @@
 # the latest HASP automation package and modify for the provided device name
 ###############################################################################
 
+# Confirm that we're working in the .homeassistant folder by checking for configuration.yaml
+if [ ! -f configuration.yaml ]
+then
+  echo "WARNING: 'configuration.yaml' not found in current directory."
+  echo "Searching for Home Assistant 'configuration.yaml'..."
+  configfile=$(find / -name configuration.yaml 2>/dev/null)
+  count=$(echo "$configfile" | wc -l)
+  if [ $count == 1 ]
+  then
+    configdir=$(dirname "${configfile}")
+    cd $configdir
+    echo "INFO: configuration.yaml found under: $configdir"
+  else
+    echo "ERROR: Failed to locate the active 'configuration.yaml'"
+    echo "       Please run this script from the homeassistant"
+    echo "       configuration folder for your environment."
+    exit 1
+  fi
+fi
+
+# Check for write access to configuration.yaml
+if [ ! -w configuration.yaml ]
+then
+  echo "ERROR: Cannot write to 'configuration.yaml'."
+  exit 1
+fi
+
 # Check that a new device name has been supplied and ask the user if we're missing
 hasp_input_name="$@"
 
@@ -19,30 +46,13 @@ then
   exit 1
 fi
 
-# Confirm that we're working in the .homeassistant folder by checking for configuration.yaml
-if [ ! -f configuration.yaml ]
-then
-  echo "WARNING: 'configuration.yaml' not found in current directory."
-  echo "Searching for Home Assistant 'configuration.yaml'..."
-  configfile=$(find / -name configuration.yaml 2>/dev/null)
-  count=$(echo "$configfile" | wc -l)
-  if [ $count == 1 ]
-  then
-    configdir=$(dirname "${configfile}")
-    cd $configdir
-  else
-    echo "ERROR: Failed to locate the active 'configuration.yaml'"
-    echo "       Please run this script from the homeassistant"
-    echo "       configuration folder for your environment."
-    exit 1
-  fi
-fi
+# Santize the requested devicename to work with hass
+hasp_device=`echo "$hasp_input_name" | tr '[:upper:]' '[:lower:]' | tr ' [:punct:]' '_'`
 
-# Check for write access to configuration.yaml
-if [ ! -w configuration.yaml ]
+# Warn the user if we had rename anything
+if [[ "$hasp_input_name" != "$hasp_device" ]]
 then
-  echo "ERROR: Cannot write to 'configuration.yaml'."
-  exit 1
+  echo "WARNING: Sanitized device name to \"$hasp_device\""
 fi
 
 # Check to see if packages are being included
@@ -78,12 +88,11 @@ fi
 # Enable MQTT if not enabled
 if ! grep "^mqtt:" configuration.yaml > /dev/null
 then
-  echo "mqtt:" >> configuration.yaml
-  # Check to see if we're running hass.io
-  if [ -f /etc/alpine-release ]
-  then
-    echo "  broker: core-mosquitto" >> configuration.yaml
-  fi
+  echo "WARNING: Required MQTT broker configuration not setup in configuration.yaml"
+  echo "HASP will not function until this has been configured.  The embedded option"
+  echo "offered my Home Assistant is buggy, so deploying Mosquitto is recommended."
+  echo "Home Assistant MQTT configuration: https://www.home-assistant.io/docs/mqtt/broker/#run-your-own"
+  echo "Install Mosquitto: sudo apt-get install mosquitto mosquitto-clients"
 fi
 
 # Hass has a bug where packaged automations don't work unless you have at least one
@@ -102,15 +111,6 @@ then
       echo "  trigger: []" >> automations.yaml
     fi
   fi
-fi
-
-# Santize the requested devicename to work with hass
-hasp_device=`echo "$hasp_input_name" | tr '[:upper:]' '[:lower:]' | tr ' [:punct:]' '_'`
-
-# Warn the user if we had rename anything
-if [[ "$hasp_input_name" != "$hasp_device" ]]
-then
-  echo "WARNING: Sanitized device name to \"$hasp_device\""
 fi
 
 # Create a temp dir
