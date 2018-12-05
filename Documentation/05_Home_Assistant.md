@@ -18,6 +18,20 @@ You will be prompted for a device name and the script will do the rest.  Once it
 
 ---
 
+## Hass.io
+
+If you're running [Hass.io](https://www.home-assistant.io/hassio/), you'll need to install and configure the [`Mosquitto broker`](https://www.home-assistant.io/addons/mosquitto/) and [`SSH server`](https://www.home-assistant.io/addons/ssh/) add-ons from the default repository.  Be sure to follow the configuration instructions provided for both add-ons.  Once those are installed, configured, and started, you can ssh to your hass.io installation and execute the following commands:
+
+```bash
+cd /config
+apk add tar wget
+bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
+```
+
+You will be prompted for a device name and the script will do the rest.  Once it completes, restart your Home Assistant service to apply changes (`Configuration` > `General` > `Server Management` > `RESTART`) and then continue to the [First time setup](#first-time-setup) section below to initialize your environment.
+
+---
+
 ## Manual Home Assistant installation
 
 ### `configuration.yaml` changes
@@ -60,20 +74,6 @@ recorder:
 Now you'll need to copy over the [packages directory](https://github.com/aderusha/HASwitchPlate/tree/master/Home_Assistant/packages) and modify it for your new device.  The folder name, file names, and the contents of the `.yaml` files will all need to have `plate01` replaced with your new device name.
 
 Finally, you'll need to restart Home Assistant to apply your changes then continue to the [First time setup](#first-time-setup) section below to initialize your environment.
-
----
-
-## Hass.io
-
-If you're running [Hass.io](https://www.home-assistant.io/hassio/), you'll need to install and configure the [`Mosquitto broker`](https://www.home-assistant.io/addons/mosquitto/) and [`SSH server`](https://www.home-assistant.io/addons/ssh/) add-ons from the default repository.  Be sure to follow the configuration instructions provided for both add-ons.  Once those are installed, configured, and started, you can ssh to your hass.io installation and execute the following commands:
-
-```bash
-cd /config
-apk add tar wget
-bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
-```
-
-Once that process completes you can restart the Home Assistant server to apply all changes (`Configuration` > `General` > `Server Management` > `RESTART`).
 
 ---
 
