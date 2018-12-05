@@ -147,3 +147,5 @@ fi
 # Copy everything over and burn the evidence
 cp -rf $hasp_temp_dir/* .
 rm -rf $hasp_temp_dir
+
+echo "SUCCESS: Restart Home Assistant to apply changes and enable HASP device $hasp_device"
