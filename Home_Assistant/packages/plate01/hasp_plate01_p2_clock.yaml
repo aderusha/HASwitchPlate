@@ -5,9 +5,14 @@ automation:
   # Set appropriate font for the time and date and send intial values on HASP init
   - alias: hasp_plate01_p2_ClockInit
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:

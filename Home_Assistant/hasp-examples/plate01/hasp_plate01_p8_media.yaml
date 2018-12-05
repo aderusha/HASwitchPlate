@@ -1,13 +1,31 @@
 ##############################################################################
+# Pull media information from a media player named `media_player`
+sensor:
+  - platform: template
+    sensors:
+      media_player_title:
+        value_template: '{{ states.media_player.media_player.attributes.media_title }}'
+      media_player_artist:
+        value_template: '{{ states.media_player.media_player.attributes.media_artist }}'
+      media_player_volume:
+        value_template: '{{ states.media_player.media_player.attributes.volume_level }}'
+
+
+##############################################################################
 # Automations to display media player info on page 8
 
 automation:
 # Initialize button text/font for media controls on start
   - alias: hasp_plate01_p8_MediaInit
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -73,9 +91,14 @@ automation:
     trigger:
     - platform: state
       entity_id: sensor.media_player_artist
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -90,9 +113,14 @@ automation:
     trigger:
     - platform: state
       entity_id: sensor.media_player_title
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -107,6 +135,14 @@ automation:
     trigger:
     - platform: state
       entity_id: media_player.media_player
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -129,9 +165,14 @@ automation:
     trigger:
     - platform: state
       entity_id: sensor.media_player_volume
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:

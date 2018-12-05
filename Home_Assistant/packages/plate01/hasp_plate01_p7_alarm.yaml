@@ -5,9 +5,14 @@ automation:
   # set key labels at system start
   - alias: hasp_plate01_p7_AlarmInit
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -101,14 +106,18 @@ automation:
   # set key labels at system start when system is disarmed, or when switching to disarmed
   - alias: hasp_plate01_p7_AlarmDisarmed
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
     - platform: state
       entity_id: alarm_control_panel.ha_alarm
       to: 'disarmed'
-    condition: 
-      condition: state
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
+    - condition: state
       entity_id: alarm_control_panel.ha_alarm
       state: 'disarmed'
     action:
@@ -148,14 +157,18 @@ automation:
   # set key labels at system start when system is armed_away, or when switching to armed_away
   - alias: hasp_plate01_p7_AlarmArmed
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
     - platform: state
       entity_id: alarm_control_panel.ha_alarm
       to: 'armed_away'
-    condition: 
-      condition: state
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
+    - condition: state
       entity_id: alarm_control_panel.ha_alarm
       state: 'armed_away'
     action:
@@ -203,7 +216,7 @@ automation:
       topic: 'hasp/plate01/state/+'
       payload: 'ON'
     condition: 
-      condition: template
+    - condition: template
       value_template: '{{ (trigger.topic.split("/")[-1].split("p[")[1].split("]")[0]|int == 7) and ( 4 <= trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int <= 12) }}'
     action:
     - service: input_number.set_value
@@ -252,6 +265,10 @@ automation:
     - platform: state
       entity_id: alarm_control_panel.ha_alarm
       to: 'pending'
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -262,11 +279,11 @@ automation:
   # reset all the sliders.      
   - alias: hasp_plate01_p7_AlarmDisarm
     trigger:
-      platform: mqtt
+    - platform: mqtt
       topic: 'hasp/plate01/state/p[7].b[15]'
       payload: 'OFF'
-    condition: 
-      condition: state
+    condition:
+    - condition: state
       entity_id: alarm_control_panel.ha_alarm
       state: 'armed_away'
     action:
@@ -295,11 +312,11 @@ automation:
   # reset all the sliders.
   - alias: hasp_plate01_p7_AlarmArm
     trigger:
-      platform: mqtt
+    - platform: mqtt
       topic: 'hasp/plate01/state/p[7].b[15]'
       payload: 'OFF'
-    condition: 
-      condition: state
+    condition:
+    - condition: state
       entity_id: alarm_control_panel.ha_alarm
       state: 'disarmed'
     action:

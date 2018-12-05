@@ -4,9 +4,14 @@ automation:
   # Set font and text for toggle buttons on device connection
   - alias: hasp_plate01_p3_ToggleInit
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -40,41 +45,41 @@ automation:
   # Toggle light1 when p[3].b[4] pressed
   - alias: hasp_plate01_p3_ToggleLight1
     trigger:
-      platform: mqtt
+    - platform: mqtt
       topic: 'hasp/plate01/state/p[3].b[4]'
       payload: 'ON'
     action:
-      service: homeassistant.toggle
+    - service: homeassistant.toggle
       entity_id: light.light_1
       
   # Toggle light2 when p[3].b[5] pressed
   - alias: hasp_plate01_p3_ToggleLight2
     trigger:
-      platform: mqtt
+    - platform: mqtt
       topic: 'hasp/plate01/state/p[3].b[5]'
       payload: 'ON'
     action:
-      service: homeassistant.toggle
+    - service: homeassistant.toggle
       entity_id: light.light_2
 
   # Toggle light3 when p[3].b[6] pressed
   - alias: hasp_plate01_p3_ToggleLight3
     trigger:
-      platform: mqtt
+    - platform: mqtt
       topic: 'hasp/plate01/state/p[3].b[6]'
       payload: 'ON'
     action:
-      service: homeassistant.toggle
+    - service: homeassistant.toggle
       entity_id: light.light_3
 
   # Toggle all light_toggle_group when p[3].b[7] pressed
   - alias: hasp_plate01_p3_ToggleAll
     trigger:
-      platform: mqtt
+    - platform: mqtt
       topic: 'hasp/plate01/state/p[3].b[7]'
       payload: 'ON'
     action:
-      service_template: >
+    - service_template: >
           {% if states.group.light_toggle_group.state == "on" -%}
             homeassistant.turn_off
           {%- else -%}
@@ -85,11 +90,16 @@ automation:
   # Toggle colors on p[3].b[4] when light1 changes
   - alias: hasp_plate01_p3_ToggleColor1
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
     - platform: state
       entity_id: light.light_1
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -113,11 +123,16 @@ automation:
   # Toggle colors on p[3].b[5] when light1 changes
   - alias: hasp_plate01_p3_ToggleColor2
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
     - platform: state
       entity_id: light.light_2
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -141,11 +156,16 @@ automation:
   # Toggle colors on p[3].b[6] when light1 changes
   - alias: hasp_plate01_p3_ToggleColor3
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
     - platform: state
       entity_id: light.light_3
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -169,11 +189,16 @@ automation:
   # Set button 4 to "All Off" if any lights are on, otherwise set to "All On"
   - alias: hasp_plate01_p3_ToggleColorAll
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
     - platform: state
       entity_id: group.light_toggle_group
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:

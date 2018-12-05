@@ -26,9 +26,12 @@ light:
   - platform: mqtt
     name: plate01 Backlight
     command_topic: "hasp/plate01/light/switch"
-    state_topic: "hasp/plate01/light/status"
-    brightness_state_topic: "hasp/plate01/brightness/status"
+    state_topic: "hasp/plate01/light/state"
+    brightness_state_topic: "hasp/plate01/brightness/state"
     brightness_command_topic: "hasp/plate01/brightness/set"
+    availability_topic: "hasp/plate01/status"
+    payload_available: "ON"
+    payload_not_available: "OFF"
 
 binary_sensor:
   - platform: mqtt
@@ -146,65 +149,6 @@ group:
     view: no
     entities:
       - automation.hasp_plate01_00_firsttimesetup
-      - automation.hasp_plate01_00_autofirmwareupdate
-      - automation.hasp_plate01_p0_activepagesliderchanged
-      - automation.hasp_plate01_p0_pagebutton1_text
-      - automation.hasp_plate01_p0_pagebutton1action
-      - automation.hasp_plate01_p0_pagebutton2_text
-      - automation.hasp_plate01_p0_pagebutton2action
-      - automation.hasp_plate01_p0_pagebutton3_text
-      - automation.hasp_plate01_p0_pagebutton3action
-      - automation.hasp_plate01_p0_pagebuttoncolors
-      - automation.hasp_plate01_p0_panelpagechanged
-      - automation.hasp_plate01_p0_restoreactivepage
-      - automation.hasp_plate01_p1_scenebutton4
-      - automation.hasp_plate01_p1_scenebutton5
-      - automation.hasp_plate01_p1_scenebutton6
-      - automation.hasp_plate01_p1_scenebutton7
-      - automation.hasp_plate01_p1_scenesinit
-      - automation.hasp_plate01_p2_clockinit
-      - automation.hasp_plate01_p2_clockupdate
-      - automation.hasp_plate01_p2_calendarupdate
-      - automation.hasp_plate01_p2_weather
-      - automation.hasp_plate01_p3_toggleall
-      - automation.hasp_plate01_p3_togglecolor1
-      - automation.hasp_plate01_p3_togglecolor2
-      - automation.hasp_plate01_p3_togglecolor3
-      - automation.hasp_plate01_p3_togglecolorall
-      - automation.hasp_plate01_p3_toggleinit
-      - automation.hasp_plate01_p3_togglelight1
-      - automation.hasp_plate01_p3_togglelight2
-      - automation.hasp_plate01_p3_togglelight3
-      - automation.hasp_plate01_p4_dimmer7updatehasp
-      - automation.hasp_plate01_p4_dimmer7updatehass
-      - automation.hasp_plate01_p4_dimmer8updatehasp
-      - automation.hasp_plate01_p4_dimmer8updatehass
-      - automation.hasp_plate01_p4_dimmer9updatehasp
-      - automation.hasp_plate01_p4_dimmer9updatehass
-      - automation.hasp_plate01_p4_dimmersinit
-      - automation.hasp_plate01_p7_alarmarm
-      - automation.hasp_plate01_p7_alarmarmed
-      - automation.hasp_plate01_p7_alarmcodeentry0
-      - automation.hasp_plate01_p7_alarmcodeentry1to9
-      - automation.hasp_plate01_p7_alarmdisarm
-      - automation.hasp_plate01_p7_alarmdisarmed
-      - automation.hasp_plate01_p7_alarminit
-      - automation.hasp_plate01_p7_alarmstatuspending
-      - automation.hasp_plate01_p8_mediaartist
-      - automation.hasp_plate01_p8_mediainit
-      - automation.hasp_plate01_p8_medianexttrackbutton8
-      - automation.hasp_plate01_p8_mediapausebutton7
-      - automation.hasp_plate01_p8_mediaplaypause
-      - automation.hasp_plate01_p8_mediaprevtrackbutton6
-      - automation.hasp_plate01_p8_mediatitle
-      - automation.hasp_plate01_p8_mediavolsliderupdatehasp
-      - automation.hasp_plate01_p8_mediavolsliderupdatehass
-      - automation.hasp_plate01_p9_3dprinterinit
-      - automation.hasp_plate01_p9_3dprinteroperational
-      - automation.hasp_plate01_p9_3dprinterpaused
-      - automation.hasp_plate01_p9_3dprinterprinting
-      - automation.hasp_plate01_p9_3dprintertempgraph
-      - automation.hasp_plate01_p9_3dprintertemptext
 
 automation:
 ##############################################################################
@@ -240,3 +184,19 @@ automation:
         data:
           entity_id: 'input_number.hasp_plate01_activepage'
           value: 1
+
+##############################################################################
+# Set automation group members on start - Thanks @Nightcat!
+  - alias: hasp_plate01_00_AutomationGroupUpdate
+    trigger:
+    - platform: homeassistant
+      event: start
+    action:
+    - service: group.set
+      data_template:
+        object_id: "plate01_automations"
+        entities: >-
+          {%- for item in states.automation if ((item.entity_id | lower).startswith('automation.hasp_plate01_')) -%}
+          {{ item.entity_id }}
+          {% if not loop.last %}, {% endif %}
+          {%- endfor -%}

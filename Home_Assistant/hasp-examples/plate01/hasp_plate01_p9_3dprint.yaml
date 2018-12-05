@@ -4,13 +4,29 @@
 # a running OctoPrint installation and will fail without it.
 # https://home-assistant.io/components/octoprint/
 
+# - platform: octoprint
+  # name: OctoPrint
+  # monitored_conditions:
+    # - Current State
+    # - Temperatures
+    # - Job Percentage
+
+# octoprint:
+  # host: octoprint.local
+  # api_key: YOUROCTOPRINTAPIKEY
+
 automation:
    # Set appropriate font for the status display on HASP init
   - alias: hasp_plate01_p9_3DPrinterInit
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -24,6 +40,10 @@ automation:
       value_template: "{% if is_state('sensor.octoprint_current_state', 'Printing') %}true{% endif %}"
     - platform: state
       entity_id: sensor.octoprint_job_percentage    
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -47,6 +67,10 @@ automation:
     trigger:
     - platform: template
       value_template: "{% if is_state('sensor.octoprint_current_state', 'Operational') %}true{% endif %}"
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -70,6 +94,10 @@ automation:
     trigger:
       platform: template
       value_template: "{% if is_state('sensor.octoprint_current_state', 'Paused') %}true{% endif %}"
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:

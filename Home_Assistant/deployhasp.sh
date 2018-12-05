@@ -60,12 +60,13 @@ if ! grep "^  packages: \!include_dir_named packages" configuration.yaml > /dev/
 then
   if grep "^  packages: " configuration.yaml > /dev/null
   then
+    echo "==========================================================================="
     echo "WARNING: Conflicting packages definition found in 'configuration.yaml'."
     echo "         Please add the following statement to your configuration:"
     echo ""
     echo "homeassistant:"
     echo "  packages: !include_dir_named packages"
-    echo ""
+    echo "==========================================================================="
   else
     sed -i 's/^homeassistant:.*/homeassistant:\n  packages: !include_dir_named packages/' configuration.yaml
   fi
@@ -85,14 +86,17 @@ then
   echo "    - input_text" >> configuration.yaml
 fi
 
-# Enable MQTT if not enabled
+# Warn if MQTT is not enabled
 if ! grep "^mqtt:" configuration.yaml > /dev/null
 then
+  echo "==========================================================================="
   echo "WARNING: Required MQTT broker configuration not setup in configuration.yaml"
-  echo "HASP will not function until this has been configured.  The embedded option"
+  echo "HASP WILL NOT FUNCTION UNTIL THIS HAS BEEN CONFIGURED!  The embedded option"
   echo "offered my Home Assistant is buggy, so deploying Mosquitto is recommended."
+  echo ""
   echo "Home Assistant MQTT configuration: https://www.home-assistant.io/docs/mqtt/broker/#run-your-own"
   echo "Install Mosquitto: sudo apt-get install mosquitto mosquitto-clients"
+  echo "==========================================================================="
 fi
 
 # Hass has a bug where packaged automations don't work unless you have at least one
@@ -126,6 +130,8 @@ if [[ "$hasp_input_name" != "plate01" ]]
 then
   # rename text in contents of files
   sed -i -- 's/plate01/'"$hasp_device"'/g' $hasp_temp_dir/packages/plate01/hasp_plate01_*.yaml
+  sed -i -- 's/plate01/'"$hasp_device"'/g' $hasp_temp_dir/hasp-examples/plate01/hasp_plate01_*.yaml
+
   # rename files and folder - thanks to @cloggedDrain for this loop!
   mkdir $hasp_temp_dir/packages/$hasp_device
   for file in $hasp_temp_dir/packages/plate01/*
@@ -142,10 +148,27 @@ then
     fi
   done
   rm -rf $hasp_temp_dir/packages/plate01
+  # do it again for the examples
+  mkdir $hasp_temp_dir/hasp-examples/$hasp_device
+  for file in $hasp_temp_dir/hasp-examples/plate01/*
+  do
+    new_file=`echo $file | sed s/plate01/$hasp_device/g`
+    if [ -f $file ]
+    then
+      mv $file $new_file
+      if [ $? -ne 0 ]
+      then
+        echo "ERROR: Could not copy $file to $new_file"
+        exit 1
+      fi
+    fi
+  done
+  rm -rf $hasp_temp_dir/hasp-examples/plate01
 fi
 
 # Copy everything over and burn the evidence
 cp -rf $hasp_temp_dir/* .
 rm -rf $hasp_temp_dir
 
-echo "SUCCESS: Restart Home Assistant to apply changes and enable HASP device $hasp_device"
+echo "==========================================================================="
+echo "SUCCESS! Restart Home Assistant to enable HASP device $hasp_device"

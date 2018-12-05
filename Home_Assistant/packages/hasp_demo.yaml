@@ -2,39 +2,8 @@
 # The following devices are used by the demo automations, feel free to remove
 # these and/or replace with your own devices
 
-# Sensors for weather and media player information
-sensor:
-  - platform: yweather
-    name: Weather
-    monitored_conditions:
-      - weather_current
-      - temperature
-      - temp_min
-      - temp_max
-      - humidity
-  - platform: template
-    sensors:
-      media_player_title:
-        value_template: '{{ states.media_player.media_player.attributes.media_title }}'
-      media_player_artist:
-        value_template: '{{ states.media_player.media_player.attributes.media_artist }}'
-      media_player_volume:
-        value_template: '{{ states.media_player.media_player.attributes.volume_level }}'
-# - platform: octoprint
-  # name: OctoPrint
-  # monitored_conditions:
-    # - Current State
-    # - Temperatures
-    # - Job Percentage
-
-# octoprint:
-  # host: octoprint.local
-  # api_key: YOUROCTOPRINTAPIKEY
-
-media_player:
-  - platform: gpmdp
-    name: "Media Player"
-    host: 127.0.0.1
+weather:
+  - platform: met
 
 alarm_control_panel:
   - platform: manual

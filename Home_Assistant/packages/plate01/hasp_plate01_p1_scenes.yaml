@@ -5,9 +5,14 @@ automation:
   # Set font and text labels for scene buttons on device connection
   - alias: hasp_plate01_p1_ScenesInit
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -45,39 +50,39 @@ automation:
   # Trigger scene.lights_on when p[1].b[4] pressed
   - alias: hasp_plate01_p1_SceneButton4
     trigger:
-      platform: mqtt
+    - platform: mqtt
       topic: 'hasp/plate01/state/p[1].b[4]'
       payload: 'ON'
     action:
-      service: scene.turn_on
+    - service: scene.turn_on
       entity_id: scene.lights_on
       
   # Trigger scene.daylight when p[1].b[5] pressed
   - alias: hasp_plate01_p1_SceneButton5
     trigger:
-      platform: mqtt
+    - platform: mqtt
       topic: 'hasp/plate01/state/p[1].b[5]'
       payload: 'ON'
     action:
-      service: scene.turn_on
+    - service: scene.turn_on
       entity_id: scene.daylight
 
   # Trigger scene.night when p[1].b[6] pressed
   - alias: hasp_plate01_p1_SceneButton6
     trigger:
-      platform: mqtt
+    - platform: mqtt
       topic: 'hasp/plate01/state/p[1].b[6]'
       payload: 'ON'
     action:
-      service: scene.turn_on
+    - service: scene.turn_on
       entity_id: scene.night
 
   # Trigger lights_off.night when p[1].b[7] pressed
   - alias: hasp_plate01_p1_SceneButton7
     trigger:
-      platform: mqtt
+    - platform: mqtt
       topic: 'hasp/plate01/state/p[1].b[7]'
       payload: 'ON'
     action:
-      service: scene.turn_on
+    - service: scene.turn_on
       entity_id: scene.lights_off

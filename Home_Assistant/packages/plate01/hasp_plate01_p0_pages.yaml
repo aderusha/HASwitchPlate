@@ -7,14 +7,19 @@ automation:
 # Restore saved page on connect
   - alias: hasp_plate01_p0_RestoreActivePage
     trigger:
-      - platform: mqtt
-        topic: 'hasp/plate01/status'
-        payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
-      - service: mqtt.publish
-        data_template:
-          topic: 'hasp/plate01/command/page'
-          payload_template: '{{states.input_number.hasp_plate01_activepage.state|int}}'
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/page'
+        payload_template: '{{states.input_number.hasp_plate01_activepage.state|int}}'
 
 ##############################################################################
 # select hasp_plate01_pagebutton1page in response to page button 1
@@ -147,10 +152,10 @@ automation:
 # Change page at panel when hasp_plate01_p0_active_page updated
   - alias: hasp_plate01_p0_ActivePageSliderChanged
     trigger:
-      platform: state
+    - platform: state
       entity_id: input_number.hasp_plate01_activepage
     action:
-      service: mqtt.publish
+    - service: mqtt.publish
       data_template:
         topic: 'hasp/plate01/command/page'
         payload: '{{ states.input_number.hasp_plate01_activepage.state | int }}'
@@ -163,9 +168,14 @@ automation:
     trigger:
     - platform: state
       entity_id: input_text.hasp_plate01_pagebutton1label
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -209,9 +219,14 @@ automation:
     trigger:
     - platform: state
       entity_id: input_text.hasp_plate01_pagebutton2label
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -255,9 +270,14 @@ automation:
     trigger:
     - platform: state
       entity_id: input_text.hasp_plate01_pagebutton3label
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -308,9 +328,14 @@ automation:
       entity_id: input_number.hasp_plate01_pagebutton3page
     - platform: state
       entity_id: input_number.hasp_plate01_activepage
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data_template:

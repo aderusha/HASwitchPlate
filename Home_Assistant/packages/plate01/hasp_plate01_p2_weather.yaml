@@ -6,10 +6,15 @@ automation:
   - alias: hasp_plate01_p2_Weather
     trigger:
     - platform: state
-      entity_id: sensor.weather_temperature
-    - platform: mqtt
-      topic: 'hasp/plate01/status'
-      payload: 'ON'
+      entity_id: weather.metno
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+    - platform: homeassistant
+      event: start
+    condition:
+    - condition: state
+      entity_id: 'binary_sensor.plate01_connected'
+      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -18,12 +23,12 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[6].txt'
-        payload_template: '"{{states.sensor.weather_temperature.state}}F"'
+        payload_template: '"{{state_attr("weather.metno","temperature")|int}}F"'
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[7].font'
-        payload_template: '{% if states.sensor.weather_current.state|length <= 6 -%}3{% elif (states.sensor.weather_current.state|length > 6) and (states.sensor.weather_current.state|length <= 10) %}2{% elif (states.sensor.weather_current.state|length > 10) and (states.sensor.weather_current.state|length <= 15) %}1{% else %}0{%- endif %}'
+        payload_template: '{% if states.weather.metno.state|length <= 6 -%}3{% elif (states.weather.metno.state|length > 6) and (states.weather.metno.state|length <= 10) %}2{% elif (states.weather.metno.state|length > 10) and (states.weather.metno.state|length <= 15) %}1{% else %}0{%- endif %}'
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[7].txt'
-        payload_template: '"{{states.sensor.weather_current.state|wordwrap(20, wrapstring="\\r")}}"'
+        payload_template: '"{{states.weather.metno.state|wordwrap(20, wrapstring="\\r")|title}}"'
