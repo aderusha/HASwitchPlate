@@ -7,12 +7,9 @@ automation:
     trigger:
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data:

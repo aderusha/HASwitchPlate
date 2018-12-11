@@ -7,12 +7,9 @@ automation:
     trigger:
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -111,12 +108,10 @@ automation:
       to: 'disarmed'
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
     condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     - condition: state
       entity_id: alarm_control_panel.ha_alarm
       state: 'disarmed'
@@ -162,12 +157,10 @@ automation:
       to: 'armed_away'
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
     condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     - condition: state
       entity_id: alarm_control_panel.ha_alarm
       state: 'armed_away'

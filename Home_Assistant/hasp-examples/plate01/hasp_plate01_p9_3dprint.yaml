@@ -4,16 +4,17 @@
 # a running OctoPrint installation and will fail without it.
 # https://home-assistant.io/components/octoprint/
 
-# - platform: octoprint
-  # name: OctoPrint
-  # monitored_conditions:
-    # - Current State
-    # - Temperatures
-    # - Job Percentage
+sensor:
+- platform: octoprint
+  name: OctoPrint
+  monitored_conditions:
+  - Current State
+  - Temperatures
+  - Job Percentage
 
-# octoprint:
-  # host: octoprint.local
-  # api_key: YOUROCTOPRINTAPIKEY
+octoprint:
+  host: octoprint.local
+  api_key: YOUROCTOPRINTAPIKEY
 
 automation:
    # Set appropriate font for the status display on HASP init
@@ -21,12 +22,9 @@ automation:
     trigger:
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -138,12 +136,16 @@ automation:
         topic: 'hasp/plate01/command/p[9].b[5].txt'
         payload_template: '"Head: {{((states.sensor.octoprint_actual_tool0_temp.state|float-32)*(5/9))|round(1)}}/{{((states.sensor.octoprint_target_tool0_temp.state|float-32)*(5/9))|int}}\r Bed: {{((states.sensor.octoprint_actual_bed_temp.state|float-32)*(5/9))|round(1)}}/{{((states.sensor.octoprint_target_bed_temp.state|float-32)*(5/9))|int}}"'
   
-  # Every 30 seconds (default octoprint polling interval in Hass), add one pixel to the graph.      
-  # The graph on page 9 has 4 divisions, so we're calling the origin (y=0 in the graph) 50deg C and the top line 250deg C
-  # each pixel is one data point, the object on the page is 133 points tall
-  # my Location is using deg F, so I need to convert from F to C then map 50-250 into a range of 1-133
-  # 50C = 122F, 250C = 482.  So the range of values in our chart will be 482-122 = 360 degF
-  # 133/360 ~= 0.3694, so we can map our value in F to a 133-point-tall graph that goes from 50-250C with the formula: (degF - 122) * 0.3694
+  # Every 30 seconds (default octoprint polling interval in Hass), add one pixel to the graph.
+  # Don't bother sending data to the graph unless the page is active, waveform displays in Nextion
+  # are always local, so the graph will reset every time you navigate away from the page.
+  #     
+  # The graph on page 9 has 4 divisions. We're calling the origin (y=0 in the graph) 50deg C and
+  # the top line 250deg C.  Each pixel is one data point, the object on the page is 133 points tall.
+  # my Location is using deg F, so convert from F to C then map 50-250 into a range of 1-133:
+  # 50C = 122F, 250C = 482.  Thus the range of values in our chart will be 482-122 = 360 degF
+  # 133/360 ~= 0.3694, so we can map our value in F to a 133-point-tall graph that goes from 50-250C
+  # with the formula: (degF - 122) * 0.3694
   - alias: hasp_plate01_p9_3DPrinterTempGraph
     trigger:
       platform: time

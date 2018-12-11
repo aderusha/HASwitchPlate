@@ -5,12 +5,9 @@ automation:
     trigger:
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -25,6 +22,7 @@ automation:
         topic: 'hasp/plate01/command/p[4].b[6].txt'
         payload: '"Light 3"'
   
+  # when the user moves the slider, change the light in Hass
   - alias: hasp_plate01_p4_Dimmer7UpdateHass
     trigger:
     - platform: mqtt
@@ -35,8 +33,14 @@ automation:
         entity_id: light.light_1
         brightness: '{{ trigger.payload }}'
   
+  # When the light is changed in Hass, update HASP to move the dimmer
   - alias: hasp_plate01_p4_Dimmer7UpdateHASP
     trigger:
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
+    - platform: homeassistant
+      event: start
     - platform: state
       entity_id: light.light_1
     action:
@@ -45,6 +49,7 @@ automation:
         topic: 'hasp/plate01/command/p[4].b[7].val'
         payload_template: '{{states.light.light_1.attributes.brightness|default(0)|int}}'
   
+  # when the user moves the slider, change the light in Hass
   - alias: hasp_plate01_p4_Dimmer8UpdateHass
     trigger:
     - platform: mqtt
@@ -55,8 +60,14 @@ automation:
         entity_id: light.light_2
         brightness: '{{ trigger.payload }}'
   
+  # When the light is changed in Hass, update HASP to move the dimmer
   - alias: hasp_plate01_p4_Dimmer8UpdateHASP
     trigger:
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
+    - platform: homeassistant
+      event: start
     - platform: state
       entity_id: light.light_2
     action:
@@ -65,6 +76,7 @@ automation:
         topic: 'hasp/plate01/command/p[4].b[8].val'
         payload_template: '{{states.light.light_2.attributes.brightness|default(0)|int}}'
   
+  # when the user moves the slider, change the light in Hass
   - alias: hasp_plate01_p4_Dimmer9UpdateHass
     trigger:
     - platform: mqtt
@@ -75,8 +87,14 @@ automation:
         entity_id: light.light_3
         brightness: '{{ trigger.payload }}'
   
+  # When the light is changed in Hass, update HASP to move the dimmer
   - alias: hasp_plate01_p4_Dimmer9UpdateHASP
     trigger:
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
+    - platform: homeassistant
+      event: start
     - platform: state
       entity_id: light.light_3
     action:

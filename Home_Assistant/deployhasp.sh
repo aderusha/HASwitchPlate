@@ -72,18 +72,20 @@ then
   fi
 fi
 
-# Enable recorder if not enabled to persist input values
+# Enable recorder if not enabled to persist relevant values
 if ! grep "^recorder:" configuration.yaml > /dev/null
 then
   echo "recorder:" >> configuration.yaml
   echo "  include:" >> configuration.yaml
   echo "    domains:" >> configuration.yaml
   echo "    - automation" >> configuration.yaml
+  echo "    - binary_sensor" >> configuration.yaml
   echo "    - input_boolean" >> configuration.yaml
   echo "    - input_number" >> configuration.yaml
   echo "    - input_select" >> configuration.yaml
   echo "    - input_datetime" >> configuration.yaml
   echo "    - input_text" >> configuration.yaml
+  echo "    - weather" >> configuration.yaml
 fi
 
 # Warn if MQTT is not enabled
@@ -166,9 +168,38 @@ then
   rm -rf $hasp_temp_dir/hasp-examples/plate01
 fi
 
-# Copy everything over and burn the evidence
-cp -rf $hasp_temp_dir/* .
-rm -rf $hasp_temp_dir
+# Check to see if the target directories already exist
+if [[ -d ./packages/$hasp_device ]] || [[ -d ./hasp-examples/$hasp_device ]]
+then
+  echo "==========================================================================="
+  echo "WARNING: This device already exists.  You have 3 options:"
+  echo "  [r] Replace - Delete existing device and replace with new device [RECOMMENDED]"
+  echo "  [u] Update  - Overwrite existing device with new configuration, retain any additional files created"
+  echo "  [c] Canel   - Cancel the process with no changes made"
+  echo ""
+  read -e -p "Enter overwrite action [r|u|c]: " -i "r" hasp_overwrite_action
+  if [[ "$hasp_overwrite_action" == "r" ]] || [[ "$hasp_overwrite_action" == "R" ]]
+  then
+    echo "Deleting existing device and creating new device"
+    rm -rf ./packages/$hasp_device
+    rm -rf ./hasp-examples/$hasp_device
+    cp -rf $hasp_temp_dir/* .
+    rm -rf $hasp_temp_dir
+  elif [[ "$hasp_overwrite_action" == "u" ]] || [[ "$hasp_overwrite_action" == "U" ]]
+  then
+    echo "Overwriting existing device with updated files"
+    cp -rf $hasp_temp_dir/* .
+    rm -rf $hasp_temp_dir
+  else
+    echo "Exiting with no changes made"
+    rm -rf $hasp_temp_dir
+    exit 1
+  fi
+else
+  # Copy everything over and burn the evidence
+  cp -rf $hasp_temp_dir/* .
+  rm -rf $hasp_temp_dir
+fi
 
 echo "==========================================================================="
 echo "SUCCESS! Restart Home Assistant to enable HASP device $hasp_device"

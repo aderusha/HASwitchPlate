@@ -132,6 +132,7 @@ group:
       - sensor.plate01_sensor
       - light.plate01_backlight
       - group.plate01_pageselect
+      - group.plate01_colors
       - group.plate01_automations
   plate01_pageselect:
     name: plate01 Page Selection
@@ -152,10 +153,16 @@ group:
 
 automation:
 ##############################################################################
-# Set default values for input_text/number sliders
+# Run first time setup commands
   - alias: hasp_plate01_00_FirstTimeSetup
     trigger: []
     action:
+      - service: automation.trigger
+        data:
+          entity_id: 'automation.hasp_plate01_00_automationgroupupdate'
+      - service: homeassistant.turn_on
+        data:
+          entity_id: 'group.plate01_automations'
       - service: input_text.set_value
         data:
           entity_id: 'input_text.hasp_plate01_pagebutton1label'
@@ -184,6 +191,22 @@ automation:
         data:
           entity_id: 'input_number.hasp_plate01_activepage'
           value: 1
+      - service: input_number.set_value
+        data:
+          entity_id: 'input_number.hasp_plate01_selectedforegroundcolor'
+          value: 0
+      - service: input_number.set_value
+        data:
+          entity_id: 'input_number.hasp_plate01_selectedbackgroundcolor'
+          value: 65535
+      - service: input_number.set_value
+        data:
+          entity_id: 'input_number.hasp_plate01_unselectedforegroundcolor'
+          value: 65535
+      - service: input_number.set_value
+        data:
+          entity_id: 'input_number.hasp_plate01_unselectedbackgroundcolor'
+          value: 25388
 
 ##############################################################################
 # Set automation group members on start - Thanks @Nightcat!

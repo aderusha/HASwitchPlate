@@ -9,12 +9,9 @@ automation:
     trigger:
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data_template:
@@ -158,7 +155,7 @@ automation:
     - service: mqtt.publish
       data_template:
         topic: 'hasp/plate01/command/page'
-        payload: '{{ states.input_number.hasp_plate01_activepage.state | int }}'
+        payload: '{{ states.input_number.hasp_plate01_activepage.state|int }}'
       
 ##############################################################################
 # Set page button text across all pages to the value selected in the interface
@@ -170,12 +167,9 @@ automation:
       entity_id: input_text.hasp_plate01_pagebutton1label
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -221,12 +215,9 @@ automation:
       entity_id: input_text.hasp_plate01_pagebutton2label
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -272,12 +263,9 @@ automation:
       entity_id: input_text.hasp_plate01_pagebutton3label
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -329,65 +317,70 @@ automation:
     - platform: state
       entity_id: input_number.hasp_plate01_activepage
     - platform: state
+      entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+    - platform: state
+      entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+    - platform: state
+      entity_id: input_number.hasp_plate01_selectedforegroundcolor
+    - platform: state
+      entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data_template:
         topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[1].bco'
         payload_template: >-
           {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton1page.state|int -%}
-            65535
+            {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}
           {%- else -%}
-            25388
+            {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}
           {%- endif %}
     - service: mqtt.publish
       data_template:
         topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[1].pco'
         payload_template: >-
           {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton1page.state|int -%}
-            0
+            {{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}
           {%- else -%}
-            65535
+            {{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}
           {%- endif %}
     - service: mqtt.publish
       data_template:
         topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[2].bco'
         payload_template: >-
           {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton2page.state|int -%}
-            65535
+            {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}
           {%- else -%}
-            25388
+            {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}
           {%- endif %}
     - service: mqtt.publish
       data_template:
         topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[2].pco'
         payload_template: >-
           {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton2page.state|int -%}
-           0
+            {{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}
           {%- else -%}
-            65535
+            {{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}
           {%- endif %}
     - service: mqtt.publish
       data_template:
         topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[3].bco'
         payload_template: >-
           {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton3page.state|int -%}
-            65535
+            {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}
           {%- else -%}
-            25388
+            {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}
           {%- endif %}
     - service: mqtt.publish
       data_template:
         topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[3].pco'
         payload_template: >-
           {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton3page.state|int -%}
-            0
+            {{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}
           {%- else -%}
-            65535
+            {{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}
           {%- endif %}

@@ -1,10 +1,17 @@
 ##############################################################################
 # Template sensors to report Kodi media player activity by @squirtbrnr
+#
+# Requires the Kodi component is loaded with a device named: media_player.kodi
+#
+# This is used to create the necessary template sensors used in the file
+# packages/plate01/hasp_plate01_p8_media.yaml
+# Comment out the template sensor created in that file to use this config with
+# the Kodi media player.
 
 sensor:
   - platform: template
     sensors:
-      media_player_kodi_title:
+      media_player_title:
         friendly_name: Title
         value_template: >-
           {%- if states.media_player.kodi.state == "playing" or "paused" -%}
@@ -17,7 +24,7 @@ sensor:
             
           {%- endif -%}
         icon_template: mdi:television-classic
-      media_player_kodi_artist:
+      media_player_artist:
         friendly_name: Series
         value_template: >-
           {%- if states.media_player.kodi.state == "playing" or "paused" and states.media_player.kodi.attributes.media_content_type == "tvshow" -%}
@@ -26,7 +33,7 @@ sensor:
             
           {%- endif -%}
         icon_template: mdi:television-classic
-      media_player_kodi_volume:
+      media_player_volume:
         friendly_name: Volume
         value_template: >-
           {%- if states.media_player.kodi.attributes.volume_level -%}

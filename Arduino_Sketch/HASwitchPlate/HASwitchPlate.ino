@@ -74,52 +74,52 @@ MQTTClient mqttClient(256);
 ESP8266WebServer webServer(80);
 ESP8266HTTPUpdateServer httpOTAUpdate;
 
-const float haspVersion = 0.31;                  // Current HASP software release version
-byte nextionReturnBuffer[128];                   // Byte array to pass around data coming from the panel
-uint8_t nextionReturnIndex = 0;                  // Index for nextionReturnBuffer
-uint8_t nextionActivePage = 0;                   // Track active LCD page
-char wifiConfigPass[9];                          // AP config password, always 8 chars + NUL
-char wifiConfigAP[19];                           // AP config SSID, haspNode + 3 chars
-bool shouldSaveConfig = false;                   // Flag to save json config to SPIFFS
-bool nextionReportPage0 = false;                 // If false, don't report page 0 sendme
-const long updateCheckInterval = 43200000;       // Time in msec between update checks (12 hours)
-bool startupDelayFlag = true;                    // These four values are used for housekeeping tasks
-const long startupDelayTimeBegin = 30000;        // after initial startup.  We'll wait 30 seconds for
-const long startupDelayTimeEnd = 45000;          // everything to settle and then attempt to collect
-const long startupDelayRetryInterval = 1000;     // information from attached devices and then
-long startupDelayRetryTimer = 0;                 // collect update information from the web
-long updateCheckTimer = 0;                       // Timer for update check
-bool updateEspAvailable = false;                 // Flag for update check to report new ESP FW version
-float updateEspAvailableVersion;                 // Float to hold the new ESP FW version number
-bool updateLcdAvailable = false;                 // Flag for update check to report new LCD FW version
-bool motionEnabled = false;                      // Motion sensor is enabled
-uint8_t motionPin = 0;                           // GPIO input pin for motion sensor if connected and enabled
-bool motionActive = false;                       // Motion is being detected
-const unsigned long motionLatchTimeout = 30000;  // Latch time for motion sensor
-const unsigned long motionBufferTimeout = 1000;  // Latch time for motion sensor
-unsigned long lcdVersion = 0;                    // Int to hold current LCD FW version number
-unsigned long updateLcdAvailableVersion;         // Int to hold the new LCD FW version number
-bool lcdVersionQueryFlag = false;                // Flag to set if we've queried lcdVersion
-const String lcdVersionQuery = "p[0].b[2].val";  // Object ID for lcdVersion in HMI
-const long statusUpdateInterval = 300000;        // Time in msec between publishing MQTT status updates (5 minutes)
-long statusUpdateTimer = 0;                      // Timer for update check
-const unsigned long connectTimeout = 300;        // Timeout for WiFi and MQTT connection attempts
-byte espMac[6];                                  // Byte array to store our MAC address
-String mqttClientId;                             // Auto-generated MQTT ClientID
-String mqttGetSubtopic;                          // MQTT subtopic for incoming commands requesting .val
-String mqttStateTopic;                           // MQTT topic for outgoing panel interactions
-String mqttCommandTopic;                         // MQTT topic for incoming panel commands
-String mqttGroupCommandTopic;                    // MQTT topic for incoming group panel commands
-String mqttStatusTopic;                          // MQTT topic for publishing device connectivity state
-String mqttSensorTopic;                          // MQTT topic for publishing device information in JSON format
-String mqttLightCommandTopic;                    // MQTT topic for incoming panel backlight on/off commands
-String mqttLightStateTopic;                      // MQTT topic for outgoing panel backlight on/off state
-String mqttLightBrightCommandTopic;              // MQTT topic for incoming panel backlight dimmer commands
-String mqttLightBrightStateTopic;                // MQTT topic for outgoing panel backlight dimmer state
-String mqttMotionStateTopic;                     // MQTT topic for outgoing motion sensor state
-String nextionModel;                             // Record reported model number of LCD panel
-const byte nextionSuffix[] = {0xFF, 0xFF, 0xFF}; // Standard suffix for Nextion commands
-long tftFileSize = 0;                            // Filesize for TFT firmware upload
+const float haspVersion = 0.32;                     // Current HASP software release version
+byte nextionReturnBuffer[128];                      // Byte array to pass around data coming from the panel
+uint8_t nextionReturnIndex = 0;                     // Index for nextionReturnBuffer
+uint8_t nextionActivePage = 0;                      // Track active LCD page
+char wifiConfigPass[9];                             // AP config password, always 8 chars + NUL
+char wifiConfigAP[19];                              // AP config SSID, haspNode + 3 chars
+bool shouldSaveConfig = false;                      // Flag to save json config to SPIFFS
+bool nextionReportPage0 = false;                    // If false, don't report page 0 sendme
+const unsigned long updateCheckInterval = 43200000; // Time in msec between update checks (12 hours)
+unsigned long updateCheckTimer = 0;                 // Timer for update check
+const unsigned long nextionCheckInterval = 5000;    // Time in msec between nextion connection checks
+unsigned long nextionCheckTimer = 0;                // Timer for nextion connection checks
+unsigned int nextionRetryMax = 5;                   // Attempt to connect to panel this many times
+bool updateEspAvailable = false;                    // Flag for update check to report new ESP FW version
+float updateEspAvailableVersion;                    // Float to hold the new ESP FW version number
+bool updateLcdAvailable = false;                    // Flag for update check to report new LCD FW version
+bool motionEnabled = false;                         // Motion sensor is enabled
+uint8_t motionPin = 0;                              // GPIO input pin for motion sensor if connected and enabled
+bool motionActive = false;                          // Motion is being detected
+const unsigned long motionLatchTimeout = 30000;     // Latch time for motion sensor
+const unsigned long motionBufferTimeout = 1000;     // Latch time for motion sensor
+unsigned long lcdVersion = 0;                       // Int to hold current LCD FW version number
+unsigned long updateLcdAvailableVersion;            // Int to hold the new LCD FW version number
+bool lcdVersionQueryFlag = false;                   // Flag to set if we've queried lcdVersion
+const String lcdVersionQuery = "p[0].b[2].val";     // Object ID for lcdVersion in HMI
+bool startupCompleteFlag = false;                   // Startup process has completed
+const long statusUpdateInterval = 300000;           // Time in msec between publishing MQTT status updates (5 minutes)
+long statusUpdateTimer = 0;                         // Timer for update check
+const unsigned long connectTimeout = 300;           // Timeout for WiFi and MQTT connection attempts
+byte espMac[6];                                     // Byte array to store our MAC address
+String mqttClientId;                                // Auto-generated MQTT ClientID
+String mqttGetSubtopic;                             // MQTT subtopic for incoming commands requesting .val
+String mqttStateTopic;                              // MQTT topic for outgoing panel interactions
+String mqttCommandTopic;                            // MQTT topic for incoming panel commands
+String mqttGroupCommandTopic;                       // MQTT topic for incoming group panel commands
+String mqttStatusTopic;                             // MQTT topic for publishing device connectivity state
+String mqttSensorTopic;                             // MQTT topic for publishing device information in JSON format
+String mqttLightCommandTopic;                       // MQTT topic for incoming panel backlight on/off commands
+String mqttLightStateTopic;                         // MQTT topic for outgoing panel backlight on/off state
+String mqttLightBrightCommandTopic;                 // MQTT topic for incoming panel backlight dimmer commands
+String mqttLightBrightStateTopic;                   // MQTT topic for outgoing panel backlight dimmer state
+String mqttMotionStateTopic;                        // MQTT topic for outgoing motion sensor state
+String nextionModel;                                // Record reported model number of LCD panel
+const byte nextionSuffix[] = {0xFF, 0xFF, 0xFF};    // Standard suffix for Nextion commands
+long tftFileSize = 0;                               // Filesize for TFT firmware upload
+uint8_t nextionResetPin = D6;                       // Pin for Nextion power rail switch (GPIO0/D3)
 
 // Additional CSS style to match Hass theme
 const char HASP_STYLE[] = "<style>button{background-color:#03A9F4;}body{width:60%;margin:auto;}</style>";
@@ -133,7 +133,8 @@ String lcdFirmwareUrl = "http://haswitchplate.com/update/HASwitchPlate.tft";
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup()
 { // System setup
-
+  pinMode(nextionResetPin, OUTPUT);
+  digitalWrite(nextionResetPin, HIGH);
   Serial.begin(115200);  // Serial - LCD RX (after swap), debug TX
   Serial1.begin(115200); // Serial1 - LCD TX, no RX
 
@@ -210,7 +211,7 @@ void loop()
 
   if (!mqttClient.connected())
   { // Check MQTT connection
-    debugPrintln("NQTT: not connected, connecting.");
+    debugPrintln("MQTT: not connected, connecting.");
     mqttConnect();
   }
 
@@ -219,12 +220,23 @@ void loop()
   ArduinoOTA.handle();      // Arduino OTA loop
   webServer.handleClient(); // webServer loop
 
-  if ((millis() >= (startupDelayTimeBegin - 5000)) && (millis() <= startupDelayTimeEnd) && ((millis() - startupDelayRetryTimer) >= startupDelayRetryInterval) && startupDelayFlag && nextionModel == "")
-  { // Begin request for LCD information 5 seconds early if we haven't collected it yet
-    nextionSendCmd("get " + lcdVersionQuery);
-    lcdVersionQueryFlag = true;
-    startupDelayRetryTimer = millis();
-    nextionSendCmd("connect");
+  if ((lcdVersion < 1) && (millis() <= (nextionRetryMax * nextionCheckInterval)))
+  { // Attempt to connect to LCD panel to collect model and version info during startup
+    nextionConnect();
+  }
+  else if ((lcdVersion > 0) && (millis() <= (nextionRetryMax * nextionCheckInterval)) && !startupCompleteFlag)
+  { // We have LCD info, so trigger an update check + report
+    if (updateCheck())
+    { // Send a status update if the update check worked
+      mqttStatusUpdate();
+      startupCompleteFlag = true;
+    }
+  }
+  else if ((millis() > (nextionRetryMax * nextionCheckInterval)) && !startupCompleteFlag)
+  { // We still don't have LCD info so go ahead and run the rest of the checks once at startup anyway
+    updateCheck();
+    mqttStatusUpdate();
+    startupCompleteFlag = true;
   }
 
   if ((millis() - statusUpdateTimer) >= statusUpdateInterval)
@@ -233,13 +245,11 @@ void loop()
     mqttStatusUpdate();
   }
 
-  if (((millis() - updateCheckTimer) >= updateCheckInterval) || ((millis() >= startupDelayTimeBegin) && (millis() <= startupDelayTimeEnd) && startupDelayFlag))
+  if ((millis() - updateCheckTimer) >= updateCheckInterval)
   { // Run periodic update check
     updateCheckTimer = millis();
     if (updateCheck())
-    { // If updateCheck hasn't returned an error, clear the startupDelay flag and update MQTT status
-      startupDelayFlag = false;
-      debugPrintln(F("UPDATE: Update check completed"));
+    { // Send a status update if the update check worked
       mqttStatusUpdate();
     }
   }
@@ -475,6 +485,12 @@ void mqttCallback(String &strTopic, String &strPayload)
     debugPrintln(F("MQTT: Rebooting device"));
     espReset();
   }
+  else if (strTopic == (mqttCommandTopic + "/lcdreboot") || strTopic == (mqttGroupCommandTopic + "/lcdreboot"))
+  { // '[...]/device/command/lcdreboot' == reboot LCD panel)
+    // '[...]/group/command/lcdreboot' == reboot LCD panel)
+    debugPrintln(F("MQTT: Rebooting LCD"));
+    nextionReset();
+  }
   else if (strTopic == (mqttCommandTopic + "/factoryreset") || strTopic == (mqttGroupCommandTopic + "/factoryreset"))
   { // '[...]/device/command/factoryreset' == clear all saved settings)
     // '[...]/group/command/factoryreset' == clear all saved settings)
@@ -542,6 +558,9 @@ void mqttStatusUpdate()
   String mqttStatusPayload;
   statusUpdate.printTo(mqttStatusPayload);
   mqttClient.publish(mqttSensorTopic, mqttStatusPayload);
+  mqttClient.publish(mqttStatusTopic, "ON", true, 1);
+  debugPrintln(String(F("MQTT: status update: ")) + String(mqttStatusPayload));
+  debugPrintln(String(F("MQTT: binary_sensor state: [")) + mqttStatusTopic + "] : [ON]");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -556,9 +575,9 @@ void nextionHandleInput()
   unsigned long nextionCommandTimer = millis(); // record current time for our timeout
   nextionReturnIndex = 0;                       // reset the global nextionReturnIndex back to zero
   String hmiDebug = "HMI IN: ";                 // assemble a string for debug output
-  // Load the nextionBuffer until we receive a termination command or we hit our timeout
+
   while (nextionCommandIncoming && ((millis() - nextionCommandTimer) < nextionCommandTimeout))
-  {
+  { // Load the nextionBuffer until we receive a termination command or we hit our timeout
     if (Serial.available())
     {
       byte nextionCommandByte = Serial.read();
@@ -595,8 +614,7 @@ void nextionProcessInput()
   // Command reference: https://www.itead.cc/wiki/Nextion_Instruction_Set#Format_of_Device_Return_Data
   // tl;dr, command byte, command data, 0xFF 0xFF 0xFF
 
-  // Call nextionHandleInput() to load nextionReturnBuffer[] and set nextionReturnIndex
-  nextionHandleInput();
+  nextionHandleInput(); // Call nextionHandleInput() to load nextionReturnBuffer[] and set nextionReturnIndex
 
   if (nextionReturnBuffer[0] == 0x65)
   { // Handle incoming touch command
@@ -943,12 +961,61 @@ bool nextionOtaResponse()
   return otaSuccessVal;
 }
 
+void nextionConnect()
+{
+  if ((millis() - nextionCheckTimer) >= nextionCheckInterval)
+  {
+    static unsigned int nextionRetryCount = 0;
+    if ((nextionModel.length() == 0) && (nextionRetryCount < (nextionRetryMax - 2)))
+    { // Try issuing the "connect" command a few times
+      debugPrintln(F("HMI: sending Nextion connect request"));
+      nextionSendCmd("connect");
+      nextionRetryCount++;
+      nextionCheckTimer = millis();
+    }
+    else if ((nextionModel.length() == 0) && (nextionRetryCount < nextionRetryMax))
+    { // If we still don't have model info, try to change nextion serial speed from 9600 to 115200
+      nextionSetSpeed();
+      nextionRetryCount++;
+      debugPrintln(F("HMI: sending Nextion serial speed 115200 request"));
+      nextionCheckTimer = millis();
+    }
+    else if ((lcdVersion < 1) && (nextionRetryCount <= nextionRetryMax))
+    {
+      if (nextionModel.length() == 0)
+      { // one last hail mary, maybe the serial speed is set correctly now
+        nextionSendCmd("connect");
+      }
+      nextionSendCmd("get " + lcdVersionQuery);
+      lcdVersionQueryFlag = true;
+      nextionRetryCount++;
+      debugPrintln(F("HMI: sending Nextion version query"));
+      nextionCheckTimer = millis();
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void nextionSetSpeed()
+{
+  debugPrintln(F("HMI: No Nextion response, attempting 9600bps connection"));
+  Serial1.begin(9600);
+  Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+  Serial1.print("bauds=115200");
+  Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+  Serial1.flush();
+  Serial1.begin(115200);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void nextionReset()
 {
+  digitalWrite(nextionResetPin, LOW);
+  // delay(10);
   Serial1.print("rest");
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   Serial1.flush();
+  digitalWrite(nextionResetPin, HIGH);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1360,11 +1427,18 @@ void webHandleRoot()
   httpMessage += String(F("<br/><br/><b>MQTT Broker</b> <i><small>(required)</small></i><input id='mqttServer' required name='mqttServer' maxlength=63 placeholder='mqttServer' value='")) + String(mqttServer) + "'>";
   httpMessage += String(F("<br/><b>MQTT Port</b> <i><small>(required)</small></i><input id='mqttPort' required name='mqttPort' type='number' maxlength=5 placeholder='mqttPort' value='")) + String(mqttPort) + "'>";
   httpMessage += String(F("<br/><b>MQTT User</b> <i><small>(optional)</small></i><input id='mqttUser' name='mqttUser' maxlength=31 placeholder='mqttUser' value='")) + String(mqttUser) + "'>";
-  httpMessage += String(F("<br/><b>MQTT Password</b> <i><small>(optional)</small></i><input id='mqttPassword' name='mqttPassword' type='password' maxlength=31 placeholder='mqttPassword'>"));
-  httpMessage += String(F("<br/><br/><b>HASP Admin Username</b> <i><small>(optional)</small></i><input id='configUser' name='configUser' maxlength=31 placeholder='Admin User' value='")) + String(configUser) + "'>";
-  httpMessage += String(F("<br/><b>HASP Admin Password</b> <i><small>(optional)</small></i><input id='configPassword' name='configPassword' type='password' maxlength=31 placeholder='Admin User Password' value='")) + String(configPassword) + "'>";
-
-  httpMessage += String(F("<br/><br/><b>Motion Sensor Pin:&nbsp;</b><select id='motionPinConfig' name='motionPinConfig'>"));
+  httpMessage += String(F("<br/><b>MQTT Password</b> <i><small>(optional)</small></i><input id='mqttPassword' name='mqttPassword' type='password' maxlength=31 placeholder='mqttPassword' value='"));
+  if (strlen(mqttPassword) != 0)
+  {
+    httpMessage += String("********");
+  }
+  httpMessage += String(F("'><br/><br/><b>HASP Admin Username</b> <i><small>(optional)</small></i><input id='configUser' name='configUser' maxlength=31 placeholder='Admin User' value='")) + String(configUser) + "'>";
+  httpMessage += String(F("<br/><b>HASP Admin Password</b> <i><small>(optional)</small></i><input id='configPassword' name='configPassword' type='password' maxlength=31 placeholder='Admin User Password' value='"));
+  if (strlen(configPassword) != 0)
+  {
+    httpMessage += String("********");
+  }
+  httpMessage += String(F("'><br/><br/><b>Motion Sensor Pin:&nbsp;</b><select id='motionPinConfig' name='motionPinConfig'>"));
   httpMessage += String(F("<option value='0'"));
   if (!motionPin)
   {
@@ -1456,7 +1530,10 @@ void webHandleSaveConfig()
     shouldSaveConfig = true;
     shouldSaveWifi = true;
     webServer.arg("wifiSSID").toCharArray(wifiSSID, 32);
-    webServer.arg("wifiPass").toCharArray(wifiPass, 64);
+    if (webServer.arg("wifiPass") != String("********"))
+    {
+      webServer.arg("wifiPass").toCharArray(wifiPass, 64);
+    }
   }
   if (webServer.arg("mqttServer") != "" && webServer.arg("mqttServer") != String(mqttServer))
   { // Handle mqttServer
@@ -1486,7 +1563,7 @@ void webHandleSaveConfig()
     shouldSaveConfig = true;
     webServer.arg("mqttUser").toCharArray(mqttUser, 32);
   }
-  if (webServer.arg("mqttPassword") != String(mqttPassword))
+  if (webServer.arg("mqttPassword") != String("********"))
   { // Handle mqttPassword
     shouldSaveConfig = true;
     webServer.arg("mqttPassword").toCharArray(mqttPassword, 32);
@@ -1496,7 +1573,7 @@ void webHandleSaveConfig()
     shouldSaveConfig = true;
     webServer.arg("configUser").toCharArray(configUser, 32);
   }
-  if (webServer.arg("configPassword") != String(configPassword))
+  if (webServer.arg("configPassword") != String("********"))
   { // Handle configPassword
     shouldSaveConfig = true;
     webServer.arg("configPassword").toCharArray(configPassword, 32);
@@ -1993,6 +2070,7 @@ bool updateCheck()
         debugPrintln(String(F("UPDATE: New LCD version available: ")) + String(updateLcdAvailableVersion));
       }
     }
+    debugPrintln(F("UPDATE: Update check completed"));
   }
   return true;
 }

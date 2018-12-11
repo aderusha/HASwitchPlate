@@ -12,20 +12,17 @@ binary_sensor:
     payload_available: "ON"
     payload_not_available: "OFF"
 
-# Use the motion sensor to switch between pages configured for buttons 1 and 2
-# USe case: Page button 1 has interactive controls, page button 2 has information
-# Show information when motion isn't detect, when person approaches the display,
-# then switch to interactive controls.
+# Use the motion sensor to switch between pages configured for buttons 1 and 2.
+# Use case: Page button 1 has interactive controls, page button 2 has information
+# Interaction: 
+# - When user isn't nearby, display shows information like a clock or weather on page 2.
+# - When a person approachs, switch to interactive controls like the scene buttons on page 1.
 automation:
   - alias: hasp_plate01_00_MotionSelectPageButton1
     trigger:
     - platform: state
       entity_id: 'binary_sensor.plate01_motion_sensor'
       to: 'on'
-    - platform: state
-      entity_id: 'binary_sensor.plate01_connected'
-    - platform: homeassistant
-      event: start
     condition:
     - condition: state
       entity_id: 'binary_sensor.plate01_connected'
@@ -41,10 +38,6 @@ automation:
     - platform: state
       entity_id: 'binary_sensor.plate01_motion_sensor'
       to: 'off'
-    - platform: state
-      entity_id: 'binary_sensor.plate01_connected'
-    - platform: homeassistant
-      event: start
     condition:
     - condition: state
       entity_id: 'binary_sensor.plate01_connected'

@@ -1,0 +1,99 @@
+##############################################################################
+# Automations to set colors on HASP Page 5
+#
+# WARNING: These automations can quadruple MQTT traffic on Home Assistant or
+# HASP restart.  It's recommended that you selectively enable these on a per-
+# page basis to avoid flooding your MQTT broker with traffic.
+#
+# Here we've swapped selected/unselected as these buttons will always be
+# unselected (unless actively being pressed), and sliders do not have a
+# selected/unselected state.
+automation:
+  - alias: hasp_plate01_p5_ColorConfig
+    trigger:
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
+    - platform: homeassistant
+      event: start
+    - platform: state
+      entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+    - platform: state
+      entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+    - platform: state
+      entity_id: input_number.hasp_plate01_selectedforegroundcolor
+    - platform: state
+      entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[4].pco'
+        payload_template: '{{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[4].bco'
+        payload_template: '{{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[4].pco2'
+        payload_template: '{{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[4].bco2'
+        payload_template: '{{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[5].pco'
+        payload_template: '{{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[5].bco'
+        payload_template: '{{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[5].pco2'
+        payload_template: '{{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[5].bco2'
+        payload_template: '{{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[6].pco'
+        payload_template: '{{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[6].bco'
+        payload_template: '{{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[6].pco2'
+        payload_template: '{{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[6].bco2'
+        payload_template: '{{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[7].pco'
+        payload_template: '{{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[7].bco'
+        payload_template: '{{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[8].pco'
+        payload_template: '{{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[8].bco'
+        payload_template: '{{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[9].pco'
+        payload_template: '{{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[5].b[9].bco'
+        payload_template: '{{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}'

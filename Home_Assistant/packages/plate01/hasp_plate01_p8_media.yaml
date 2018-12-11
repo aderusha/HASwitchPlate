@@ -1,14 +1,24 @@
 ##############################################################################
-# Pull media information from a media player named `media_player`
+# A dummy sensor is created below for demonstration purposes.  Volume change
+# will not work.
+# To use with a real media player, comment out the dummy sensors, uncomment
+# the examples, and modify to fit the attributes published by your own media
+# player device.
 sensor:
   - platform: template
     sensors:
+      # media_player_title:
+      #   value_template: '{{ states.media_player.media_player.attributes.media_title }}'
+      # media_player_artist:
+      #   value_template: '{{ states.media_player.media_player.attributes.media_artist }}'
+      # media_player_volume:
+      #   value_template: '{{ states.media_player.media_player.attributes.volume_level }}'
       media_player_title:
-        value_template: '{{ states.media_player.media_player.attributes.media_title }}'
+        value_template: 'Track Title'
       media_player_artist:
-        value_template: '{{ states.media_player.media_player.attributes.media_artist }}'
+        value_template: 'Artist Name'
       media_player_volume:
-        value_template: '{{ states.media_player.media_player.attributes.volume_level }}'
+        value_template: '50'
 
 
 ##############################################################################
@@ -20,12 +30,9 @@ automation:
     trigger:
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -93,12 +100,9 @@ automation:
       entity_id: sensor.media_player_artist
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -115,12 +119,9 @@ automation:
       entity_id: sensor.media_player_title
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -137,12 +138,9 @@ automation:
       entity_id: media_player.media_player
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data:
@@ -167,12 +165,9 @@ automation:
       entity_id: sensor.media_player_volume
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
     - platform: homeassistant
       event: start
-    condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
     action:
     - service: mqtt.publish
       data:
