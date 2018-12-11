@@ -258,12 +258,11 @@ void loop()
   { // Check on our motion sensor
     motionUpdate();
   }
-}
-
+  
 #ifdef DEBUGTELNET
-// telnetClient loop
-handleTelnetClient();
+  handleTelnetClient(); // telnetClient loop
 #endif
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Functions
