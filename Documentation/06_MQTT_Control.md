@@ -37,3 +37,17 @@ Objects are referenced by page number (not page name) and object ID (not object 
 ![Page and Object IDs](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Nextion_Editor_Page_and_Object_Ids.png?raw=true)
 
 While it is possible to send `command` messages using the object or page names, all messages coming back from the panel under `state` will be using page numbers and object IDs.  Save yourself the confusion and do everything in the format `p[<page number>].b[<object id>]` and things will go easier.
+
+### MQTT Error codes (rc=n)
+
+If the HASP cannot connect to MQTT it will display a return code on the screen as RC=_n_.  These codes are specified by the MQTT spec [here](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Table_3.1_-).
+
+| Value | Return Code Response                                   | Description                                                                        |
+|-------|--------------------------------------------------------|------------------------------------------------------------------------------------|
+| 0     | 0x00 Connection Accepted                               | Connection accepted                                                                |
+| 1     | 0x01 Connection Refused, unacceptable protocol version | The Server does not support the level of the MQTT protocol requested by the Client |
+| 2     | 0x02 Connection Refused, identifier rejected           | The Client identifier is correct UTF-8 but not allowed by the Server               |
+| 3     | 0x03 Connection Refused, Server unavailable            | The Network Connection has been made but the MQTT service is unavailable           |
+| 4     | 0x04 Connection Refused, bad user name or password     | The data in the user name or password is malformed                                 |
+| 5     | 0x05 Connection Refused, not authorized                | The Client is not authorized to connect                                            |
+| 6-255 |                                                        | Reserved for future use                                                            |
