@@ -18,8 +18,6 @@ The Nextion accepts and sends commands over the serial interface.  A [detailed g
 
 Once the project is assembled, future updates to the Nextion firmware can be handled over-the-air by utilizing the built-in web interface or by [issuing an MQTT command](06_MQTT_Control.md#command-syntax) with a URL to the target TFT file.
 
----
-
 ## HOW TO: Run this software with an ESP8266 only
 
 One feature of the Nextion Editor is the [Nextion Simulator](https://www.itead.cc/wiki/Nextion_Editor_Quick_Start_Guide#Debug.2C_online_simulator), which allows the user to debug an HMI being edited.  You've probably used this if you've worked on editing your own HMI file.  You can run through the screens using your mouse to issue touch commands and feed it commands and see output in the text boxes provided.
@@ -29,3 +27,7 @@ The Nextion simulator allows you to run [hardware-in-loop](https://en.wikipedia.
 Now the Simulator will accept input from and send output to your flashed ESP8266 without having a Nextion on hand!
 
 ![Nextion Editor Simulator](Images/Nextion_Editor_Simulator.png?raw=true)
+
+## Nextion color codes
+
+The Nextion environment utilizes RGB 565 encoding, which is a little unusual.  [Use this handy convertor to select your colors and convert to the RGB 565 format](https://nodtem66.github.io/nextion-hmi-color-convert/index.html).
