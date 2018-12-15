@@ -13,7 +13,7 @@ For most users, you'll want to print [HASwitchPlate_front_single.stl](HASwitchPl
 * **[HASwitchPlate_front_double_toggle_right.stl](HASwitchPlate_front_double_toggle_right.stl)** Double-wide plate with toggle switch to the right `[HASP|toggle]`
 * **[HASwitchPlate_front_triple_hasp_decora_decora.stl](HASwitchPlate_front_triple_hasp_decora_decora.stl)** Triple-wide plate with Decora switches to the right `[HASP|Decora|Decora]`
 * **[HASwitchPlate_front_triple_hasp_toggle_toggle.stl](HASwitchPlate_front_triple_hasp_toggle_toggle.stl)** Triple-wide plate with toggle switches to the right `[HASP|toggle|toggle]`
-* **[HASwitchPlate_front_5x_decora_decora_hasp_decora_decora](HASwitchPlate_front_5x_decora_decora_hasp_decora_decora)** 5-wide plate with 4x Decora switches and HASP in center `[Decora|Decora|HASP|Decora|Decora]`
+* **[HASwitchPlate_front_5x_decora_decora_hasp_decora_decora.stl](HASwitchPlate_front_5x_decora_decora_hasp_decora_decora.stl)** 5-wide plate with 4x Decora switches and HASP in center `[Decora|Decora|HASP|Decora|Decora]`
 * **[HASwitchPlate_front_single_dev.stl](HASwitchPlate_front_single_dev.stl)** Standard single-wide plate with SD card exposed for development use (unsafe!) `[HASP]`
 
 ### Rear enclosure models
