@@ -1,0 +1,26 @@
+sitemap hasp label="HASP"
+{
+    Text label="HASP"
+    {
+        Frame{
+            Switch item=HASP_Plate01_Page mappings=[0="0", 1="1", 2="2", 3="3", 4="4", 5="5", 6="6", 7="7", 8="8", 9="9"]
+        }
+        Text item=HASP_Plate01_Page_Current
+        Text item=HASP_Plate01_Plate_Sensor_Status
+        Text item=HASP_Plate01_Plate_Sensor_ESPVersion
+        Text item=HASP_Plate01_Plate_Sensor_ESPUpdate
+        Text item=HASP_Plate01_Plate_Sensor_LCDVersion
+        Text item=HASP_Plate01_Plate_Sensor_LCDUpdate
+        Text item=HASP_Plate01_Plate_Sensor_ESPUptime
+        Text item=HASP_Plate01_Plate_Sensor_SignalStrength
+        Text item=HASP_Plate01_Plate_Sensor_HaspIP
+        Frame{
+            Switch item=HASP_Plate01_Light_Power
+            Text item=HASP_Plate01_Light_Status
+        }
+        Frame{
+            Setpoint item=HASP_Plate01_Light_Dimmer minValue=0 maxValue=255 step=32
+            Text item=HASP_Plate01_Light_Brightness
+        }
+    }
+}
