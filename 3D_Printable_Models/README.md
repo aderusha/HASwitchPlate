@@ -22,6 +22,14 @@ For most users, you'll want to print [HASwitchPlate_front_single.stl](HASwitchPl
 * **[HASwitchPlate_rear_nolcdmod.stl](HASwitchPlate_rear_nolcdmod.stl)** The `nolcdmod` enclosure does not require removing the 4-pin XHP connector from the Nextion LCD panel.  This simplifies the build process but has just a little less room behind the device for the work box screws.  We're not talking a lot here, so if you don't have the hot air station this option will probably work fine for you.
 * **[HASwitchPlate_rear_dev.stl](HASwitchPlate_rear_dev.stl)** The `dev` enclosure has USB, SD card, and Nextion XHP connector exposed for development/test purposes.  This is unsafe to install in your workbox.
 
+### Desktop models
+
+An enclosure designed for desktop (table, bedstand, etc) use has been developed.  The enclosure will fit the standard PCB, WeMos D1 Mini, and Nextion 2.4" but will not allow installation or use of the AC PSU.  Power is provided by USB connection to the WeMos D1 Mini.
+
+* **[HASwitchPlate_desktop_front.stl](HASwitchPlate_desktop_front.stl)** Front panel for desktop use with opening for SD card access
+* **[HASwitchPlate_desktop_rear.stl](HASwitchPlate_desktop_rear.stl)** Rear enclosure for desktop use with openings for SD card, USB, and Nextion Serial access
+* **[HASwitchPlate_desktop_base.stl](HASwitchPlate_desktop_base.stl)** Handy base for desktop use.  Print with higher infill to add mass to weigh it down a bit.
+
 ![HASP_3D_Print_Models](../Documentation/Images/HASP_3D_Print_Models.png?raw=true)
 
 ## 3D Printing Notes
