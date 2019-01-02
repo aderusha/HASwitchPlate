@@ -36,7 +36,7 @@ hasp_input_name="$@"
 
 if [ "$hasp_input_name" == "" ]
 then
-  read -e -p "Enter the new HASP device name and press [RETURN]: " -i "plate01" hasp_input_name
+  read -e -p "Enter the new HASP device name (lower case letters, numbers, and '_' only): " -i "plate01" hasp_input_name
 fi
 
 # If it's still empty just pout and quit

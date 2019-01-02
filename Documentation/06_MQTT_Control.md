@@ -15,8 +15,10 @@ Messages sent to the panel under the `command` topic will be handled based on th
 
 * **`-t 'hasp/plate01/command' -m 'dim=50'`** A `command` with no subtopic will send the command in the payload to the panel directly.
 * **`-t 'hasp/plate01/command/page' -m '1'`** The `page` command subtopic will set the current page on the device to the page number included in the payload.
-* **`-t 'hasp/plate01/command/p[1].b[4].txt' -m '"Lamp On"'`** A `command` with a subtopic will set the attribute named in the subtopic to the value sent in the payload.  You can send these messages with `retain` enabled and the broker will remember these settings for you.
+* **`-t 'hasp/plate01/command/json' -m '["dim=50", "page 1"]'`** The `json` command subtopic will send a JSON array of commands one-by-one to the panel.
+* **`-t 'hasp/plate01/command/p[1].b[4].txt' -m '"Lamp On"'`** A `command` with a subtopic will set the attribute named in the subtopic to the value sent in the payload.
 * **`-t 'hasp/plate01/command/p[1].b[4].txt' -m ''`** A `command` with a subtopic and an empty payload will request the current value of the attribute named in the subtopic from the panel.  The value will be returned under the `state` topic as `'hasp/plate01/state/p[1].b[4].txt' -m '"Lamp On"'`
+* **`-t 'hasp/plate01/command/statusupdate'`** `statusupdate` will publish a JSON string indicating system status.
 * **`-t 'hasp/plate01/command/reboot'`** The `reboot` command will reboot the HASP device.
 * **`-t 'hasp/plate01/command/factoryreset'`** The `factoryreset` command will wipe out saved WiFi, nodename, and MQTT broker details to reset the device back to default settings.
 * **`-t 'hasp/plate01/command/lcdupdate'`** The `lcdupdate` command subtopic with no message will attempt to update the Nextion from the HASP GitHub repository.

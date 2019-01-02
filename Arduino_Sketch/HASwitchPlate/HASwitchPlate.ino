@@ -6,7 +6,7 @@
 //        Home Automation Switch Plate
 // https://github.com/aderusha/HASwitchPlate
 //
-// Copyright (c) 2018 Allen Derusha allen@derusha.org
+// Copyright (c) 2019 Allen Derusha allen@derusha.org
 //
 // MIT License
 //
@@ -69,12 +69,8 @@ char motionPinConfig[3] = "0";
 WiFiServer telnetServer(23);
 WiFiClient telnetClient;
 #endif
-WiFiClient wifiClient;
-MQTTClient mqttClient(256);
-ESP8266WebServer webServer(80);
-ESP8266HTTPUpdateServer httpOTAUpdate;
 
-const float haspVersion = 0.32;                     // Current HASP software release version
+const float haspVersion = 0.33;                     // Current HASP software release version
 byte nextionReturnBuffer[128];                      // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;                     // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                      // Track active LCD page
@@ -104,6 +100,7 @@ const long statusUpdateInterval = 300000;           // Time in msec between publ
 long statusUpdateTimer = 0;                         // Timer for update check
 const unsigned long connectTimeout = 300;           // Timeout for WiFi and MQTT connection attempts
 byte espMac[6];                                     // Byte array to store our MAC address
+const uint16_t mqttMaxPacketSize = 4096;            // Size of buffer for incoming MQTT message
 String mqttClientId;                                // Auto-generated MQTT ClientID
 String mqttGetSubtopic;                             // MQTT subtopic for incoming commands requesting .val
 String mqttStateTopic;                              // MQTT topic for outgoing panel interactions
@@ -121,8 +118,13 @@ const byte nextionSuffix[] = {0xFF, 0xFF, 0xFF};    // Standard suffix for Nexti
 long tftFileSize = 0;                               // Filesize for TFT firmware upload
 uint8_t nextionResetPin = D6;                       // Pin for Nextion power rail switch (GPIO0/D3)
 
+WiFiClient wifiClient;
+MQTTClient mqttClient(mqttMaxPacketSize);
+ESP8266WebServer webServer(80);
+ESP8266HTTPUpdateServer httpOTAUpdate;
+
 // Additional CSS style to match Hass theme
-const char HASP_STYLE[] = "<style>button{background-color:#03A9F4;}body{width:60%;margin:auto;}</style>";
+const char HASP_STYLE[] = "<style>button{background-color:#03A9F4;}body{width:60%;margin:auto;}input:invalid{border:1px solid red;}</style>";
 // URL for auto-update "version.json"
 const char UPDATE_URL[] = "http://haswitchplate.com/update/version.json";
 // Default link to compiled Arduino firmware image
@@ -258,7 +260,7 @@ void loop()
   { // Check on our motion sensor
     motionUpdate();
   }
-  
+
 #ifdef DEBUGTELNET
   handleTelnetClient(); // telnetClient loop
 #endif
@@ -409,54 +411,47 @@ void mqttCallback(String &strTopic, String &strPayload)
   // strPayload: "Lights On"
   // subTopic: p[1].b[4].txt
 
-  // Incoming Namespace:
-  // '[...]/device/command' -m '' = undefined
-  // '[...]/group/command' -m '' = undefined
-  // '[...]/device/command' -m 'dim 50' = nextionSendCmd("dim 50")
+  // Incoming Namespace (replace /device/ with /group/ for group commands)
+  // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
+  // '[...]/device/command' -m 'dim=50' = nextionSendCmd("dim=50")
+  // '[...]/device/command/json' -m '["dim=5", "page 1"]' = nextionSendCmd("dim=50"), nextionSendCmd("page 1")
   // '[...]/device/command/page' -m '1' = nextionSendCmd("page 1")
-  // '[...]/group/command/page' -m '1' = nextionSendCmd("page 1")
+  // '[...]/device/command/statusupdate' -m '' = mqttStatusUpdate()
   // '[...]/device/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' = nextionStartOtaDownload("http://192.168.0.10/local/HASwitchPlate.tft")
-  // '[...]/group/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' = nextionStartOtaDownload("http://192.168.0.10/local/HASwitchPlate.tft")
   // '[...]/device/command/lcdupdate' -m '' = nextionStartOtaDownload("lcdFirmwareUrl")
-  // '[...]/group/command/lcdupdate' -m '' = nextionStartOtaDownload("lcdFirmwareUrl")
   // '[...]/device/command/espupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin' = espStartOta("http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin")
-  // '[...]/group/command/espupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin' = espStartOta("http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin")
   // '[...]/device/command/espupdate' -m '' = espStartOta("espFirmwareUrl")
-  // '[...]/group/command/espupdate' -m '' = espStartOta("espFirmwareUrl")
   // '[...]/device/command/p[1].b[4].txt' -m '' = nextionGetAttr("p[1].b[4].txt")
-  // '[...]/group/command/p[1].b[4].txt' -m '' = nextionGetAttr("p[1].b[4].txt")
   // '[...]/device/command/p[1].b[4].txt' -m '"Lights On"' = nextionSetAttr("p[1].b[4].txt", "\"Lights On\"")
-  // '[...]/group/command/p[1].b[4].txt' -m '"Lights On"' = nextionSetAttr("p[1].b[4].txt", "\"Lights On\"")
 
   debugPrintln(String(F("MQTT IN:  '")) + strTopic + "' : '" + strPayload + "'");
 
   if (((strTopic == mqttCommandTopic) || (strTopic == mqttGroupCommandTopic)) && (strPayload == ""))
-  { // '[...]/device/command' -m '' = undefined
-    // '[...]/group/command' -m '' = undefined
-    // currently undefined
+  { // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
+    mqttStatusUpdate(); // return status JSON via MQTT;
   }
   else if (strTopic == mqttCommandTopic || strTopic == mqttGroupCommandTopic)
-  { // '[...]/device/command' -m 'dim 50' == nextionSendCmd("dim 50")
-    // '[...]/group/command' -m 'dim 50' == nextionSendCmd("dim 50")
+  { // '[...]/device/command' -m 'dim=50' == nextionSendCmd("dim=50")
     nextionSendCmd(strPayload);
   }
   else if (strTopic == (mqttCommandTopic + "/page") || strTopic == (mqttGroupCommandTopic + "/page"))
   { // '[...]/device/command/page' -m '1' == nextionSendCmd("page 1")
-    // '[...]/group/command/page' -m '1' == nextionSendCmd("page 1")
     if (nextionActivePage != strPayload.toInt())
     { // Hass likes to send duplicate responses to things like page requests and there are no plans to fix that behavior, so try and track it locally
       nextionActivePage = strPayload.toInt();
       nextionSendCmd("page " + strPayload);
     }
   }
+  else if (strTopic == (mqttCommandTopic + "/json") || strTopic == (mqttGroupCommandTopic + "/json"))
+  { // '[...]/device/command/json' -m '["dim=5", "page 1"]' = nextionSendCmd("dim=50"), nextionSendCmd("page 1")
+    nextionParseJson(strPayload); // Send to nextionParseJson()
+  }
   else if (strTopic == (mqttCommandTopic + "/statusupdate") || strTopic == (mqttGroupCommandTopic + "/statusupdate"))
   { // '[...]/device/command/statusupdate' == mqttStatusUpdate()
-    // '[...]/group/command/statusupdate' == mqttStatusUpdate()
     mqttStatusUpdate(); // return status JSON via MQTT;
   }
   else if (strTopic == (mqttCommandTopic + "/lcdupdate") || strTopic == (mqttGroupCommandTopic + "/lcdupdate"))
   { // '[...]/device/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' == nextionStartOtaDownload("http://192.168.0.10/local/HASwitchPlate.tft")
-    // '[...]/group/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' == nextionStartOtaDownload("http://192.168.0.10/local/HASwitchPlate.tft")
     if (strPayload == "")
     {
       nextionStartOtaDownload(lcdFirmwareUrl);
@@ -468,7 +463,6 @@ void mqttCallback(String &strTopic, String &strPayload)
   }
   else if (strTopic == (mqttCommandTopic + "/espupdate") || strTopic == (mqttGroupCommandTopic + "/espupdate"))
   { // '[...]/device/command/espupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin' == espStartOta("http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin")
-    // '[...]/group/command/espupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin' == espStartOta("http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin")
     if (strPayload == "")
     {
       espStartOta(espFirmwareUrl);
@@ -480,19 +474,16 @@ void mqttCallback(String &strTopic, String &strPayload)
   }
   else if (strTopic == (mqttCommandTopic + "/reboot") || strTopic == (mqttGroupCommandTopic + "/reboot"))
   { // '[...]/device/command/reboot' == reboot microcontroller)
-    // '[...]/group/command/reboot' == reboot microcontroller)
     debugPrintln(F("MQTT: Rebooting device"));
     espReset();
   }
   else if (strTopic == (mqttCommandTopic + "/lcdreboot") || strTopic == (mqttGroupCommandTopic + "/lcdreboot"))
   { // '[...]/device/command/lcdreboot' == reboot LCD panel)
-    // '[...]/group/command/lcdreboot' == reboot LCD panel)
     debugPrintln(F("MQTT: Rebooting LCD"));
     nextionReset();
   }
   else if (strTopic == (mqttCommandTopic + "/factoryreset") || strTopic == (mqttGroupCommandTopic + "/factoryreset"))
   { // '[...]/device/command/factoryreset' == clear all saved settings)
-    // '[...]/group/command/factoryreset' == clear all saved settings)
     configClearSaved();
   }
   else if (strTopic.startsWith(mqttCommandTopic) && (strPayload == ""))
@@ -609,7 +600,7 @@ void nextionHandleInput()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void nextionProcessInput()
-{ // Handle incoming commands from the Nextion device
+{ // Process incoming serial commands from the Nextion panel
   // Command reference: https://www.itead.cc/wiki/Nextion_Instruction_Set#Format_of_Device_Return_Data
   // tl;dr, command byte, command data, 0xFF 0xFF 0xFF
 
@@ -778,35 +769,46 @@ void nextionProcessInput()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void nextionSetAttr(String hmi_attribute, String hmi_value)
+void nextionSetAttr(String hmiAttribute, String hmiValue)
 { // Set the value of a Nextion component attribute
-  Serial1.print(hmi_attribute);
+  Serial1.print(hmiAttribute);
   Serial1.print("=");
-  Serial1.print(hmi_value);
+  Serial1.print(utf8ascii(hmiValue));
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   Serial1.flush();
-  debugPrintln(String(F("HMI OUT:  '")) + hmi_attribute + "=" + hmi_value + "'");
+  debugPrintln(String(F("HMI OUT:  '")) + hmiAttribute + "=" + hmiValue + "'");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void nextionGetAttr(String hmi_attribute)
+void nextionGetAttr(String hmiAttribute)
 { // Get the value of a Nextion component attribute
   // This will only send the command to the panel requesting the attribute, the actual
   // return of that value will be handled by nextionProcessInput and placed into mqttGetSubtopic
-  Serial1.print("get " + hmi_attribute);
+  Serial1.print("get " + hmiAttribute);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   Serial1.flush();
-  debugPrintln(String(F("HMI OUT:  'get ")) + hmi_attribute + "'");
+  debugPrintln(String(F("HMI OUT:  'get ")) + hmiAttribute + "'");
   nextionProcessInput();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void nextionSendCmd(String nextionCmd)
 { // Send a raw command to the Nextion panel
-  Serial1.print(nextionCmd);
+  Serial1.print(utf8ascii(nextionCmd));
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   Serial1.flush();
   debugPrintln(String(F("HMI OUT:  ")) + nextionCmd);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void nextionParseJson(String &strPayload)
+{ // Parse an incoming JSON array into individual Nextion commands
+  DynamicJsonBuffer nextionJsonBuffer(256);
+  JsonArray &nextionCommands = nextionJsonBuffer.parseArray(strPayload, 1);
+  for (uint8_t i = 0; i < nextionCommands.size(); i++)
+  {
+    nextionSendCmd(nextionCommands[i]);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -960,6 +962,7 @@ bool nextionOtaResponse()
   return otaSuccessVal;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void nextionConnect()
 {
   if ((millis() - nextionCheckTimer) >= nextionCheckInterval)
@@ -1047,7 +1050,7 @@ void espWifiSetup()
     WiFiManagerParameter custom_configUser("configUser", "Config User", configUser, 15, " maxlength=31'");
     WiFiManagerParameter custom_configPassword("configPassword", "Config Password", configPassword, 31, " maxlength=31 type='password'");
 
-    // WiFiManager local intialization. Once its business is done, there is no need to keep it around
+    // WiFiManager local initialization. Once its business is done, there is no need to keep it around
     WiFiManager wifiManager;
 
     // set config save notify callback
@@ -1370,7 +1373,7 @@ void configClearSaved()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void webHandleNotFound()
-{ // webSevrer 404
+{ // webServer 404
   String httpMessage = "File Not Found\n\n";
   httpMessage += "URI: ";
   httpMessage += webServer.uri();
@@ -1418,8 +1421,7 @@ void webHandleRoot()
   httpMessage += String(haspNode);
   httpMessage += String(F("</h1>"));
 
-  httpMessage += String(F("<style>input:invalid { border: 1px solid red; }</style>"));
-  httpMessage += String(F("<form method='POST' action='saveConfig'>"));
+    httpMessage += String(F("<form method='POST' action='saveConfig'>"));
   httpMessage += String(F("<b>WiFi SSID</b> <i><small>(required)</small></i><input id='wifiSSID' required name='wifiSSID' maxlength=32 placeholder='WiFi SSID' value='")) + String(WiFi.SSID()) + "'>";
   httpMessage += String(F("<br/><b>WiFi Password</b> <i><small>(required)</small></i><input id='wifiPass' required name='wifiPass' type='password' maxlength=64 placeholder='WiFi Password' value='")) + String("********") + "'>";
   httpMessage += String(F("<br/><br/><b>HASP Node Name</b> <i><small>(lowercase, required)</small></i><input id='haspNode' required name='haspNode' maxlength=15 placeholder='HASP Node Name' pattern='[a-z0-9_]*' value='")) + String(haspNode) + "'>";
@@ -2145,7 +2147,7 @@ void handleTelnetClient()
     }
     else
     {
-      telnetServer.available().stop(); // have client, block new conections
+      telnetServer.available().stop(); // have client, block new connections
     }
   }
   // Handle client input from telnet connection.
@@ -2209,4 +2211,61 @@ void debugPrint(String debugText)
     handleTelnetClient();
   }
 #endif
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+// UTF8-Decoder: convert UTF8-string to extended ASCII http://playground.arduino.cc/main/Utf8ascii
+// Workaround for issue here: https://github.com/home-assistant/home-assistant/issues/9528
+// Nextion claims that "Unicode and UTF will not be among the supported encodings", so this should
+// be safe to run against all attribute values coming in.
+static byte c1; // Last character buffer
+byte utf8ascii(byte ascii)
+{ // Convert a single Character from UTF8 to Extended ASCII. Return "0" if a byte has to be ignored.
+  if (ascii < 128)
+  { // Standard ASCII-set 0..0x7F handling
+    c1 = 0;
+    return (ascii);
+  }
+  // get previous input
+  byte last = c1; // get last char
+  c1 = ascii;     // remember actual character
+  switch (last)
+  { // conversion depending on first UTF8-character
+  case 0xC2:
+    return (ascii);
+    break;
+  case 0xC3:
+    return (ascii | 0xC0);
+    break;
+  case 0x82:
+    if (ascii == 0xAC)
+      return (0x80); // special case Euro-symbol
+  }
+  return (0); // otherwise: return zero, if character has to be ignored
+}
+
+String utf8ascii(String s)
+{ // convert String object from UTF8 String to Extended ASCII
+  String r = "";
+  char c;
+  for (uint16_t i = 0; i < s.length(); i++)
+  {
+    c = utf8ascii(s.charAt(i));
+    if (c != 0)
+      r += c;
+  }
+  return r;
+}
+
+void utf8ascii(char *s)
+{ // In Place conversion UTF8-string to Extended ASCII (ASCII is shorter!)
+  uint16_t k = 0;
+  char c;
+  for (uint16_t i = 0; i < strlen(s); i++)
+  {
+    c = utf8ascii(s[i]);
+    if (c != 0)
+      s[k++] = c;
+  }
+  s[k] = 0;
 }

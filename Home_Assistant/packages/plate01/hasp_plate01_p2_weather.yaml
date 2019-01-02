@@ -23,7 +23,7 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[6].txt'
-        payload_template: '"{{state_attr("weather.metno","temperature")|int}}F"'
+        payload_template: '"{{state_attr("weather.metno","temperature")|int}}°F"'
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[7].font'
