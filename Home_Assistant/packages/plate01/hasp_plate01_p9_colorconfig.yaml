@@ -1,0 +1,34 @@
+##############################################################################
+# Automations to set colors on HASP Page 9
+#
+# Here we've swapped selected/unselected as these buttons will always be
+# unselected (unless actively being pressed).
+automation:
+  - alias: hasp_plate01_p9_ColorConfig
+    trigger:
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
+    - platform: homeassistant
+      event: start
+    - platform: state
+      entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+    - platform: state
+      entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+    - platform: state
+      entity_id: input_number.hasp_plate01_selectedforegroundcolor
+    - platform: state
+      entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/json'
+        payload_template: >-
+          [{%- for i in range(4,6) -%}"p[9].b[{{i}}].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",{%- endfor -%}
+          {%- for i in range(4,6) -%}"p[9].b[{{i}}].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}",{%- endfor -%}
+          {%- for i in range(4,6) -%}"p[9].b[{{i}}].pco2={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",{%- endfor -%}
+          {%- for i in range(4,6) -%}"p[9].b[{{i}}].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",{%- endfor -%}
+          "p[9].b[6].gdc={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",
+          "p[9].b[6].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}",
+          "p[9].b[6].pco0={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
+          "p[9].b[6].pco1={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}"]

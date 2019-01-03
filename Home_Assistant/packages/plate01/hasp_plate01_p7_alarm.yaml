@@ -13,93 +13,15 @@ automation:
     action:
     - service: mqtt.publish
       data:
-        topic: 'hasp/plate01/command/p[7].b[4].txt'
-        payload: '"1"'
+        topic: 'hasp/plate01/command/json'
+        payload_template: >-
+          [{%- for i in range(4,13) -%}"p[7].b[{{i}}].txt=\"{{i-3}}\"",{%- endfor -%}"p[7].b[14]=\"0\""]
     - service: mqtt.publish
       data:
-        topic: 'hasp/plate01/command/p[7].b[5].txt'
-        payload: '"2"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[6].txt'
-        payload: '"3"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[7].txt'
-        payload: '"4"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[8].txt'
-        payload: '"5"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[9].txt'
-        payload: '"6"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[10].txt'
-        payload: '"7"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[11].txt'
-        payload: '"8"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[12].txt'
-        payload: '"9"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[14].txt'
-        payload: '"0"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[4].font'
-        payload: '3'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[5].font'
-        payload: '3'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[6].font'
-        payload: '3'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[7].font'
-        payload: '3'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[8].font'
-        payload: '3'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[9].font'
-        payload: '3'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[10].font'
-        payload: '3'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[11].font'
-        payload: '3'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[12].font'
-        payload: '3'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[13].font'
-        payload: '0'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[14].font'
-        payload: '3'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[15].font'
-        payload: '0'
-  
+        topic: 'hasp/plate01/command/json'
+        payload_template: >-
+          [{%- for i in range(4,16) -%}"p[7].b[{{i}}].font=3",{%- endfor -%}]
+
   # set key labels at system start when system is disarmed, or when switching to disarmed
   - alias: hasp_plate01_p7_AlarmDisarmed
     trigger:

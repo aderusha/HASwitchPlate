@@ -18,7 +18,7 @@ sensor:
       media_player_artist:
         value_template: 'Artist Name'
       media_player_volume:
-        value_template: '50'
+        value_template: '0.50'
 
 
 ##############################################################################

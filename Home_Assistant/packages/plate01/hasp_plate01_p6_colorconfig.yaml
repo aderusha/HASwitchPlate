@@ -1,8 +1,8 @@
 ##############################################################################
-# Automations to set colors on HASP Page 7
+# Automations to set colors on HASP Page 6
 
 automation:
-  - alias: hasp_plate01_p7_ColorConfig
+  - alias: hasp_plate01_p6_ColorConfig
     trigger:
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
@@ -22,7 +22,7 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(4,15) -%}"p[7].b[{{i}}].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",{%- endfor -%}
-          {%- for i in range(4,15) -%}"p[7].b[{{i}}].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}",{%- endfor -%}
-          {%- for i in range(4,15) -%}"p[7].b[{{i}}].pco2={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",{%- endfor -%}
-          {%- for i in range(4,15) -%}"p[7].b[{{i}}].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",{%- endfor -%}]
+          [{%- for i in range(4,12) -%}"p[6].b[{{i}}].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",{%- endfor -%}
+          {%- for i in range(4,12) -%}"p[6].b[{{i}}].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}",{%- endfor -%}
+          {%- for i in range(4,12) -%}"p[6].b[{{i}}].pco2={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",{%- endfor -%}
+          {%- for i in range(4,12) -%}"p[6].b[{{i}}].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",{%- endfor -%}]

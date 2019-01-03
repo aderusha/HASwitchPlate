@@ -1,11 +1,11 @@
 ##############################################################################
-# Automations to set colors on HASP Page 4
+# Automations to set colors on HASP Page 5
 #
 # Here we've swapped selected/unselected as these buttons will always be
 # unselected (unless actively being pressed), and sliders do not have a
 # selected/unselected state.
 automation:
-  - alias: hasp_plate01_p4_ColorConfig
+  - alias: hasp_plate01_p5_ColorConfig
     trigger:
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
@@ -25,13 +25,13 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(4,7) -%}"p[4].b[{{i}}].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",{%- endfor -%}
-          {%- for i in range(4,7) -%}"p[4].b[{{i}}].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}",{%- endfor -%}
-          {%- for i in range(4,7) -%}"p[4].b[{{i}}].pco2={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",{%- endfor -%}
-          {%- for i in range(4,7) -%}"p[4].b[{{i}}].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",{%- endfor -%}]
+          [{%- for i in range(4,7) -%}"p[5].b[{{i}}].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",{%- endfor -%}
+          {%- for i in range(4,7) -%}"p[5].b[{{i}}].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}",{%- endfor -%}
+          {%- for i in range(4,7) -%}"p[5].b[{{i}}].pco2={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",{%- endfor -%}
+          {%- for i in range(4,7) -%}"p[5].b[{{i}}].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",{%- endfor -%}]
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(7,10) -%}"p[4].b[{{i}}].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",{%- endfor -%}
-          {%- for i in range(7,10) -%}"p[4].b[{{i}}].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",{%- endfor -%}]
+          [{%- for i in range(7,10) -%}"p[5].b[{{i}}].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",{%- endfor -%}
+          {%- for i in range(7,10) -%}"p[5].b[{{i}}].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",{%- endfor -%}]

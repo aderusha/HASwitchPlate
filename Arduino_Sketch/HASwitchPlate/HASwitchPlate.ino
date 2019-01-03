@@ -427,7 +427,7 @@ void mqttCallback(String &strTopic, String &strPayload)
   debugPrintln(String(F("MQTT IN:  '")) + strTopic + "' : '" + strPayload + "'");
 
   if (((strTopic == mqttCommandTopic) || (strTopic == mqttGroupCommandTopic)) && (strPayload == ""))
-  { // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
+  {                     // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
     mqttStatusUpdate(); // return status JSON via MQTT;
   }
   else if (strTopic == mqttCommandTopic || strTopic == mqttGroupCommandTopic)
@@ -443,11 +443,11 @@ void mqttCallback(String &strTopic, String &strPayload)
     }
   }
   else if (strTopic == (mqttCommandTopic + "/json") || strTopic == (mqttGroupCommandTopic + "/json"))
-  { // '[...]/device/command/json' -m '["dim=5", "page 1"]' = nextionSendCmd("dim=50"), nextionSendCmd("page 1")
+  {                               // '[...]/device/command/json' -m '["dim=5", "page 1"]' = nextionSendCmd("dim=50"), nextionSendCmd("page 1")
     nextionParseJson(strPayload); // Send to nextionParseJson()
   }
   else if (strTopic == (mqttCommandTopic + "/statusupdate") || strTopic == (mqttGroupCommandTopic + "/statusupdate"))
-  { // '[...]/device/command/statusupdate' == mqttStatusUpdate()
+  {                     // '[...]/device/command/statusupdate' == mqttStatusUpdate()
     mqttStatusUpdate(); // return status JSON via MQTT;
   }
   else if (strTopic == (mqttCommandTopic + "/lcdupdate") || strTopic == (mqttGroupCommandTopic + "/lcdupdate"))
@@ -1039,7 +1039,7 @@ void espWifiSetup()
 
     // id/name, placeholder/prompt, default value, length, extra tags
     WiFiManagerParameter custom_haspNodeHeader("<br/><br/><b>HASP Node Name</b>");
-    WiFiManagerParameter custom_haspNode("haspNode", "HASP Node (lowercase, required)", haspNode, 15, " maxlength=15 required");
+    WiFiManagerParameter custom_haspNode("haspNode", "HASP Node (required. lowercase letters, numbers, and _ only)", haspNode, 15, " maxlength=15 required pattern='[a-z0-9_]*'");
     WiFiManagerParameter custom_groupName("groupName", "Group Name (required)", groupName, 15, " maxlength=15 required");
     WiFiManagerParameter custom_mqttHeader("<br/><br/><b>MQTT Broker</b>");
     WiFiManagerParameter custom_mqttServer("mqttServer", "MQTT Server", mqttServer, 63, " maxlength=39");
@@ -1421,10 +1421,10 @@ void webHandleRoot()
   httpMessage += String(haspNode);
   httpMessage += String(F("</h1>"));
 
-    httpMessage += String(F("<form method='POST' action='saveConfig'>"));
+  httpMessage += String(F("<form method='POST' action='saveConfig'>"));
   httpMessage += String(F("<b>WiFi SSID</b> <i><small>(required)</small></i><input id='wifiSSID' required name='wifiSSID' maxlength=32 placeholder='WiFi SSID' value='")) + String(WiFi.SSID()) + "'>";
   httpMessage += String(F("<br/><b>WiFi Password</b> <i><small>(required)</small></i><input id='wifiPass' required name='wifiPass' type='password' maxlength=64 placeholder='WiFi Password' value='")) + String("********") + "'>";
-  httpMessage += String(F("<br/><br/><b>HASP Node Name</b> <i><small>(lowercase, required)</small></i><input id='haspNode' required name='haspNode' maxlength=15 placeholder='HASP Node Name' pattern='[a-z0-9_]*' value='")) + String(haspNode) + "'>";
+  httpMessage += String(F("<br/><br/><b>HASP Node Name</b> <i><small>(required. lowercase letters, numbers, and _ only)</small></i><input id='haspNode' required name='haspNode' maxlength=15 placeholder='HASP Node Name' pattern='[a-z0-9_]*' value='")) + String(haspNode) + "'>";
   httpMessage += String(F("<br/><br/><b>Group Name</b> <i><small>(required)</small></i><input id='groupName' required name='groupName' maxlength=15 placeholder='Group Name' value='")) + String(groupName) + "'>";
   httpMessage += String(F("<br/><br/><b>MQTT Broker</b> <i><small>(required)</small></i><input id='mqttServer' required name='mqttServer' maxlength=63 placeholder='mqttServer' value='")) + String(mqttServer) + "'>";
   httpMessage += String(F("<br/><b>MQTT Port</b> <i><small>(required)</small></i><input id='mqttPort' required name='mqttPort' type='number' maxlength=5 placeholder='mqttPort' value='")) + String(mqttPort) + "'>";

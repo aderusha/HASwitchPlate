@@ -173,40 +173,9 @@ automation:
     action:
     - service: mqtt.publish
       data:
-        topic: 'hasp/plate01/command/p[1].b[1].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton1label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[2].b[1].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton1label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[1].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton1label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[4].b[1].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton1label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[5].b[1].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton1label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[6].b[1].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton1label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[1].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton1label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[8].b[1].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton1label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[9].b[1].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton1label.state}}"'
+        topic: 'hasp/plate01/command/json'
+        payload_template: >-
+          [{%- for i in range(1,10) -%}"p[{{i}}].b[1].txt=\"{{states.input_text.hasp_plate01_pagebutton1label.state}}\"",{%- endfor -%}]
 
 # set page button text on each page to hasp-plate01-PageButton2Label
   - alias: hasp_plate01_p0_PageButton2_Text
@@ -221,40 +190,9 @@ automation:
     action:
     - service: mqtt.publish
       data:
-        topic: 'hasp/plate01/command/p[1].b[2].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton2label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[2].b[2].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton2label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[2].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton2label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[4].b[2].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton2label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[5].b[2].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton2label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[6].b[2].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton2label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[2].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton2label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[8].b[2].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton2label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[9].b[2].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton2label.state}}"'
+        topic: 'hasp/plate01/command/json'
+        payload_template: >-
+          [{%- for i in range(1,10) -%}"p[{{i}}].b[2].txt=\"{{states.input_text.hasp_plate01_pagebutton2label.state}}\"",{%- endfor -%}]
 
 # set page button text on each page to hasp-plate01-PageButton3Label
   - alias: hasp_plate01_p0_PageButton3_Text
@@ -269,40 +207,9 @@ automation:
     action:
     - service: mqtt.publish
       data:
-        topic: 'hasp/plate01/command/p[1].b[3].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton3label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[2].b[3].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton3label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[3].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton3label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[4].b[3].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton3label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[5].b[3].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton3label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[6].b[3].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton3label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[3].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton3label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[8].b[3].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton3label.state}}"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[9].b[3].txt'
-        payload_template: '"{{states.input_text.hasp_plate01_pagebutton3label.state}}"'
+        topic: 'hasp/plate01/command/json'
+        payload_template: >-
+          [{%- for i in range(1,10) -%}"p[{{i}}].b[3].txt=\"{{states.input_text.hasp_plate01_pagebutton3label.state}}\"",{%- endfor -%}]
 
 ##############################################################################
 # Set page button colors across selected pages to show active page button
@@ -314,8 +221,6 @@ automation:
       entity_id: input_number.hasp_plate01_pagebutton2page
     - platform: state
       entity_id: input_number.hasp_plate01_pagebutton3page
-    - platform: state
-      entity_id: input_number.hasp_plate01_activepage
     - platform: state
       entity_id: input_number.hasp_plate01_selectedbackgroundcolor
     - platform: state
@@ -331,56 +236,42 @@ automation:
       event: start
     action:
     - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[1].bco'
+      data:
+        topic: 'hasp/plate01/command/json'
         payload_template: >-
-          {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton1page.state|int -%}
-            {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}
-          {%- endif %}
-    - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[1].pco'
-        payload_template: >-
-          {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton1page.state|int -%}
-            {{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}
-          {%- endif %}
-    - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[2].bco'
-        payload_template: >-
-          {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton2page.state|int -%}
-            {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}
-          {%- endif %}
-    - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[2].pco'
-        payload_template: >-
-          {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton2page.state|int -%}
-            {{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}
-          {%- endif %}
-    - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[3].bco'
-        payload_template: >-
-          {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton3page.state|int -%}
-            {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}
-          {%- endif %}
-    - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[{{states.input_number.hasp_plate01_activepage.state|int}}].b[3].pco'
-        payload_template: >-
-          {% if states.input_number.hasp_plate01_activepage.state|int == states.input_number.hasp_plate01_pagebutton3page.state|int -%}
-            {{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}
-          {%- endif %}
+          [{%- for i in range(1,10) -%}"p[{{i}}].b[1].pco={% if i == states.input_number.hasp_plate01_pagebutton1page.state|int -%}
+              {{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}
+            {%- else -%}
+              {{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}
+            {%- endif %}",
+          {%- endfor -%}
+          {%- for i in range(1,10) -%}"p[{{i}}].b[1].bco={% if i == states.input_number.hasp_plate01_pagebutton1page.state|int -%}
+              {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}
+            {%- else -%}
+              {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}
+            {%- endif %}",
+          {%- endfor -%}
+          {%- for i in range(1,10) -%}"p[{{i}}].b[2].pco={% if i == states.input_number.hasp_plate01_pagebutton2page.state|int -%}
+              {{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}
+            {%- else -%}
+              {{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}
+            {%- endif %}",
+          {%- endfor -%}
+          {%- for i in range(1,10) -%}"p[{{i}}].b[2].bco={% if i == states.input_number.hasp_plate01_pagebutton2page.state|int -%}
+              {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}
+            {%- else -%}
+              {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}
+            {%- endif %}",
+          {%- endfor -%}
+          {%- for i in range(1,10) -%}"p[{{i}}].b[3].pco={% if i == states.input_number.hasp_plate01_pagebutton3page.state|int -%}
+              {{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}
+            {%- else -%}
+              {{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}
+            {%- endif %}",
+          {%- endfor -%}
+          {%- for i in range(1,10) -%}"p[{{i}}].b[3].bco={% if i == states.input_number.hasp_plate01_pagebutton3page.state|int -%}
+              {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}
+            {%- else -%}
+              {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}
+            {%- endif %}",
+          {%- endfor -%}]
