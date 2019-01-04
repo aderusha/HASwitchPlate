@@ -1,42 +1,6 @@
-EESchema Schematic File Version 2
-LIBS:HASwitchPlate-library
-LIBS:power
-LIBS:device
-LIBS:switches
-LIBS:relays
-LIBS:motors
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:wemos_mini
-LIBS:ac-dc
-LIBS:Connector
+EESchema Schematic File Version 4
 LIBS:HASwitchPlate-cache
-EELAYER 25 0
+EELAYER 26 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -51,7 +15,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L WeMos_mini U2
+L HASwitchPlate-library:WeMos_mini-HASwitchPlate U2
 U 1 1 59E27669
 P 5850 3800
 F 0 "U2" H 5850 4300 60  0000 C CNN
@@ -62,7 +26,7 @@ F 3 "" H 6400 3100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Screw_Terminal_01x02 J1
+L HASwitchPlate-library:Screw_Terminal_01x02-HASwitchPlate-library J1
 U 1 1 59E27A1F
 P 3875 3450
 F 0 "J1" H 3875 3550 50  0000 C CNN
@@ -73,7 +37,7 @@ F 3 "" H 3875 3450 50  0001 C CNN
 	-1   0    0    -1  
 $EndComp
 $Comp
-L XH2.54-4P J2
+L HASwitchPlate-library:XH2.54-4P-HASwitchPlate-library J2
 U 1 1 59E297BA
 P 7150 3650
 F 0 "J2" H 7150 3850 50  0000 C CNN
@@ -84,7 +48,7 @@ F 3 "" H 7150 3650 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L IRM-03-5 U1
+L HASwitchPlate-library:IRM-03-5-HASwitchPlate-library U1
 U 1 1 59E37A8B
 P 4275 3550
 F 0 "U1" H 4675 3800 50  0000 C CNN
@@ -95,7 +59,7 @@ F 3 "" H 4675 3200 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Conn_01x08 J3
+L HASwitchPlate-library:Conn_01x08-conn-HASwitchPlate J3
 U 1 1 5AB13587
 P 5750 2350
 F 0 "J3" H 5750 2775 50  0000 C CNN
@@ -136,9 +100,9 @@ Wire Wire Line
 Wire Wire Line
 	6350 3650 6425 3650
 Wire Wire Line
-	5075 3550 5350 3550
+	5075 3550 5200 3550
 Wire Wire Line
-	5075 3450 5350 3450
+	5075 3450 5200 3450
 Wire Wire Line
 	5350 3650 5300 3650
 Wire Wire Line
@@ -150,7 +114,7 @@ Wire Wire Line
 Wire Wire Line
 	6525 3650 6950 3650
 Wire Wire Line
-	5200 3200 6525 3200
+	5200 3200 5550 3200
 Wire Wire Line
 	6525 3200 6525 3450
 Wire Wire Line
@@ -247,4 +211,12 @@ Text Label 4275 3550 2    60   ~ 0
 AC_N
 Text Label 4075 3450 0    60   ~ 0
 AC_L
+Wire Wire Line
+	5200 3550 5275 3550
+Wire Wire Line
+	5200 3450 5350 3450
+Wire Wire Line
+	5275 3550 5350 3550
+Wire Wire Line
+	5550 3200 6525 3200
 $EndSCHEMATC
