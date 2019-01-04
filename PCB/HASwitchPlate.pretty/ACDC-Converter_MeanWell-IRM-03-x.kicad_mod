@@ -24,7 +24,7 @@
   (pad 2 thru_hole circle (at -5.08 0) (size 2.29 2.29) (drill 0.76) (layers *.Cu *.Mask))
   (pad 1 thru_hole circle (at 0 0) (size 2.29 2.29) (drill 0.76) (layers *.Cu *.Mask))
   (pad 5 thru_hole circle (at -30.48 0) (size 2.29 2.29) (drill 0.76) (layers *.Cu *.Mask))
-  (model "C:/Sync/Dev/HASwitchPlate/Dev/PCB-1.0/shapes3D/Mean Well IRM-03 Series.wrl"
+  (model "shapes3D/Mean Well IRM-03 Series.wrl"
     (offset (xyz -33.78199949264526 3.047999954223633 0))
     (scale (xyz 0.393 0.393 0.393))
     (rotate (xyz 0 0 90))
