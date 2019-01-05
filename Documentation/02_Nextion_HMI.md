@@ -20,11 +20,11 @@ If you want to edit the existing HASP interface, you will likely need to delete 
 
 ## Nextion Instruction Set
 
-The Nextion accepts and sends commands over the serial interface.  A [detailed guide to the Nextion instruction set can be found here](https://nextion.itead.cc/resources/documents/instruction-set/).  [A mostly-complete list of all available instructions and their use is available here](https://www.itead.cc/wiki/Nextion_Instruction_Set).
+The Nextion accepts and sends commands over the serial interface.  A detailed guide to the Nextion instruction set can be found [here](https://nextion.itead.cc/resources/documents/instruction-set/).  A mostly-complete list of all available instructions and their use is available [here](https://www.itead.cc/wiki/Nextion_Instruction_Set).
 
 ## Nextion color codes
 
-The Nextion environment utilizes RGB 565 encoding.  [Use this handy convertor to select your colors and convert to the RGB 565 format](https://nodtem66.github.io/nextion-hmi-color-convert/index.html).
+The Nextion environment utilizes RGB 565 encoding.  [Use this handy convertor](https://nodtem66.github.io/nextion-hmi-color-convert/index.html) to select your colors and convert to the RGB 565 format.
 
 ## HASP Nextion Object Reference
 
