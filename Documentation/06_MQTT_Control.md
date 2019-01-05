@@ -50,7 +50,7 @@ Let's take a look at an automation example to handle the `p[1].b[4]` button we w
 
 [The first page 1 automation](../Home_Assistant/packages/plate01/hasp_plate01_p1_scenes.yaml#L6-L21), like most Home Assistant automations, begins with a [trigger](https://www.home-assistant.io/docs/automation/trigger/).  Ours looks like this:
 
-```
+```yaml
   - alias: hasp_plate01_p1_ScenesInit
     trigger:
     - platform: state
@@ -62,7 +62,7 @@ Let's take a look at an automation example to handle the `p[1].b[4]` button we w
 
 This trigger will fire whenever the HASP device `plate01` connects to Home Assistant, or whenever Home Assistant starts.  When the HASP starts up it has no text on any buttons, so the first thing we'll do is start sending commands to tell the HASP what we want our buttons to say.  Let's look at the [action](https://www.home-assistant.io/docs/automation/action/) section:
 
-```
+```yaml
     action:
     - service: mqtt.publish
       data:
@@ -84,7 +84,7 @@ If you would like this button to say something else, you can make that change no
 
 [The second page 1 automation](../Home_Assistant/packages/plate01/hasp_plate01_p1_scenes.yaml#L47-L55) in our example looks like this:
 
-```
+```yaml
 # Trigger scene.lights_on when p[1].b[4] pressed
   - alias: hasp_plate01_p1_SceneButton4
     trigger:
@@ -99,7 +99,6 @@ If you would like this button to say something else, you can make that change no
 This automation is `trigger`ed when Home Assistant receives the message `ON` in the topic `hasp/plate01/state/p[1].b[4]`.  The `action:` calls a [Home Assistant scene](https://www.home-assistant.io/components/scene/) called `lights_on` which was [defined elsewhere](../Home_Assistant/packages/hasp_demo.yaml#L43-L57).
 
 You can [change the action](https://www.home-assistant.io/docs/automation/action/) to be anything that Home Assistant can do - [turn on a light](https://www.home-assistant.io/components/light/#service-lightturn_on), [play a song](https://www.home-assistant.io/components/media_player/#service-media_playerplay_media), [notify a user over SMS](https://www.home-assistant.io/components/notify.twilio_sms/#usage), or whatever else you can think of.
-
 
 ## MQTT Namespace
 
