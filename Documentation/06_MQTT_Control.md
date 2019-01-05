@@ -12,15 +12,17 @@ A [detailed guide to the Nextion instruction set can be found here](https://next
 
 ## Nextion Page and Object IDs
 
-Objects are referenced by page number (not page name) and object ID (not object name) as shown in the Nextion editor.  The Nextion notation for each object is of the form `p[1].b[2]` meaning page number 1, object number 2.  Confusingly, button objects will be named starting at b0 but it might be object 2, or 7, etc. Other objects will be named similarly with different letters.  For example, the first text field on the page will be automatically named t0.  These names have nothing to do with the object ID, and all objects regardless of type are still referenced as `p[<page number>].b[<object id>]`
+Objects are referenced by page number (*not page name*) and object ID (*not object name*) as shown in the Nextion editor.  The Nextion notation for each object is of the form `p[1].b[2]` meaning page number 1, object ID 2.  Confusingly, button object *names* will start at b0 but it might be object ID 2, or 7, etc. Other objects will be named similarly with different letters.  For example, the first text field on the page will be automatically named `t0`.  These names have nothing to do with the object ID, and all objects regardless of type are still referenced as `p[<page number>].b[<object id>]`
 
 ![Page and Object IDs](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Nextion_Editor_Page_and_Object_Ids.png?raw=true)
+
+Screenshots of each object number on each page of the HASP project can be found in the [Nextion HMI documentation section](02_Nextion_HMI.md#hasp-nextion-object-reference).
 
 While it is possible to send `command` messages using the object or page names, all messages coming back from the panel under `state` will be using page numbers and object IDs.  Save yourself the confusion and do everything in the format `p[<page number>].b[<object id>]` and things will go easier.
 
 ## MQTT Message Examples
 
-With the information above we can now take a look at a some example MQTT  transaction.  To begin, let's customize the text appearing on a button on page 1.  The topmost button on page one is `p[1].b[4]`.  If we want to set the text on that button to read `HASP` we could send the following MQTT message:
+With the information above we can now take a look at a some example MQTT  transactions.  To begin, let's customize the text appearing on a button on page 1.  The [topmost button on page one](02_Nextion_HMI.md#hasp-nextion-object-reference) is `p[1].b[4]`.  If we want to set the text on that button to read `HASP` we could send the following MQTT message:
 
 > topic: `hasp/plate01/command/p[1].b[4].txt`  
 > message: `"HASP"`

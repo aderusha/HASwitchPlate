@@ -4,19 +4,54 @@
 
 For most users the deployment of the Nextion firmware is straightforward - simply copy [the compiled firmware image](../Nextion_HMI/HASwitchPlate.tft) to a FAT32-formatted microSD card, insert the micrSD card into the Nextion LCD, and then apply 5VDC to the power pins on the panel.  It should power up the panel, recognize the .TFT file, and update the panel automatically.  Once the firmware update has completed you can remove power and eject the micrSD card.
 
-Two compiled TFT files are included for the [Basic](https://github.com/aderusha/HASwitchPlate/raw/master/Nextion_HMI/HASwitchPlate.tft) and [Enhanced](https://github.com/aderusha/HASwitchPlate/raw/master/Nextion_HMI/HASwitchPlate-Enhanced.tft) versions of the panel.  This project does not currently utilize any features offered in the Enhanced panel, and some users have reported the Enhanced device does not fit in the provided enclosure.  **It is strongly recommended that you do not use the enhanced display**.
+Compiled TFT files are included for the [Basic](https://github.com/aderusha/HASwitchPlate/raw/master/Nextion_HMI/HASwitchPlate.tft) and [Enhanced](https://github.com/aderusha/HASwitchPlate/raw/master/Nextion_HMI/HASwitchPlate-Enhanced.tft) versions of the panel.  This project does not currently utilize any features offered in the Enhanced panel, and some users have reported the Enhanced device does not fit in the provided enclosure.  **It is strongly recommended that you do not use the enhanced display**.
 
-Once the Nextion firmware has been flashed you can proceed to the [Electronics Assembly section](03_Electronics_Assembly.md) to test the assembled system.
+Once the project is assembled, future updates to the Nextion firmware can be handled over-the-air by utilizing the built-in web interface or by [issuing an MQTT command](06_MQTT_Control.md#command-syntax) with a URL to the target TFT file.
+
+With the Nextion firmware flashed you can proceed to the [Electronics Assembly section](03_Electronics_Assembly.md) to test the assembled system.
 
 ---
+
+## HASP Nextion Object Reference
+
+### Page 0
+
+![Page 0](Images/NextionUI_p0_Init_Screen.png?raw=true)
+
+### Pages 1-3
+
+![Pages 1-3](Images/NextionUI_p1-p3_4buttons.png?raw=true)
+
+### Pages 4-5
+
+![Pages 4-5](Images/NextionUI_p4-p5_3sliders.png?raw=true)
+
+### Page 6
+
+![Page 6](Images/NextionUI_p6_8buttons.png?raw=true)
+
+### Page 7
+
+![Page 7](Images/NextionUI_p7_12buttons.png?raw=true)
+
+### Page 8
+
+![Page 8](Images/NextionUI_p8_5buttons+1slider.png?raw=true)
+
+### Page 9
+
+![Page 9](Images/NextionUI_p9_2buttons+graph.png?raw=true)
+
+
+## Nextion color codes
+
+The Nextion environment utilizes RGB 565 encoding, which is a little unusual.  [Use this handy convertor to select your colors and convert to the RGB 565 format](https://nodtem66.github.io/nextion-hmi-color-convert/index.html).
 
 ## Advanced use
 
 For advanced customization you will need to download the (Windows-only) [Nextion editor](https://nextion.itead.cc/resource/download/nextion-editor/).  You can find instructions on its use [here](https://www.itead.cc/blog/nextion-editor-a-basic-introduction).
 
 The Nextion accepts and sends commands over the serial interface.  A [detailed guide to the Nextion instruction set can be found here](https://nextion.itead.cc/resources/documents/instruction-set/).  [A mostly-complete list of all available instructions and their use is available here](https://www.itead.cc/wiki/Nextion_Instruction_Set).
-
-Once the project is assembled, future updates to the Nextion firmware can be handled over-the-air by utilizing the built-in web interface or by [issuing an MQTT command](06_MQTT_Control.md#command-syntax) with a URL to the target TFT file.
 
 ## HOW TO: Run this software with an ESP8266 only
 
@@ -27,7 +62,3 @@ The Nextion simulator allows you to run [hardware-in-loop](https://en.wikipedia.
 Now the Simulator will accept input from and send output to your flashed ESP8266 without having a Nextion on hand!
 
 ![Nextion Editor Simulator](Images/Nextion_Editor_Simulator.png?raw=true)
-
-## Nextion color codes
-
-The Nextion environment utilizes RGB 565 encoding, which is a little unusual.  [Use this handy convertor to select your colors and convert to the RGB 565 format](https://nodtem66.github.io/nextion-hmi-color-convert/index.html).
