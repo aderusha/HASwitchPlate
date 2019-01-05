@@ -4,11 +4,13 @@
 
 [MQTT](https://mqtt.org/faq) is a standard IoT protocol in widespread use everywhere from small home automation projects to global industrial IoT environments.  Think of it as a "twitter for devices" - it works in very much the same way.  MQTT is a "publish/subscribe" message bus, where attached devices can publish `messages` on `topics`, and other devices can subscribe to those `topics` to receive the published message.  MQTT requires a central MQTT server we call a "broker".  Built-in MQTT broker services are available in [Home Assistant](https://www.home-assistant.io/docs/mqtt/broker/) and [OpenHAB](https://www.openhab.org/addons/bindings/mqtt/) or you can run your own standalone instance.  The [Mosquitto](https://mosquitto.org/) MQTT broker is a common open source solution and is probably a good place to start for home use.
 
-At it's core, the HASP project acts as a gateway between MQTT and the Nextion LCD.  It will "subscribe" to MQTT messages sent by your home automation software and forward the contents of those messages to the Nextion LCD.  Interactions from the LCD, such as a user pressing a button, are sent back to your home automation system as published MQTT messages.  In order to make use of the HASP project to its full potential, you'll need to understand how the Nextion LCD sends and receives commands, and how to make your home automation system interact with those commands over MQTT.
+At its core, the HASP project acts as a gateway between MQTT and the Nextion LCD.  It will "subscribe" to MQTT messages sent by your home automation software and forward the contents of those messages to the Nextion LCD.  Interactions from the LCD, such as a user pressing a button, are sent back to your home automation system as published MQTT messages.  In order to make use of the HASP project to its full potential, you'll need to understand how the Nextion LCD sends and receives commands, and how to make your home automation system interact with those commands over MQTT.
 
 ## Nextion Instructions
 
-A [detailed guide to the Nextion instruction set can be found here](https://nextion.itead.cc/resources/documents/instruction-set/).  [A mostly-complete list of all available instructions and their use is available here](https://www.itead.cc/wiki/Nextion_Instruction_Set).  These Nextion instructions are then sent as MQTT messages per the [`MQTT Namespace`](#mqtt-namespace) outlined below.  A common issue people encounter centers around the use of quotes in the Nextion instruction set.  As a general rule, attributes which accept an numeric value cannot have quotes, all other attributes must be enclosed in double quotes.
+A [detailed guide to the Nextion instruction set can be found here](https://nextion.itead.cc/resources/documents/instruction-set/).  [A mostly-complete list of all available instructions and their use is available here](https://www.itead.cc/wiki/Nextion_Instruction_Set).  These Nextion instructions are sent as MQTT messages per the [`MQTT Namespace`](#mqtt-namespace) outlined below.
+
+A common issue people encounter centers around the use of quotes in the Nextion instruction set.  As a general rule, attributes which accept an numeric value cannot have quotes, all other attributes must be enclosed in double quotes.
 
 ## Nextion Page and Object IDs
 
@@ -35,6 +37,67 @@ Now let's try one going the other way.  When a user presses that button, HASP is
 > message: `ON`  
 
 Your home automation system will be subscribed to `hasp/plate01/state`.  When the message example above is published, your home automation system will know that somebody pressed button `p[1].b[4]` on a HASP device named `plate01` and can take appropriate action in response.
+
+## Home Assistant Automation Example
+
+The HASP project includes [a number of Home Assistant automations](../Home_Assistant) to get you up and running.  To make full use of your HASP you will want to customize these automations to suit your own needs.  The example automations provided are broken down into pages, and the ideas presented build on each other as you work through each page.  If you're looking to understand how this works, [start with page 1](../Home_Assistant/packages/plate01/hasp_plate01_p1_scenes.yaml) and work your way up through the rest.
+
+Let's take a look at an automation example to handle the `p[1].b[4]` button we were just working with.  The automations discussed here will be specific to Home Assistant but the concepts should apply to any home automation platform.
+
+### Send commands from Home Assistant to the HASP
+
+[The first page 1 automation](../Home_Assistant/packages/plate01/hasp_plate01_p1_scenes.yaml#L6-L21), like most Home Assistant automations, begins with a [trigger](https://www.home-assistant.io/docs/automation/trigger/).  Ours looks like this:
+
+```
+  - alias: hasp_plate01_p1_ScenesInit
+    trigger:
+    - platform: state
+      entity_id: 'binary_sensor.plate01_connected'
+      to: 'on'
+    - platform: homeassistant
+      event: start
+```
+
+This trigger will fire whenever the HASP device `plate01` connects to Home Assistant, or whenever Home Assistant starts.  When the HASP starts up it has no text on any buttons, so the first thing we'll do is start sending commands to tell the HASP what we want our buttons to say.  Let's look at the first `action:`:
+
+```
+    action:
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[1].b[4].font'
+        payload: '2'
+    - service: mqtt.publish
+      data:
+        topic: 'hasp/plate01/command/p[1].b[4].txt'
+        payload: '"Lights On"'
+```
+
+The first action tells Home Assistant to publish the message `2` on the topic `hasp/plate01/command/p[1].b[4].font`.  This command sets the font for our button to [font number 2](02_Nextion_HMI.md#hasp-default-fonts) which "Consolas 48 point".  That font allows us to fit 10 characters into a standard-sized button.
+
+Our next action tells Home Assistant to publish the message `"Lights On"` on the topic `hasp/plate01/command/p[1].b[4].txt`.  Note the use of quotes here, as we're sending text instead of a numeric value.  This command will program button `p[1].b[4]` to read `"Lights On"`.
+
+If you would like this button to say something else, you can make that change now and restart Home Assistant to see what happens.
+
+### Send commands from HASP to Home Assistant
+
+[The second page 1 automation](../Home_Assistant/packages/plate01/hasp_plate01_p1_scenes.yaml#L47-L55) in our example looks like this:
+
+```
+# Trigger scene.lights_on when p[1].b[4] pressed
+  - alias: hasp_plate01_p1_SceneButton4
+    trigger:
+    - platform: mqtt
+      topic: 'hasp/plate01/state/p[1].b[4]'
+      payload: 'ON'
+    action:
+    - service: scene.turn_on
+      entity_id: scene.lights_on
+```
+
+This automation is triggered when Home Assistant receives the message `ON` in the topic `hasp/plate01/state/p[1].b[4]`.  The `action` calls a [Home Assistant scene](https://www.home-assistant.io/components/scene/) called `lights_on` which was [defined elsewhere](../Home_Assistant/packages/hasp_demo.yaml#L43-L57).
+
+You can [change the action](https://www.home-assistant.io/docs/automation/action/) to be anything that Home Assistant can do - [turn on a light](https://www.home-assistant.io/components/light/#service-lightturn_on), [play a song](https://www.home-assistant.io/components/media_player/#service-media_playerplay_media), [notify a user over SMS](https://www.home-assistant.io/components/notify.twilio_sms/#usage), or whatever else you can think of.
+
 
 ## MQTT Namespace
 

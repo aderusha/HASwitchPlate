@@ -2,7 +2,7 @@
 
 ## Basic first-time use
 
-For most users the deployment of the Nextion firmware is straightforward - simply copy [the compiled firmware image](../Nextion_HMI/HASwitchPlate.tft) to a FAT32-formatted microSD card, insert the micrSD card into the Nextion LCD, and then apply 5VDC to the power pins on the panel.  It should power up the panel, recognize the .TFT file, and update the panel automatically.  Once the firmware update has completed you can remove power and eject the micrSD card.
+For most users the deployment of the Nextion firmware is straightforward - simply copy [the compiled firmware image](../Nextion_HMI/HASwitchPlate.tft) to a FAT32-formatted microSD card, insert the microSD card into the Nextion LCD, and then apply 5VDC to the power pins on the panel.  It should power up the panel, recognize the .TFT file, and update the panel automatically.  Once the firmware update has completed you can remove power and eject the microSD card.
 
 Compiled TFT files are included for the [Basic](https://github.com/aderusha/HASwitchPlate/raw/master/Nextion_HMI/HASwitchPlate.tft) and [Enhanced](https://github.com/aderusha/HASwitchPlate/raw/master/Nextion_HMI/HASwitchPlate-Enhanced.tft) versions of the panel.  This project does not currently utilize any features offered in the Enhanced panel, and some users have reported the Enhanced device does not fit in the provided enclosure.  **It is strongly recommended that you do not use the enhanced display**.
 
@@ -42,6 +42,17 @@ With the Nextion firmware flashed you can proceed to the [Electronics Assembly s
 
 ![Page 9](Images/NextionUI_p9_2buttons+graph.png?raw=true)
 
+## HASP Default Fonts
+
+The Nextion display natively supports monospaced fonts.  The HASP HMI includes the Consolas font in 4 sizes and the [Webdings font](https://en.wikipedia.org/wiki/Webdings#Character_set) in 1 size.
+
+| Number | Font              | Max characters per line | Max lines per button |
+|--------|-------------------|-------------------------|----------------------|
+| 0      | Consolas 24 point | 20 characters           | 2 lines              |
+| 1      | Consolas 32 point | 15 characters           | 2 lines              |
+| 2      | Consolas 48 point | 10 characters           | 1 lines              |
+| 3      | Consolas 80 point | 6 characters            | 1 lines              |
+| 4      | Webdings 56 point | 8 characters            | 1 lines              |
 
 ## Nextion color codes
 
