@@ -12,6 +12,20 @@ With the Nextion firmware flashed you can proceed to the [Electronics Assembly s
 
 ---
 
+## Nextion Editor
+
+For advanced customization you will need to download the (Windows-only) [Nextion editor](https://nextion.itead.cc/resource/download/nextion-editor/).  You can find instructions on its use [here](https://www.itead.cc/blog/nextion-editor-a-basic-introduction).
+
+If you want to edit the existing HASP interface, you will likely need to delete some pages in order to add your own work as the project consumes nearly the entire memory space of the Nextion basic panel.  If you'd like to start a new interface from the ground up, copy over the existing Page 0 page as the ESP8266 firmware makes use of page 0 for user interactions and WiFi setup.  The Home Assistant automations will probably need to be changed if any major modifications are made to the HMI.
+
+## Nextion Instruction Set
+
+The Nextion accepts and sends commands over the serial interface.  A [detailed guide to the Nextion instruction set can be found here](https://nextion.itead.cc/resources/documents/instruction-set/).  [A mostly-complete list of all available instructions and their use is available here](https://www.itead.cc/wiki/Nextion_Instruction_Set).
+
+## Nextion color codes
+
+The Nextion environment utilizes RGB 565 encoding.  [Use this handy convertor to select your colors and convert to the RGB 565 format](https://nodtem66.github.io/nextion-hmi-color-convert/index.html).
+
 ## HASP Nextion Object Reference
 
 ### Page 0
@@ -53,16 +67,6 @@ The Nextion display natively supports monospaced fonts.  The HASP HMI includes t
 | 2      | Consolas 48 point | 10 characters           | 1 lines              |
 | 3      | Consolas 80 point | 6 characters            | 1 lines              |
 | 4      | Webdings 56 point | 8 characters            | 1 lines              |
-
-## Nextion color codes
-
-The Nextion environment utilizes RGB 565 encoding, which is a little unusual.  [Use this handy convertor to select your colors and convert to the RGB 565 format](https://nodtem66.github.io/nextion-hmi-color-convert/index.html).
-
-## Advanced use
-
-For advanced customization you will need to download the (Windows-only) [Nextion editor](https://nextion.itead.cc/resource/download/nextion-editor/).  You can find instructions on its use [here](https://www.itead.cc/blog/nextion-editor-a-basic-introduction).
-
-The Nextion accepts and sends commands over the serial interface.  A [detailed guide to the Nextion instruction set can be found here](https://nextion.itead.cc/resources/documents/instruction-set/).  [A mostly-complete list of all available instructions and their use is available here](https://www.itead.cc/wiki/Nextion_Instruction_Set).
 
 ## HOW TO: Run this software with an ESP8266 only
 
