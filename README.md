@@ -18,7 +18,7 @@ As this build requires some specialist skills and tools, I will occasionally be 
 
 ## Bill of Materials
 
-To build a simple version of this project you will minimally need the [Nextion display]((https://www.itead.cc/nextion-nx3224t024.html)) and the [WeMos D1 Mini]((https://wiki.wemos.cc/products:d1:d1_mini)), 4 jumper wires, and a USB cable to power both devices.
+To build a simple version of this project you will minimally need the [Nextion display](https://www.itead.cc/nextion-nx3224t024.html) and the [WeMos D1 Mini](https://wiki.wemos.cc/products:d1:d1_mini), 4 jumper wires, and a USB cable to power both devices.
 
 A complete build that's ready to install will require the following components:
 
@@ -26,12 +26,13 @@ A complete build that's ready to install will require the following components:
 * [WeMos D1 Mini ESP8266 WiFi microcontroller](https://wiki.wemos.cc/products:d1:d1_mini)
 * [3D printed switch plate](3D_Printable_Models/HASwitchPlate_front_single.stl)
 * [3D printed rear cover](3D_Printable_Models/HASwitchPlate_rear_nolcdmod.stl)
-* [5V Power supply](https://www.findchips.com/search/IRM-03-5)
+* [Mean Well IRM-03-5 AC to 5VDC Power supply](https://www.findchips.com/search/IRM-03-5)
 * [PCB](PCB/)
+* [4pin 2.54mm JST-XH female PCB header](https://www.amazon.com/GeeBat-460pcs-Connector-Housing-Adapter/dp/B01MCZE2HM)
 * [Rubber grommet](https://www.mcmaster.com/#9600k41)
 * [Two M2 self-tapping 6MM screws](https://www.amazon.com/gp/product/B01FXGHO2M) (or just any 4-6mm M2 machine screws)
 * 6" each of white and black 300V 18AWG stranded power cables (I just stripped some wire out of a power cord)
-* [Four 20mm M2 flathead screws](https://www.amazon.com/gp/product/B000FN3Q94) and [four heat-set threaded inserts](https://www.amazon.com/gp/product/B01IZ157KS) to fasten things together (feel free to improvise here)
+* [Four 20mm M2 flathead screws](https://www.amazon.com/gp/product/B000FN3Q94) and [four 3mm M2 threaded inserts](https://www.amazon.com/gp/product/B01IZ157KS) to fasten things together (feel free to improvise here)
 
 ## Get Started!
 

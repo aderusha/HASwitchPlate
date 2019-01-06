@@ -31,8 +31,6 @@ An enclosure designed for desktop (table, bedstand, etc) use has been developed.
 * **[HASwitchPlate_desktop_rear.stl](HASwitchPlate_desktop_rear.stl)** Rear enclosure for desktop use with openings for SD card, USB, and Nextion Serial access
 * **[HASwitchPlate_desktop_base.stl](HASwitchPlate_desktop_base.stl)** Handy base for desktop use.  Print with higher infill to add mass to weigh it down a bit.
 
-![HASP_3D_Print_Models](../Documentation/Images/HASP_3D_Print_Models.png?raw=true)
-
 ## 3D Printing Notes
 
 ### FDM affordance
@@ -45,7 +43,7 @@ I printed these two parts with [Atomic Filament Bright White Opaque PETG Pro](ht
 
 ### Inserts
 
-The mounting holes for the Nextion panel are sized to fit [M2 x 3mm heat-set threaded inserts](https://www.amazon.com/a16041800ux0765-Cylinder-Knurled-Threaded-Embedded/dp/B01IZ15A5U) but should accept an M3 screw (tightly).  See [the enclosure build documentation](../Documentation/04_Project_Enclosure.md#heat-set-inserts) for more details.
+The mounting holes for the Nextion panel are sized to fit [M2 x 3mm threaded inserts](https://www.amazon.com/a16041800ux0765-Cylinder-Knurled-Threaded-Embedded/dp/B01IZ15A5U) but should accept an M3 screw (tightly).  See [the enclosure build documentation](../Documentation/04_Project_Enclosure.md#threaded-inserts) for more details.
 
 ### SketchUp
 

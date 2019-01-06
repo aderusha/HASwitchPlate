@@ -10,13 +10,11 @@ The [enclosure provided](../3D_Printable_Models) includes STL files ready for sl
 
 The AC power cables should be at least 18AWG 300V stranded cable with a white jacket soldered to the `AC/N` pad on the PCB and a similar wire with a black jacket soldered to `AN/L`.  These are fed through a [rubber push-in grommet](https://www.mcmaster.com/#9600k41) mounted into the rear enclousure.  I've had good luck stripping an existing 3 conductor power cord and using the black/white wires inside.
 
-### Heat-set inserts
+### Threaded Inserts
 
-To hold the two halves on the enclosure together I've used [four 20mm M2 flat-head screws](https://www.amazon.com/gp/product/B000FN3Q94) through the rear of the enclosure into a set of [four 3mm M2 heat-set threaded inserts](https://www.amazon.com/gp/product/B01IZ157KS).  For installation I'm using a conical tip on my soldering iron set at 350°F to heat up the insert and press into the front plate.
+The two halves of the enclosure are held together by [four 20mm M2 flat-head screws](https://www.amazon.com/gp/product/B000FN3Q94) through the rear of the enclosure into a set of [four 3mm M2 threaded inserts](https://www.amazon.com/gp/product/B01IZ157KS) installed into the front plate.
 
-![Installing threaded inserts](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Assembly_Installing_Inserts.jpg?raw=true)
-
-I've threaded in a brass standoff I had laying around to prevent melted plastic from entering the nut during assembly and to give myself a handle to position and retain the insert when removing the soldering iron.  The model includes a small cutout for the inserts to sit centered on their hole in preparation for installation, so I just set the insert in place, heat it for a moment with the iron, gently press until it's inserted, then hold the standoff with some pliers (it's hot!) while I remove the iron and adjust to make sure it's reasonably vertical while the plastic is still pliable.  Be careful not to press in too far or you'll leave a dimple in the front of the plate!
+To install the threaded inserts in the front plate, thread the end of an M2 screw into the insert with the end of the screw flush with the bottom face of the insert (meaning, it's not sticking out the other side).  Apply a thin bead of slow-set superglue around the outside edge of the insert, taking care not to get glue on the screw itself as you don't want to pull the glue up into the threads when removing the screw.  Then, take a hammer and *gently* tap it into place on the front plate.  You can crack the plastic if you swing too hard, you just need enough force to push the knurled ridges on the outside of the insert into the plate.
 
 ### PCB Installation
 
