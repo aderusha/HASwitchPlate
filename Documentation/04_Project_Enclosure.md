@@ -23,5 +23,3 @@ Installing the [HASP PCB](../PCB) requires a pair of small m2-ish screws, I'm us
 ![Parts installed](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/PCB_Assembly_Parts_Installed.jpg?raw=true)
 
 Once everything is fit together then it's a simple matter of running the four 20mm m2 screws through the back to hold the two halves of the enclosure together.  Again, be careful not to tighten these too hard as the screws can dimple the front of the switch plate.  Now you should be ready to mount into the wall!
-
-![Assembled side view](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Assembly_Assembled_Side.jpg?raw=true) ![Assembled front view](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Assembly_Assembled_Front.jpg?raw=true)
