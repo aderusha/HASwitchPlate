@@ -16,17 +16,17 @@ A common issue people encounter centers around the use of quotes in the Nextion 
 
 ## Nextion Page and Object IDs
 
-Objects are referenced by page number (*not page name*) and object ID (*not object name*) as shown in the Nextion editor.  The Nextion notation for each object is of the form `p[1].b[2]` meaning page number 1, object ID 2.  Confusingly, button object *names* will start at b0 but it might be object ID 2, or 7, etc. Other objects will be named similarly with different letters.  For example, the first text field on the page will be automatically named `t0`.  **Ignore these names**.  They have nothing to do with the object ID, and all objects regardless of type are still referenced as `p[<page number>].b[<object id>]`
+Objects are referenced by page number (*not page name*) and object ID (*not object name*) as shown in the Nextion editor.  The Nextion notation for each object is of the form `p[1].b[2]` meaning page number 1, object ID 2.  Confusingly, button object *names* will start at `b0` but it might be object ID 2, or 7, etc. Other objects will be named similarly with different letters.  For example, the first text field on the page will be automatically named `t0`.  **Ignore these names**.  They have nothing to do with the object ID, and all objects regardless of type are still referenced as `p[<page number>].b[<object id>]`
 
 ![Page and Object IDs](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Nextion_Editor_Page_and_Object_Ids.png?raw=true)
 
 Screenshots of each object number on each page of the HASP project can be found in the [Nextion HMI documentation section](02_Nextion_HMI.md#hasp-nextion-object-reference).
 
-While it is possible to send `command` messages using the object or page names, all messages coming back from the panel under `state` will be using page numbers and object IDs.  Save yourself the confusion and do everything in the format `p[<page number>].b[<object id>]` and things will go easier.
+An object will have multiple attributes, some of which can be changed.  For example, a button named `p[1].b[2]` may have a "txt" attribute which we'd refer to as `p[1].b[2].txt`.  Not all attributes can be changed at runtime, the ones which can are shown in a green font in the Nextion editor (see the right pane of the image above.)
 
 ## MQTT Message Examples
 
-With the information above we can now take a look at a some example MQTT  transactions.  To begin, let's customize the text appearing on a button.  The [topmost button on page one](02_Nextion_HMI.md#hasp-nextion-object-reference) is `p[1].b[4]`.  If we want to set the text on that button to read `HASP` we could send the following MQTT message:
+With the information above we can now take a look at a some example MQTT  transactions.  To begin, let's customize the text appearing on a button.  The [topmost button on page one](02_Nextion_HMI.md#pages-1-3) is `p[1].b[4]`.  If we want to set the text on that button to read `HASP` we could send the following MQTT message:
 
 > topic: `hasp/plate01/command/p[1].b[4].txt`  
 > message: `"HASP"`
