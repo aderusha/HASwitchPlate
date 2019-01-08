@@ -31,7 +31,7 @@ With the information above we can now take a look at a some example MQTT  transa
 > topic: `hasp/plate01/command/p[1].b[4].txt`  
 > message: `"HASP"`
 
-The HASP device named `plate01` will be subscribed to the topic `hasp/plate01/command`.  When it sees this message, it will send the Nextion LCD the command `p[1].b[4]="HASP"` which will update the text on our button.
+The HASP device named `plate01` will be subscribed to the topic `hasp/plate01/command`.  When it sees this message, it will send the Nextion LCD the command `p[1].b[4].txt="HASP"` which will update the text on our button.
 
 Now let's try one going the other way.  When a user presses that button, HASP is going to publish an MQTT message that looks like this:
 
@@ -42,7 +42,7 @@ Your home automation system will be subscribed to `hasp/plate01/state`.  When th
 
 ## Home Assistant Automation Example
 
-The HASP project includes [a number of Home Assistant automations](../Home_Assistant) to get you up and running.  To make full use of your HASP you will want to customize these automations to suit your own needs.  The example automations provided are broken down into pages, and the ideas presented build on each other as you work through each page.  If you're looking to understand how this works, [start with page 1](../Home_Assistant/packages/plate01/hasp_plate01_p1_scenes.yaml) and work your way up through the rest.
+The HASP project includes [a number of Home Assistant automations](../Home_Assistant) to get you up and running.  To make full use of your HASP you will want to customize these automations to suit your own needs.  The example automations provided are broken down into pages, and the ideas presented build on each other as you work through each page in numerical order.  If you're looking to understand how this works, [start with page 1](../Home_Assistant/packages/plate01/hasp_plate01_p1_scenes.yaml) and work your way up through the rest.
 
 Let's take a look at an automation example to handle the `p[1].b[4]` button we were just working with.  The automations discussed here will be specific to Home Assistant but the concepts should apply to any home automation platform.
 
