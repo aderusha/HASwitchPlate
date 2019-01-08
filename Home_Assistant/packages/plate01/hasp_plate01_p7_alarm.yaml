@@ -15,12 +15,8 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(4,13) -%}"p[7].b[{{i}}].txt=\"{{i-3}}\"",{%- endfor -%}"p[7].b[14]=\"0\""]
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/json'
-        payload_template: >-
-          [{%- for i in range(4,16) -%}"p[7].b[{{i}}].font=3",{%- endfor -%}]
+          [{%- for i in range(4,13) -%}"p[7].b[{{i}}].txt=\"{{i-3}}\"",{%- endfor -%}"p[7].b[14].txt=\"0\"",
+          {%- for i in range(4,13) -%}"p[7].b[{{i}}].font=3",{%- endfor -%}"p[7].b[14].font=3"]
 
   # set key labels at system start when system is disarmed, or when switching to disarmed
   - alias: hasp_plate01_p7_AlarmDisarmed
@@ -40,36 +36,8 @@ automation:
     action:
     - service: mqtt.publish
       data:
-        topic: 'hasp/plate01/command/p[7].b[13].txt'
-        payload: '"DIS\rARMED"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[13].font'
-        payload: '0'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[13].pco'
-        payload: '63488'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[13].bco'
-        payload: '65535'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[15].txt'
-        payload: '"ARM"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[15].font'
-        payload: '1'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[15].pco'
-        payload: '65535'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[15].bco'
-        payload: '63488'
+        topic: 'hasp/plate01/command/json'
+        payload: '["p[7].b[13].font=0","p[7].b[13].pco=63488","p[7].b[13].bco=65535","p[7].b[13].txt=\"DIS\\rARMED\"","p[7].b[15].font=1","p[7].b[15].pco=65535","p[7].b[15].bco=63488","p[7].b[15].txt=\"ARM\""]'
   
   # set key labels at system start when system is armed_away, or when switching to armed_away
   - alias: hasp_plate01_p7_AlarmArmed
@@ -89,36 +57,8 @@ automation:
     action:
     - service: mqtt.publish
       data:
-        topic: 'hasp/plate01/command/p[7].b[13].txt'
-        payload: '"ARMED"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[13].font'
-        payload: '0'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[13].pco'
-        payload: '65535'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[13].bco'
-        payload: '63488'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[15].txt'
-        payload: '"DISARM"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[15].font'
-        payload: '0'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[13].pco'
-        payload: '63488'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[13].bco'
-        payload: '65535'
+        topic: 'hasp/plate01/command/json'
+        payload: '["p[7].b[13].font=0","p[7].b[13].pco=65535","p[7].b[13].bco=63488","p[7].b[13].txt=\"ARMED\"","p[7].b[15].font=0","p[7].b[15].pco=63488","p[7].b[15].bco=65535","p[7].b[15].txt=\"DISARM\""]'
         
   # This automation catches the key presses 1-9 and sets our input numbers in response.
   # Button p[7]b[4] is labeled 1, so I'm grabbing buttons p[7]b[4] through p[7]b[13]
