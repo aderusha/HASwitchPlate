@@ -32,7 +32,8 @@ char wifiPass[64] = ""; // Note that these values will be lost if auto-update is
                         // and that's probably OK because they will be saved in EEPROM.
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-char mqttServer[64] = ""; // These defaults may be overwritten with values saved by the web interface
+// These defaults may be overwritten with values saved by the web interface
+char mqttServer[64] = "";
 char mqttPort[6] = "1883";
 char mqttUser[32] = "";
 char mqttPassword[32] = "";
@@ -41,13 +42,7 @@ char groupName[16] = "plates";
 char configUser[32] = "admin";
 char configPassword[32] = "";
 char motionPinConfig[3] = "0";
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// Serial debug output control, comment out to disable
-#define DEBUGSERIAL
-// Open a super-insecure (but read-only) telnet debug port
-// #define DEBUGTELNET
 
 #include <FS.h>
 #include <ESP8266WiFi.h>
@@ -65,12 +60,7 @@ char motionPinConfig[3] = "0";
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 
-#ifdef DEBUGTELNET
-WiFiServer telnetServer(23);
-WiFiClient telnetClient;
-#endif
-
-const float haspVersion = 0.33;                     // Current HASP software release version
+const float haspVersion = 0.34;                     // Current HASP software release version
 byte nextionReturnBuffer[128];                      // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;                     // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                      // Track active LCD page
@@ -86,7 +76,11 @@ unsigned int nextionRetryMax = 5;                   // Attempt to connect to pan
 bool updateEspAvailable = false;                    // Flag for update check to report new ESP FW version
 float updateEspAvailableVersion;                    // Float to hold the new ESP FW version number
 bool updateLcdAvailable = false;                    // Flag for update check to report new LCD FW version
+bool debugSerialEnabled = true;                     // Enable serial debug output
+bool debugTelnetEnabled = false;                    // Enable telnet debug output
+const unsigned long telnetInputMax = 128;           // Size of user input buffer for user telnet session
 bool motionEnabled = false;                         // Motion sensor is enabled
+bool mdnsEnabled = true;                            // mDNS enabled
 uint8_t motionPin = 0;                              // GPIO input pin for motion sensor if connected and enabled
 bool motionActive = false;                          // Motion is being detected
 const unsigned long motionLatchTimeout = 30000;     // Latch time for motion sensor
@@ -116,15 +110,17 @@ String mqttMotionStateTopic;                        // MQTT topic for outgoing m
 String nextionModel;                                // Record reported model number of LCD panel
 const byte nextionSuffix[] = {0xFF, 0xFF, 0xFF};    // Standard suffix for Nextion commands
 long tftFileSize = 0;                               // Filesize for TFT firmware upload
-uint8_t nextionResetPin = D6;                       // Pin for Nextion power rail switch (GPIO0/D3)
+uint8_t nextionResetPin = D6;                       // Pin for Nextion power rail switch (GPIO12/D6)
 
 WiFiClient wifiClient;
 MQTTClient mqttClient(mqttMaxPacketSize);
 ESP8266WebServer webServer(80);
 ESP8266HTTPUpdateServer httpOTAUpdate;
+WiFiServer telnetServer(23);
+WiFiClient telnetClient;
 
 // Additional CSS style to match Hass theme
-const char HASP_STYLE[] = "<style>button{background-color:#03A9F4;}body{width:60%;margin:auto;}input:invalid{border:1px solid red;}</style>";
+const char HASP_STYLE[] = "<style>button{background-color:#03A9F4;}body{width:60%;margin:auto;}input:invalid{border:1px solid red;}input[type=checkbox]{width:20px;}</style>";
 // URL for auto-update "version.json"
 const char UPDATE_URL[] = "http://haswitchplate.com/update/version.json";
 // Default link to compiled Arduino firmware image
@@ -140,15 +136,25 @@ void setup()
   Serial.begin(115200);  // Serial - LCD RX (after swap), debug TX
   Serial1.begin(115200); // Serial1 - LCD TX, no RX
 
-  debugPrintln(F("\r\nSYSTEM: Hardware initialized, starting program load"));
+  Serial.println(F("\r\nSYSTEM: Hardware initialized, starting program load"));
 
-  // Uncomment for testing, clears all saved settings on each boot
-  //configClearSaved();
   configRead(); // Check filesystem for a saved config.json
 
   espWifiSetup(); // Start up networking
 
-  MDNS.begin(haspNode); // Add mDNS
+  if (mdnsEnabled)
+  {
+    MDNS.begin(haspNode); // Add mDNS hostname
+    // MDNS.addService("http", "tcp", 80); this breaks Wemo devices when Home Assistant discovery is enabled.  No idea why.
+    if (debugTelnetEnabled)
+    {
+      MDNS.addService("telnet", "tcp", 23);
+    }
+    MDNS.addServiceTxt("arduino", "tcp", "app_name", "HASwitchPlate");
+    MDNS.addServiceTxt("arduino", "tcp", "app_version", String(haspVersion));
+    MDNS.addServiceTxt("arduino", "tcp", "mac", WiFi.macAddress());
+    MDNS.update();
+  }
 
   if ((configPassword[0] != '\0') && (configUser[0] != '\0'))
   {
@@ -171,7 +177,6 @@ void setup()
   webServer.begin();
   debugPrintln(String(F("HTTP: Server started @ http://")) + WiFi.localIP().toString());
 
-  MDNS.addService("http", "tcp", 80);
   espSetupOta();
 
   // Create server and assign callbacks for MQTT
@@ -182,12 +187,13 @@ void setup()
   // Setup motion sensor if configured
   motionSetup();
 
-#ifdef DEBUGTELNET
-  // Setup telnet server for remote debug output
-  telnetServer.setNoDelay(true);
-  telnetServer.begin();
-  debugPrintln(String(F("TELNET: debug server enabled at telnet:")) + WiFi.localIP().toString());
-#endif
+  if (debugTelnetEnabled)
+  { // Setup telnet server for remote debug output
+
+    telnetServer.setNoDelay(true);
+    telnetServer.begin();
+    debugPrintln(String(F("TELNET: debug server enabled at telnet:")) + WiFi.localIP().toString());
+  }
 
   debugPrintln(F("SYSTEM: Init complete, swapping debug serial output to D8\r\n"));
   Serial.swap();
@@ -221,6 +227,10 @@ void loop()
   delay(10);                // https://github.com/256dpi/arduino-mqtt#notes
   ArduinoOTA.handle();      // Arduino OTA loop
   webServer.handleClient(); // webServer loop
+  if (mdnsEnabled)
+  {
+    MDNS.update();
+  }
 
   if ((lcdVersion < 1) && (millis() <= (nextionRetryMax * nextionCheckInterval)))
   { // Attempt to connect to LCD panel to collect model and version info during startup
@@ -261,9 +271,10 @@ void loop()
     motionUpdate();
   }
 
-#ifdef DEBUGTELNET
-  handleTelnetClient(); // telnetClient loop
-#endif
+  if (debugTelnetEnabled)
+  {
+    handleTelnetClient(); // telnetClient loop
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -899,6 +910,9 @@ void nextionStartOtaDownload(String otaUrl)
             else
             {
               debugPrintln(String(F("LCD OTA: Part ")) + String(lcdOtaPartNum) + String(F(" FAILED, ")) + String(lcdOtaPercentComplete) + String(F("% complete")));
+              debugPrintln(F("LCD OTA: failure"));
+              delay(2000); // extra delay while the LCD does its thing
+              espReset();
             }
           }
           else
@@ -1013,11 +1027,10 @@ void nextionSetSpeed()
 void nextionReset()
 {
   digitalWrite(nextionResetPin, LOW);
-  // delay(10);
   Serial1.print("rest");
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   Serial1.flush();
-  digitalWrite(nextionResetPin, HIGH);
+  delay(2000);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1141,6 +1154,10 @@ void espWifiSetup()
 void espWifiConfigCallback(WiFiManager *myWiFiManager)
 { // Notify the user that we're entering config mode
   debugPrintln(F("WIFI: Failed to connect to assigned AP, entering config mode"));
+  while (millis() < 800)
+  { // for factory-reset system this will be called before display is responsive. give it a second.
+    delay(10);
+  }
   nextionSendCmd("page 0");
   nextionSetAttr("p[0].b[1].txt", "\"Configure HASP:\\rAP:" + String(wifiConfigAP) + "\\rPass:" + String(wifiConfigPass) + "\\r\\r\\r\\r\\r\\r\\rWeb:192.168.4.1\"");
   nextionSetAttr("p[0].b[3].txt", "\"WIFI:S:" + String(wifiConfigAP) + ";T:WPA;P:" + String(wifiConfigPass) + ";;\"");
@@ -1227,9 +1244,7 @@ void espReset()
     mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
     mqttClient.disconnect();
   }
-  delay(500);
   nextionReset();
-  delay(2000);
   ESP.reset();
   delay(5000);
 }
@@ -1297,6 +1312,39 @@ void configRead()
           {
             strcpy(motionPinConfig, configJson["motionPinConfig"]);
           }
+          if (configJson["debugSerialEnabled"].success())
+          {
+            if (configJson["debugSerialEnabled"])
+            {
+              debugSerialEnabled = true;
+            }
+            else
+            {
+              debugSerialEnabled = false;
+            }
+          }
+          if (configJson["debugTelnetEnabled"].success())
+          {
+            if (configJson["debugTelnetEnabled"])
+            {
+              debugTelnetEnabled = true;
+            }
+            else
+            {
+              debugTelnetEnabled = false;
+            }
+          }
+          if (configJson["mdnsEnabled"].success())
+          {
+            if (configJson["mdnsEnabled"])
+            {
+              mdnsEnabled = true;
+            }
+            else
+            {
+              mdnsEnabled = false;
+            }
+          }
           String configJsonStr;
           configJson.printTo(configJsonStr);
           debugPrintln(String(F("SPIFFS: parsed json:")) + configJsonStr);
@@ -1324,6 +1372,7 @@ void configSaveCallback()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void configSave()
 { // Save the custom parameters to config.json
+  nextionSetAttr("p[0].b[1].txt", "\"Saving\\rconfig\"");
   debugPrintln(F("SPIFFS: Saving config"));
   DynamicJsonBuffer jsonBuffer(256);
   JsonObject &json = jsonBuffer.createObject();
@@ -1336,6 +1385,22 @@ void configSave()
   json["configUser"] = configUser;
   json["configPassword"] = configPassword;
   json["motionPinConfig"] = motionPinConfig;
+  json["debugSerialEnabled"] = debugSerialEnabled;
+  json["debugTelnetEnabled"] = debugTelnetEnabled;
+  json["mdnsEnabled"] = mdnsEnabled;
+
+  debugPrintln(String(F("SPIFFS: mqttServer = ")) + String(mqttServer));
+  debugPrintln(String(F("SPIFFS: mqttPort = ")) + String(mqttPort));
+  debugPrintln(String(F("SPIFFS: mqttUser = ")) + String(mqttUser));
+  debugPrintln(String(F("SPIFFS: mqttPassword = ")) + String(mqttPassword));
+  debugPrintln(String(F("SPIFFS: haspNode = ")) + String(haspNode));
+  debugPrintln(String(F("SPIFFS: groupName = ")) + String(groupName));
+  debugPrintln(String(F("SPIFFS: configUser = ")) + String(configUser));
+  debugPrintln(String(F("SPIFFS: configPassword = ")) + String(configPassword));
+  debugPrintln(String(F("SPIFFS: motionPinConfig = ")) + String(motionPinConfig));
+  debugPrintln(String(F("SPIFFS: debugSerialEnabled = ")) + String(debugSerialEnabled));
+  debugPrintln(String(F("SPIFFS: debugTelnetEnabled = ")) + String(debugTelnetEnabled));
+  debugPrintln(String(F("SPIFFS: mdnsEnabled = ")) + String(mdnsEnabled));
 
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile)
@@ -1440,7 +1505,7 @@ void webHandleRoot()
   {
     httpMessage += String("********");
   }
-  httpMessage += String(F("'><br/><br/><b>Motion Sensor Pin:&nbsp;</b><select id='motionPinConfig' name='motionPinConfig'>"));
+  httpMessage += String(F("'><br/><hr><b>Motion Sensor Pin:&nbsp;</b><select id='motionPinConfig' name='motionPinConfig'>"));
   httpMessage += String(F("<option value='0'"));
   if (!motionPin)
   {
@@ -1463,7 +1528,22 @@ void webHandleRoot()
   }
   httpMessage += String(F(">D2</option></select>"));
 
-  httpMessage += String(F("<br/><hr><button type='submit'>save settings</button></form>"));
+  httpMessage += String(F("<br/><b>Serial debug output enabled:</b><input id='debugSerialEnabled' name='debugSerialEnabled' type='checkbox'"));
+  if (debugSerialEnabled)
+  {
+    httpMessage += String(F(" checked='checked'"));
+  }
+  httpMessage += String(F("><br/><b>Telnet debug output enabled:</b><input id='debugTelnetEnabled' name='debugTelnetEnabled' type='checkbox'"));
+  if (debugTelnetEnabled)
+  {
+    httpMessage += String(F(" checked='checked'"));
+  }
+  httpMessage += String(F("><br/><b>mDNS enabled:</b><input id='mdnsEnabled' name='mdnsEnabled' type='checkbox'"));
+  if (mdnsEnabled)
+  {
+    httpMessage += String(F(" checked='checked'"));
+  }
+  httpMessage += String(F("><br/><hr><button type='submit'>save settings</button></form>"));
 
   if (updateEspAvailable)
   {
@@ -1585,6 +1665,36 @@ void webHandleSaveConfig()
     shouldSaveConfig = true;
     webServer.arg("motionPinConfig").toCharArray(motionPinConfig, 3);
   }
+  if ((webServer.arg("debugSerialEnabled") == String("on")) && !debugSerialEnabled)
+  { // debugSerialEnabled was disabled but should now be enabled
+    shouldSaveConfig = true;
+    debugSerialEnabled = true;
+  }
+  else if ((webServer.arg("debugSerialEnabled") == String("")) && debugSerialEnabled)
+  { // debugSerialEnabled was enabled but should now be disabled
+    shouldSaveConfig = true;
+    debugSerialEnabled = false;
+  }
+  if ((webServer.arg("debugTelnetEnabled") == String("on")) && !debugTelnetEnabled)
+  { // debugTelnetEnabled was disabled but should now be enabled
+    shouldSaveConfig = true;
+    debugTelnetEnabled = true;
+  }
+  else if ((webServer.arg("debugTelnetEnabled") == String("")) && debugTelnetEnabled)
+  { // debugTelnetEnabled was enabled but should now be disabled
+    shouldSaveConfig = true;
+    debugTelnetEnabled = false;
+  }
+  if ((webServer.arg("mdnsEnabled") == String("on")) && !mdnsEnabled)
+  { // mdnsEnabled was disabled but should now be enabled
+    shouldSaveConfig = true;
+    mdnsEnabled = true;
+  }
+  else if ((webServer.arg("mdnsEnabled") == String("")) && mdnsEnabled)
+  { // mdnsEnabled was enabled but should now be disabled
+    shouldSaveConfig = true;
+    mdnsEnabled = false;
+  }
 
   if (shouldSaveConfig)
   { // Config updated, notify user and trigger write to SPIFFS
@@ -1594,6 +1704,7 @@ void webHandleSaveConfig()
     httpMessage += String(F("<br/>Saving updated configuration values and restarting device"));
     httpMessage += FPSTR(HTTP_END);
     webServer.send(200, "text/html", httpMessage);
+
     configSave();
     if (shouldSaveWifi)
     {
@@ -2133,17 +2244,19 @@ void motionUpdate()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifdef DEBUGTELNET
 void handleTelnetClient()
 { // Basic telnet client handling code from: https://gist.github.com/tablatronix/4793677ca748f5f584c95ec4a2b10303
+  static unsigned long telnetInputIndex = 0;
   if (telnetServer.hasClient())
-  {
-    // client is connected
+  { // client is connected
     if (!telnetClient || !telnetClient.connected())
     {
       if (telnetClient)
-        telnetClient.stop();                   // client disconnected
+      {
+        telnetClient.stop(); // client disconnected
+      }
       telnetClient = telnetServer.available(); // ready for new client
+      telnetInputIndex = 0;                    // reset input buffer index
     }
     else
     {
@@ -2152,65 +2265,82 @@ void handleTelnetClient()
   }
   // Handle client input from telnet connection.
   if (telnetClient && telnetClient.connected() && telnetClient.available())
-  {
-    // client input processing
-    while (telnetClient.available())
+  { // client input processing
+    static char telnetInputBuffer[telnetInputMax];
+
+    if (telnetClient.available())
     {
-      // Read data from telnet just to clear out the buffer
-      telnetClient.read();
+      char telnetInputByte = telnetClient.read(); // Read client byte
+      // debugPrintln(String("telnet in: 0x") + String(telnetInputByte, HEX));
+      if (telnetInputByte == 5)
+      { // If the telnet client sent a bunch of control commands on connection (which end in ENQUIRY/0x05), ignore them and restart the buffer
+        telnetInputIndex = 0;
+      }
+      else if (telnetInputByte == 13)
+      { // telnet line endings should be CRLF: https://tools.ietf.org/html/rfc5198#appendix-C
+        // If we get a CR just ignore it
+      }
+      else if (telnetInputByte == 10)
+      {                                          // We've caught a LF (DEC 10), send buffer contents to the Nextion
+        telnetInputBuffer[telnetInputIndex] = 0; // null terminate our char array
+        nextionSendCmd(String(telnetInputBuffer));
+        telnetInputIndex = 0;
+      }
+      else if (telnetInputIndex < telnetInputMax)
+      { // If we have room left in our buffer add the current byte
+        telnetInputBuffer[telnetInputIndex] = telnetInputByte;
+        telnetInputIndex++;
+      }
     }
   }
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void debugPrintln(String debugText)
 { // Debug output line of text to our debug targets
   String debugTimeText = "[+" + String(float(millis()) / 1000, 3) + "s] " + debugText;
-#ifdef DEBUGSERIAL
-  SoftwareSerial debugSerial = SoftwareSerial(17, 1); // 17==nc for RX, 1==TX pin
-  debugSerial.begin(115200);
-  debugSerial.println(debugTimeText);
-  debugSerial.flush();
-  Serial.println(debugTimeText);
-  Serial.flush();
-#endif
-#ifdef DEBUGTELNET
-  if (telnetClient.connected())
+  if (debugSerialEnabled)
   {
-    debugTimeText += "\r\n";
-    const size_t len = debugTimeText.length();
-    const char *buffer = debugTimeText.c_str();
-    telnetClient.write(buffer, len);
-    handleTelnetClient();
+    SoftwareSerial debugSerial = SoftwareSerial(17, 1); // 17==nc for RX, 1==TX pin
+    debugSerial.begin(115200);
+    debugSerial.println(debugTimeText);
+    debugSerial.flush();
+    Serial.println(debugTimeText);
+    Serial.flush();
   }
-#endif
+  if (debugTelnetEnabled)
+  {
+    if (telnetClient.connected())
+    {
+      telnetClient.println(debugTimeText);
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void debugPrint(String debugText)
 { // Debug output single character to our debug targets (DON'T USE THIS!)
-// Try to avoid using this function if at all possible.  When connected to telnet, printing each
-// character requires a full TCP round-trip + acknowledgement back and execution halts while this
-// happens.  Far better to put everything into a line and send it all out in one packet using
-// debugPrintln.
-#ifdef DEBUGSERIAL
-  SoftwareSerial debugSerial = SoftwareSerial(17, 1); // 17==nc for RX, 1==TX pin
-  debugSerial.begin(115200);
-  debugSerial.print(debugText);
-  debugSerial.flush();
-  Serial.print(debugText);
-  Serial.flush();
-#endif
-#ifdef DEBUGTELNET
-  if (telnetClient.connected())
+  // Try to avoid using this function if at all possible.  When connected to telnet, printing each
+  // character requires a full TCP round-trip + acknowledgement back and execution halts while this
+  // happens.  Far better to put everything into a line and send it all out in one packet using
+  // debugPrintln.
+  if (debugSerialEnabled)
   {
-    const size_t len = debugText.length();
-    const char *buffer = debugText.c_str();
-    telnetClient.write(buffer, len);
-    handleTelnetClient();
+    SoftwareSerial debugSerial = SoftwareSerial(17, 1); // 17==nc for RX, 1==TX pin
+    debugSerial.begin(115200);
+    debugSerial.print(debugText);
+    debugSerial.flush();
+    Serial.print(debugText);
+    Serial.flush();
   }
-#endif
+
+  if (debugTelnetEnabled)
+  {
+    if (telnetClient.connected())
+    {
+      telnetClient.print(debugText);
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
