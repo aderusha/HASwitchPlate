@@ -2,7 +2,7 @@
 
 ## First, a note of caution
 
-The HA SwitchPlate project is a moderately complicated build and requires some basic knowledge of soldering, electronics, Arduino programming, MQTT, and how to safely handle high-voltage AC.  This point bears some repeating so let's try a bigger font to make sure everyone gets it:
+The HA SwitchPlate project requires some basic knowledge of soldering, electronics, Arduino programming, MQTT, and how to safely handle high-voltage AC.  This point bears some repeating so let's try a bigger font to make sure everyone gets it:
 
 # THIS PROJECT INVOLVES MONKEYING WITH HIGH VOLTAGE AND YOU COULD KILL YOURSELF AND/OR SET YOUR HOUSE ON FIRE
 
