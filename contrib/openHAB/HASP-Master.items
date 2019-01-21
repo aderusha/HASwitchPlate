@@ -20,6 +20,8 @@ Group HASP_Plate01_Page8_Button_Group
 Group HASP_Plate01_Page8_Dimmer_Group
 Group HASP_Plate01_Page9_Button_Group
 
+Switch HASP_Plate01_Button_P0B1 "HASP Plate 01 Page 0 Button 1 State [%s]" {mqtt="<[broker:hasp/plate01/state/p[0].b[1]:state:default]"}
+
 Switch HASP_Plate01_Button_P1B1 "HASP Plate 01 Page 1 Button 1 State [%s]" (HASP_Plate01_Button1_Group)  {mqtt="<[broker:hasp/plate01/state/p[1].b[1]:state:default]"}
 Switch HASP_Plate01_Button_P2B1 "HASP Plate 01 Page 2 Button 1 State [%s]" (HASP_Plate01_Button1_Group)  {mqtt="<[broker:hasp/plate01/state/p[2].b[1]:state:default]"}
 Switch HASP_Plate01_Button_P3B1 "HASP Plate 01 Page 3 Button 1 State [%s]" (HASP_Plate01_Button1_Group)  {mqtt="<[broker:hasp/plate01/state/p[3].b[1]:state:default]"}
@@ -320,11 +322,11 @@ Number HASP_Plate01_Button_P9B5_Font "HASP Plate 01 Page 9 Button 5 Font [%d]" {
 /* Page Storage Items */
 
 Number HASP_Plate01_Page "HASP Plate 01 Page Select [%d]" (HASP) {mqtt=">[broker:hasp/plate01/command/page:command:*:default]"}
-Number HASP_Plate01_Page_Current "HASP Plate 01 Current Page [%d]" (HASP) {mqtt="<[broker:hasp/plate01/command/page:state:default]"}
+Number HASP_Plate01_Page_Current "HASP Platte 01 Current Page [%d]" (HASP) {mqtt="<[broker:hasp/plate01/command/page:state:default]"}
 
 /* Plate Status Items */
 
-Switch HASP_Plate01_Light_Power "HASP Plate 01 Backlight Switch [%s]" (HASP) {mqtt=">[broker:hasp/plate01/light/switch:command:*:default]"}
+Switch HASP_Plate01_Light_Power "HASP Plate 01 Backlight Switch [%s]" (HASP) {mqtt=">[broker:hasp/plate01/light/switch:command:*:default]",expire="30s,command=OFF"}
 Switch HASP_Plate01_Light_Status "HASP Plate 01 Backlight Status [%s]" (HASP) {mqtt="<[broker:hasp/plate01/light/state:state:default]"}
 Number HASP_Plate01_Light_Brightness "HASP Plate 01 Backlight Brightness [%d]" (HASP) {mqtt="<[broker:hasp/plate01/brightness/state:state:default]"}
 Number HASP_Plate01_Light_Dimmer "HASP Plate 01 Backlight Brightness Set [%d]" (HASP) {mqtt=">[broker:hasp/plate01/brightness/set:command:*:default]"}
@@ -343,3 +345,5 @@ String HASP_Plate01_Plate_Sensor_HaspIP "HASP Plate 01 Sensor - HASP IP [%s]" (H
 Number HASP_Plate01_Plate_Motion "HASP Plate 01 Motion Status [%d]" (HASP) {mqtt="<[broker:hasp/plate01/motion/state:state:default]"}
 
 String HASP_Plate01_Plate_Command "Hasp Plate 01 Command" (HASP) {mqtt=">[broker:hasp/plate01/command:command:*:default]"}
+
+String HASP_Plate01_Plate_Command_JSON "Hasp Plate 01 JSON Command" (HASP) {mqtt=">[broker:hasp/plate01/command/json:command:*:default]"}
