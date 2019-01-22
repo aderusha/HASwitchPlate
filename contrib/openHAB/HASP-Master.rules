@@ -1,0 +1,769 @@
+//import java.util.Calendar
+
+/* -------------------------------------- BEGIN USER CONFIG -------------------------------------- */
+
+/* Configuration for the three page selection buttons at the bottom of the page */
+val plate01_pagebutton1page = 1 // Set page # for bottom left button
+val plate01_pagebutton1txt = '"Scenes"' // Set page title for bottom left button
+val plate01_pagebutton2page = 2 // Set page # for bottom center button
+val plate01_pagebutton2txt = '"Status"' // Set page title for bottom left button
+val plate01_pagebutton3page = 6 // Set page # for bottom right button
+val plate01_pagebutton3txt = '"HVAC"' // Set page title for bottom left button
+
+/* Configuration for page 1 (Scenes) */
+val plate01_page1button4txt = '"Morning"'
+val plate01_page1button5txt = '"Evening"'
+val plate01_page1button6txt = '"Night"'
+val plate01_page1button7txt = '"Bedtime"'
+val plate01_page1button4font = 2
+val plate01_page1button5font = 2
+val plate01_page1button6font = 2
+val plate01_page1button7font = 2
+
+/* Configuration for page 2 (Status) */
+val plate01_page2button4txt = '"Line 1"'
+val plate01_page2button5txt = '"Line 2"'
+val plate01_page2button6txt = '"Line 3"'
+val plate01_page2button7txt = '"Line 4"'
+val plate01_page2button4font = 2
+val plate01_page2button5font = 2
+val plate01_page2button6font = 2
+val plate01_page2button7font = 1
+
+/* Configuration for page 3 (Page 3) */
+val plate01_page3button4txt = '"P3 B4 Text"'
+val plate01_page3button5txt = '"P3 B5 Text"'
+val plate01_page3button6txt = '"P3 B6 Text"'
+val plate01_page3button7txt = '"P3 B7 Text"'
+val plate01_page3button4font = 1
+val plate01_page3button5font = 1
+val plate01_page3button6font = 1
+val plate01_page3button7font = 1
+
+/* Configuration for page 4 (Page 4) */
+val plate01_page4button4txt = '"P4 B4 Light"'
+val plate01_page4button5txt = '"P4 B5 Light"'
+val plate01_page4button6txt = '"P4 B6 Light"'
+val plate01_page4button4font = 1
+val plate01_page4button5font = 1
+val plate01_page4button6font = 1
+
+/* Configuration for page 5 (Page 5) */
+val plate01_page5button4txt = '"P5 B4 Light"'
+val plate01_page5button5txt = '"P5 B5 Light"'
+val plate01_page5button6txt = '"P5 B6 Light"'
+val plate01_page5button4font = 1
+val plate01_page5button5font = 1
+val plate01_page5button6font = 1
+
+/* Configuration for page 6 (HVAC) */
+val plate01_page6button4txt = '"P6 B4"'
+val plate01_page6button5txt = '"P6 B5"'
+val plate01_page6button6txt = '"P6 B6"'
+val plate01_page6button7txt = '"P6 B7"'
+val plate01_page6button8txt = '"P6 B8"'
+val plate01_page6button9txt = '"P6 B9"'
+val plate01_page6button10txt = '"P6 B10"'
+val plate01_page6button11txt = '"P6 B11"'
+val plate01_page6button4font = 1
+val plate01_page6button5font = 1
+val plate01_page6button6font = 1
+val plate01_page6button7font = 1
+val plate01_page6button8font = 1
+val plate01_page6button9font = 1
+val plate01_page6button10font = 1
+val plate01_page6button11font = 1
+
+/* Configuration for page 7 (Page 7) */
+val plate01_page7button4txt = '"1"'
+val plate01_page7button5txt = '"2"'
+val plate01_page7button6txt = '"3"'
+val plate01_page7button7txt = '"4"'
+val plate01_page7button8txt = '"5"'
+val plate01_page7button9txt = '"6"'
+val plate01_page7button10txt = '"7"'
+val plate01_page7button11txt = '"8"'
+val plate01_page7button12txt = '"9"'
+val plate01_page7button13txt = '"*"'
+val plate01_page7button14txt = '"0"'
+val plate01_page7button15txt = '"#"'
+val plate01_page7button4font = 3
+val plate01_page7button5font = 3
+val plate01_page7button6font = 3
+val plate01_page7button7font = 3
+val plate01_page7button8font = 3
+val plate01_page7button9font = 3
+val plate01_page7button10font = 3
+val plate01_page7button11font = 3
+val plate01_page7button12font = 3
+val plate01_page7button13font = 3
+val plate01_page7button14font = 3
+val plate01_page7button15font = 3
+
+/* Configuration for page 8 (Page 8) */
+val plate01_page8button4txt = '"P8 B4"'
+val plate01_page8button5txt = '"P8 B5"'
+val plate01_page8button6txt = '"P8B6"'
+val plate01_page8button7txt = '"P8B7"'
+val plate01_page8button8txt = '"P8B8"'
+val plate01_page8button4font = 1
+val plate01_page8button5font = 1
+val plate01_page8button6font = 1
+val plate01_page8button7font = 1
+val plate01_page8button8font = 1
+
+/* Configuration for page 9 (Page 9) */
+val plate01_page9button4txt = '"P9 B4"'
+val plate01_page9button5txt = '"P9 B5"'
+val plate01_page9button4font = 2
+val plate01_page9button5font = 2
+
+/* -------------------------------------- END USER CONFIG -------------------------------------- */
+
+/* -------------------------------------- BEGIN USER-DEFINED HANDLER RULES -------------------------------------- */
+
+// HASP -> openHAB item handling rules
+
+/* 
+Use the rules below to add automation logic in your system, based on inputs from the HASP.
+There is an if statement for every button and dimmer on the HASP pages, and you just need to add your setup's items
+to the proper if statement, to use that button to control the item.
+Several examples are included (commented out) to get you started, whether you just want to send an ON command when the 
+button is pressed, or toggle the output item depending on its current state.
+*/
+
+rule "Handle HASP Master Page 0"
+when
+    Item HASP_Plate01_Button_P0B1 received update ON
+then
+    if(HASP_Plate01_Light_Power.state == OFF)
+    {
+        HASP_Plate01_Light_Power.sendCommand(ON)
+    }
+    else
+    {   
+        /*
+            Act on buttons from Page 0 here
+        */
+        if (triggeringItem == HASP_Plate01_Button_P0B1)
+        {
+            //Insert action to perform if button 0 was pressed
+    
+            HASP_Plate01_Page.sendCommand(2)                         //This is only for when the HASP starts in page 0 and you need to go to a different page, this will send it to Page 2
+        }
+    }
+end
+
+rule "Handle HASP Master Page 1"
+when
+    Member of HASP_Plate01_Page1_Button_Group received update ON
+then
+    if(HASP_Plate01_Light_Power.state == OFF)
+    {
+        HASP_Plate01_Light_Power.sendCommand(ON)
+    }
+    else
+    {   
+        /*
+            Act on buttons from Page 1 here
+        */
+        if (triggeringItem == HASP_Plate01_Button_P1B4)
+        {
+            //Insert action to perform if button 4 was pressed
+    
+            Scene_Morning.sendCommand(ON)                         //Example - Latching ON - send ON command from HASP button to turn item on
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P1B5)
+        {
+            //Insert action to perform if button 5 was pressed
+
+            // if(Scene_Evening == ON)                                    //Example - Toggle - change item state using HASP button (turn OFF if ON and ON if OFF)
+            // {
+            //     Scene_Evening.sendCommand(OFF)
+            // }
+            // else
+            // {
+            //     Scene_Evening.sendCommand(ON)
+            // }
+            Scene_Evening.sendCommand(ON)
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P1B6)
+        {
+            //Insert action to perform if button 6 was pressed
+            Scene_Night.sendCommand(ON)
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P1B7)
+        {
+            //Insert action to perform if button 7 was pressed
+            Scene_Bedtime.sendCommand(ON)
+        }
+        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+    }
+end
+
+rule "Handle HASP Master Page 2"
+when
+    Member of HASP_Plate01_Page2_Button_Group received update ON
+then
+    if(HASP_Plate01_Light_Power.state == OFF)
+    {
+        HASP_Plate01_Light_Power.sendCommand(ON)
+    }
+    else
+    {   
+        /*
+            Act on buttons from Page 2 here
+        */
+        if (triggeringItem == HASP_Plate01_Button_P2B4)
+        {
+            //Insert action to perform if button 4 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P2B5)
+        {
+            //Insert action to perform if button 5 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P2B6)
+        {
+            //Insert action to perform if button 6 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P2B7)
+        {
+            //Insert action to perform if button 7 was pressed
+        }        
+        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+    }
+end
+
+rule "Handle HASP Master Page 3"
+when
+    Member of HASP_Plate01_Page3_Button_Group received update ON
+then
+    if(HASP_Plate01_Light_Power.state == OFF)
+    {
+        HASP_Plate01_Light_Power.sendCommand(ON)
+    }
+    else
+    {   
+        /*
+            Act on buttons from Page 3 here
+        */
+        if (triggeringItem == HASP_Plate01_Button_P3B4)
+        {
+            //Insert action to perform if button 4 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P3B5)
+        {
+            //Insert action to perform if button 5 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P3B6)
+        {
+            //Insert action to perform if button 6 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P3B7)
+        {
+            //Insert action to perform if button 7 was pressed
+        }
+        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+    }
+end
+
+rule "Handle HASP Master Page 4"
+when
+    Member of HASP_Plate01_Page4_Button_Group received update ON or
+    Member of HASP_Plate01_Page4_Dimmer_Group received update
+then
+    if(HASP_Plate01_Light_Power.state == OFF)
+    {
+        HASP_Plate01_Light_Power.sendCommand(ON)
+    }
+    else
+    {   
+        /*
+            Act on buttons/dimmers from Page 4 here
+        */
+        if (triggeringItem == HASP_Plate01_Button_P4B4)
+        {
+            //Insert action to perform if button 4 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P4B5)
+        {
+            //Insert action to perform if button 5 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P4B6)
+        {
+            //Insert action to perform if button 6 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Dimmer_P4B7)
+        {
+            //Insert action to perform if dimmer 1 was moved
+        }
+        else if (triggeringItem == HASP_Plate01_Dimmer_P4B8)
+        {
+            //Insert action to perform if dimmer 2 was moved
+        }
+        else if (triggeringItem == HASP_Plate01_Dimmer_P4B9)
+        {
+            //Insert action to perform if dimmer 3 was moved
+        }
+        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+    }
+end
+
+rule "Handle HASP Master Page 5"
+when
+    Member of HASP_Plate01_Page5_Button_Group received update ON or
+    Member of HASP_Plate01_Page5_Dimmer_Group received update
+then
+    if(HASP_Plate01_Light_Power.state == OFF)
+    {
+        HASP_Plate01_Light_Power.sendCommand(ON)
+    }
+    else
+    {   
+        /*
+            Act on buttons/dimmers from Page 5 here
+        */
+        if (triggeringItem == HASP_Plate01_Button_P5B4)
+        {
+            //Insert action to perform if button 4 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P5B5)
+        {
+            //Insert action to perform if button 5 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P5B6)
+        {
+            //Insert action to perform if button 6 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Dimmer_P5B7)
+        {
+            //Insert action to perform if dimmer 1 was moved
+
+            HASP_Plate01_Light_Dimmer.sendCommand(HASP_Plate01_Dimmer_P5B7.state.toString) //Example - send dimmer value to HASP Backlight item
+        }
+        else if (triggeringItem == HASP_Plate01_Dimmer_P5B8)
+        {
+            //Insert action to perform if dimmer 2 was moved
+        }
+        else if (triggeringItem == HASP_Plate01_Dimmer_P5B9)
+        {
+            //Insert action to perform if dimmer 3 was moved
+        }
+        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+    }
+end
+
+rule "Handle HASP Master Page 6"
+when
+    Member of HASP_Plate01_Page6_Button_Group received update ON
+then
+    if(HASP_Plate01_Light_Power.state == OFF)
+    {
+        HASP_Plate01_Light_Power.sendCommand(ON)
+    }
+    else
+    {   
+        /*
+            Act on buttons/dimmers from Page 6 here
+        */
+        if (triggeringItem == HASP_Plate01_Button_P6B4)
+        {
+            //Insert action to perform if button 4 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P6B5)
+        {
+            //Insert action to perform if button 5 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P6B6)
+        {
+            //Insert action to perform if button 6 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P6B7)
+        {
+            //Insert action to perform if button 7 was moved
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P6B8)
+        {
+            //Insert action to perform if button 8 was moved
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P6B9)
+        {
+            //Insert action to perform if button 9 was moved
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P6B10)
+        {
+            //Insert action to perform if button 10 was moved
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P6B11)
+        {
+            //Insert action to perform if button 11 was moved
+        }    
+        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+    }    
+end
+
+rule "Handle HASP Master Page 7"
+when
+    Member of HASP_Plate01_Page7_Button_Group received update ON
+then
+    if(HASP_Plate01_Light_Power.state == OFF)
+    {
+        HASP_Plate01_Light_Power.sendCommand(ON)
+    }
+    else
+    {   
+        /*
+            Act on buttons/dimmers from Page 7 here
+        */
+        if (triggeringItem == HASP_Plate01_Button_P7B4)
+        {
+            //Insert action to perform if button 4 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P7B5)
+        {
+            //Insert action to perform if button 5 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P7B6)
+        {
+            //Insert action to perform if button 6 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P7B7)
+        {
+            //Insert action to perform if button 7 was moved
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P7B8)
+        {
+            //Insert action to perform if button 8 was moved
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P7B9)
+        {
+            //Insert action to perform if button 9 was moved
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P7B10)
+        {
+            //Insert action to perform if button 10 was moved
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P7B11)
+        {
+            //Insert action to perform if button 11 was moved
+        }      
+        else if (triggeringItem == HASP_Plate01_Button_P7B12)
+        {
+            //Insert action to perform if button 12 was moved
+        }     
+        else if (triggeringItem == HASP_Plate01_Button_P7B13)
+        {
+            //Insert action to perform if button 13 was moved
+        }  
+        else if (triggeringItem == HASP_Plate01_Button_P7B14)
+        {
+            //Insert action to perform if button 14 was moved
+        }  
+        else if (triggeringItem == HASP_Plate01_Button_P7B15)
+        {
+            //Insert action to perform if button 15 was moved
+        }   
+        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press 
+    }             
+end
+
+rule "Handle HASP Master Page 8"
+when
+    Member of HASP_Plate01_Page8_Button_Group received update ON or
+    Member of HASP_Plate01_Page8_Dimmer_Group received update
+then
+    if(HASP_Plate01_Light_Power.state == OFF)
+    {
+        HASP_Plate01_Light_Power.sendCommand(ON)
+    }
+    else
+    {   
+        /*
+            Act on buttons/dimmers from Page 8 here
+        */
+        if (triggeringItem == HASP_Plate01_Button_P8B4)
+        {
+            //Insert action to perform if button 4 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P8B5)
+        {
+            //Insert action to perform if button 5 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P8B6)
+        {
+            //Insert action to perform if button 6 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P8B7)
+        {
+            //Insert action to perform if button 7 was moved
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P8B8)
+        {
+            //Insert action to perform if button 8 was moved
+        }
+        else if (triggeringItem == HASP_Plate01_Dimmer_P8B9)
+        {
+            //Insert action to perform if dimmer 9 was moved
+        }
+        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+    }
+end
+
+rule "Handle HASP Master Page 9"
+when
+    Member of HASP_Plate01_Page9_Button_Group received update ON
+then
+    if(HASP_Plate01_Light_Power.state == OFF)
+    {
+        HASP_Plate01_Light_Power.sendCommand(ON)
+    }
+    else
+    {   
+        /*
+            Act on buttons/dimmers from Page 9 here
+        */
+        if (triggeringItem == HASP_Plate01_Button_P9B4)
+        {
+            //Insert action to perform if button 4 was pressed
+        }
+        else if (triggeringItem == HASP_Plate01_Button_P9B5)
+        {
+            //Insert action to perform if button 5 was pressed
+        }
+        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+    }
+end
+
+// openHAB -> HASP item handling rules
+
+/* 
+Use the rules below to modify the HASP display based on inputs from your openHAB system.
+
+A sample rule has been included to show you how to modify a dimmer value on Page 5, to make it match the actual position of the openHAB item
+(in this case, we're simply taking the input from Dimmer 1, which is tied to the HASP Backlight item in the HASP -> openHAB rules above, and 
+sending that value to Dimmer 2)
+
+You can also use these rules to display status information on one of the screens of the HASP (i.e. weather, system status, clock, etc..)
+
+Another great use for these rules would be for screen 9, which is built to show 3d printer status from Octoprint.
+
+*/
+
+rule "Handle HASP Master Page 2 Status"
+when
+    Item localCurrentTemperature received update or
+    Item Temperature_MasterBedroom received update or
+    Item Date received update or
+    Item HASP_Plate01_Page_Current received update 2
+then
+    if (HASP_Plate01_Page_Current.state == 2)   //Only update page if you're on page 2 (avoid sending too many MQTT messages)
+    {
+       //["p[2].b[4].txt=\"O: 27.6 °F\"", "p[2].b[5].txt=\"I: 71.8 °F\"", ...]
+
+        var jsonString = '["p[2].b[4].txt=\\"' + 'O: ' + localCurrentTemperature.state.format("%.1f °F") + '\\"", ' +
+                         '"p[2].b[5].txt=\\"' + 'I: ' + Temperature_MasterBedroom.state.format("%.1f °F") + '\\"", ' +
+                         '"p[2].b[6].txt=\\"' + (Date.state as DateTimeType).format("%1$tA") + '\\"", ' +
+                         '"p[2].b[7].txt=\\"' + (Date.state as DateTimeType).format("%1$td.%1$tb.%1$tY") + '\\""]'
+
+        HASP_Plate01_Plate_Command_JSON.sendCommand(jsonString)
+    }
+end
+
+rule "Handle HASP Master Page 5 dimmers"
+when 
+    Item HASP_Plate01_Light_Brightness received update
+then
+    HASP_Plate01_Dimmer_P5B8_Val.sendCommand(HASP_Plate01_Light_Brightness.state as Number)
+end
+
+rule "Handle HASP Master Page 9 chart"
+when
+    Time cron "0 * * ? * *"                     //Fire rule every minute
+then
+    if (HASP_Plate01_Page_Current.state == 9)   //Only update chart if you're on page 9 (chart gets reset when page is not active)
+    {
+        var Number sigStrength = (((HASP_Plate01_Plate_Sensor_SignalStrength.state as DecimalType) + 100 ) * 1.333).intValue
+        logInfo("HASP", sigStrength.toString)
+
+        HASP_Plate01_Plate_Command.sendCommand('add 6,0,' + sigStrength.toString)
+    }
+end
+
+/* -------------------------------------- END USER-DEFINED HANDLER RULES -------------------------------------- */
+
+/* Restore saved page and rebuild config on reconnect */
+rule "HASP Master Restore page on connect"
+when
+    Item HASP_Plate01_Plate_Sensor_Status changed to "available"
+then
+  
+    HASP_Plate01_Page.sendCommand(HASP_Plate01_Page_Current.state as Number) // Send HASP to previous page
+
+    HASP_Plate01_Button1_Bcol_Group.sendCommand("25388") // Initialize page buttons with gray color
+    HASP_Plate01_Button2_Bcol_Group.sendCommand("25388")
+    HASP_Plate01_Button3_Bcol_Group.sendCommand("25388")
+    HASP_Plate01_Button1_Text_Group.sendCommand(plate01_pagebutton1txt) // Set bottom page buttons text
+    HASP_Plate01_Button2_Text_Group.sendCommand(plate01_pagebutton2txt)
+    HASP_Plate01_Button3_Text_Group.sendCommand(plate01_pagebutton3txt)
+
+    /* Build Page 1 */
+    HASP_Plate01_Button_P1B4_Text.sendCommand(plate01_page1button4txt)
+    HASP_Plate01_Button_P1B5_Text.sendCommand(plate01_page1button5txt)
+    HASP_Plate01_Button_P1B6_Text.sendCommand(plate01_page1button6txt)
+    HASP_Plate01_Button_P1B7_Text.sendCommand(plate01_page1button7txt)
+    HASP_Plate01_Button_P1B4_Font.sendCommand(plate01_page1button4font)
+    HASP_Plate01_Button_P1B5_Font.sendCommand(plate01_page1button5font)
+    HASP_Plate01_Button_P1B6_Font.sendCommand(plate01_page1button6font)
+    HASP_Plate01_Button_P1B7_Font.sendCommand(plate01_page1button7font)
+
+    /* Build Page 2 */
+    HASP_Plate01_Button_P2B4_Text.sendCommand(plate01_page2button4txt)
+    HASP_Plate01_Button_P2B5_Text.sendCommand(plate01_page2button5txt)
+    HASP_Plate01_Button_P2B6_Text.sendCommand(plate01_page2button6txt)
+    HASP_Plate01_Button_P2B7_Text.sendCommand(plate01_page2button7txt)
+    HASP_Plate01_Button_P2B4_Font.sendCommand(plate01_page2button4font)
+    HASP_Plate01_Button_P2B5_Font.sendCommand(plate01_page2button5font)
+    HASP_Plate01_Button_P2B6_Font.sendCommand(plate01_page2button6font)
+    HASP_Plate01_Button_P2B7_Font.sendCommand(plate01_page2button7font)
+
+    /* Build Page 3 */
+    HASP_Plate01_Button_P3B4_Text.sendCommand(plate01_page3button4txt)
+    HASP_Plate01_Button_P3B5_Text.sendCommand(plate01_page3button5txt)
+    HASP_Plate01_Button_P3B6_Text.sendCommand(plate01_page3button6txt)
+    HASP_Plate01_Button_P3B7_Text.sendCommand(plate01_page3button7txt)
+    HASP_Plate01_Button_P3B4_Font.sendCommand(plate01_page3button4font)
+    HASP_Plate01_Button_P3B5_Font.sendCommand(plate01_page3button5font)
+    HASP_Plate01_Button_P3B6_Font.sendCommand(plate01_page3button6font)
+    HASP_Plate01_Button_P3B7_Font.sendCommand(plate01_page3button7font)
+
+    /* Build Page 4 */
+    HASP_Plate01_Button_P4B4_Text.sendCommand(plate01_page4button4txt)
+    HASP_Plate01_Button_P4B5_Text.sendCommand(plate01_page4button5txt)
+    HASP_Plate01_Button_P4B6_Text.sendCommand(plate01_page4button6txt)
+    HASP_Plate01_Button_P4B4_Font.sendCommand(plate01_page4button4font)
+    HASP_Plate01_Button_P4B5_Font.sendCommand(plate01_page4button5font)
+    HASP_Plate01_Button_P4B6_Font.sendCommand(plate01_page4button6font)
+    
+    /* Build Page 5 */
+    HASP_Plate01_Button_P5B4_Text.sendCommand(plate01_page5button4txt)
+    HASP_Plate01_Button_P5B5_Text.sendCommand(plate01_page5button5txt)
+    HASP_Plate01_Button_P5B6_Text.sendCommand(plate01_page5button6txt)
+    HASP_Plate01_Button_P5B4_Font.sendCommand(plate01_page5button4font)
+    HASP_Plate01_Button_P5B5_Font.sendCommand(plate01_page5button5font)
+    HASP_Plate01_Button_P5B6_Font.sendCommand(plate01_page5button6font)
+
+    /* Build Page 6 */
+    HASP_Plate01_Button_P6B4_Text.sendCommand(plate01_page6button4txt)
+    HASP_Plate01_Button_P6B5_Text.sendCommand(plate01_page6button5txt)
+    HASP_Plate01_Button_P6B6_Text.sendCommand(plate01_page6button6txt)
+    HASP_Plate01_Button_P6B7_Text.sendCommand(plate01_page6button7txt)
+    HASP_Plate01_Button_P6B8_Text.sendCommand(plate01_page6button8txt)
+    HASP_Plate01_Button_P6B9_Text.sendCommand(plate01_page6button9txt)
+    HASP_Plate01_Button_P6B10_Text.sendCommand(plate01_page6button10txt)
+    HASP_Plate01_Button_P6B11_Text.sendCommand(plate01_page6button11txt)
+    HASP_Plate01_Button_P6B4_Font.sendCommand(plate01_page6button4font)
+    HASP_Plate01_Button_P6B5_Font.sendCommand(plate01_page6button5font)
+    HASP_Plate01_Button_P6B6_Font.sendCommand(plate01_page6button6font)
+    HASP_Plate01_Button_P6B7_Font.sendCommand(plate01_page6button7font)
+    HASP_Plate01_Button_P6B8_Font.sendCommand(plate01_page6button8font)
+    HASP_Plate01_Button_P6B9_Font.sendCommand(plate01_page6button9font)
+    HASP_Plate01_Button_P6B10_Font.sendCommand(plate01_page6button10font)
+    HASP_Plate01_Button_P6B11_Font.sendCommand(plate01_page6button11font)
+    
+    /* Build Page 7 */
+    HASP_Plate01_Button_P7B4_Text.sendCommand(plate01_page7button4txt)
+    HASP_Plate01_Button_P7B5_Text.sendCommand(plate01_page7button5txt)
+    HASP_Plate01_Button_P7B6_Text.sendCommand(plate01_page7button6txt)
+    HASP_Plate01_Button_P7B7_Text.sendCommand(plate01_page7button7txt)
+    HASP_Plate01_Button_P7B8_Text.sendCommand(plate01_page7button8txt)
+    HASP_Plate01_Button_P7B9_Text.sendCommand(plate01_page7button9txt)
+    HASP_Plate01_Button_P7B10_Text.sendCommand(plate01_page7button10txt)
+    HASP_Plate01_Button_P7B11_Text.sendCommand(plate01_page7button11txt)
+    HASP_Plate01_Button_P7B12_Text.sendCommand(plate01_page7button12txt)
+    HASP_Plate01_Button_P7B13_Text.sendCommand(plate01_page7button13txt)
+    HASP_Plate01_Button_P7B14_Text.sendCommand(plate01_page7button14txt)
+    HASP_Plate01_Button_P7B15_Text.sendCommand(plate01_page7button15txt)
+    HASP_Plate01_Button_P7B4_Font.sendCommand(plate01_page7button4font)
+    HASP_Plate01_Button_P7B5_Font.sendCommand(plate01_page7button5font)
+    HASP_Plate01_Button_P7B6_Font.sendCommand(plate01_page7button6font)
+    HASP_Plate01_Button_P7B7_Font.sendCommand(plate01_page7button7font)
+    HASP_Plate01_Button_P7B8_Font.sendCommand(plate01_page7button8font)
+    HASP_Plate01_Button_P7B9_Font.sendCommand(plate01_page7button9font)
+    HASP_Plate01_Button_P7B10_Font.sendCommand(plate01_page7button10font)
+    HASP_Plate01_Button_P7B11_Font.sendCommand(plate01_page7button11font)
+    HASP_Plate01_Button_P7B12_Font.sendCommand(plate01_page7button12font)
+    HASP_Plate01_Button_P7B13_Font.sendCommand(plate01_page7button13font)
+    HASP_Plate01_Button_P7B14_Font.sendCommand(plate01_page7button14font)
+    HASP_Plate01_Button_P7B15_Font.sendCommand(plate01_page7button15font)
+    
+    /* Build Page 8 */
+    HASP_Plate01_Button_P8B4_Text.sendCommand(plate01_page8button4txt)
+    HASP_Plate01_Button_P8B5_Text.sendCommand(plate01_page8button5txt)
+    HASP_Plate01_Button_P8B6_Text.sendCommand(plate01_page8button6txt)
+    HASP_Plate01_Button_P8B7_Text.sendCommand(plate01_page8button7txt)
+    HASP_Plate01_Button_P8B8_Text.sendCommand(plate01_page8button8txt)
+    HASP_Plate01_Button_P8B4_Font.sendCommand(plate01_page8button4font)
+    HASP_Plate01_Button_P8B5_Font.sendCommand(plate01_page8button5font)
+    HASP_Plate01_Button_P8B6_Font.sendCommand(plate01_page8button6font)
+    HASP_Plate01_Button_P8B7_Font.sendCommand(plate01_page8button7font)
+    HASP_Plate01_Button_P8B8_Font.sendCommand(plate01_page8button8font)
+    
+    /* Build Page 9 */
+    HASP_Plate01_Button_P9B4_Text.sendCommand(plate01_page9button4txt)
+    HASP_Plate01_Button_P9B5_Text.sendCommand(plate01_page9button5txt)
+    HASP_Plate01_Button_P9B4_Font.sendCommand(plate01_page9button4font)
+    HASP_Plate01_Button_P9B5_Font.sendCommand(plate01_page9button5font)
+    
+end
+
+/* Select hasp_plate01_page in response to page button 1 */
+rule "HASP Master respond to page button 1"
+when
+    Member of HASP_Plate01_Button1_Group received update ON
+then
+    HASP_Plate01_Page.sendCommand(plate01_pagebutton1page as Number)
+    HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+end
+
+/* Select hasp_plate01_page in response to page button 2 */
+rule "HASP Master respond to page button 2"
+when
+    Member of HASP_Plate01_Button2_Group received update ON
+then
+    HASP_Plate01_Page.sendCommand(plate01_pagebutton2page as Number)
+    HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+end
+
+/* Select hasp_plate01_page in response to page button 3 */
+rule "HASP Master respond to page button 3"
+when
+    Member of HASP_Plate01_Button3_Group received update ON
+then
+    HASP_Plate01_Page.sendCommand(plate01_pagebutton3page as Number)
+    HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+end
+
+/* Set page button colors based on current page */
+rule "HASP Master set page button colors on page change"
+when
+    Item HASP_Plate01_Page_Current received update 
+then
+    var jsonString = '["p['+ (HASP_Plate01_Page_Current.state.toString) + '].b[1].bco=25388", ' +
+                        '"p['+ (HASP_Plate01_Page_Current.state.toString) + '].b[2].bco=25388", ' +
+                        '"p['+ (HASP_Plate01_Page_Current.state.toString) + '].b[3].bco=25388", '
+
+    if (HASP_Plate01_Page_Current.state == plate01_pagebutton1page)
+    {
+            jsonString = jsonString + '"p['+ (HASP_Plate01_Page_Current.state.toString) + '].b[1].bco=65535"]'
+    }
+    else if (HASP_Plate01_Page_Current.state == plate01_pagebutton2page)
+    {
+            jsonString = jsonString + '"p['+ (HASP_Plate01_Page_Current.state.toString) + '].b[2].bco=65535"]'
+    }
+    else if (HASP_Plate01_Page_Current.state == plate01_pagebutton3page)
+    {
+            jsonString = jsonString + '"p['+ (HASP_Plate01_Page_Current.state.toString) + '].b[3].bco=65535"]'
+    }
+
+    HASP_Plate01_Plate_Command_JSON.sendCommand(jsonString)
+end
