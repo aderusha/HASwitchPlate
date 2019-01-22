@@ -39,11 +39,11 @@ The careful observer might note that the dimensions of the model vary just sligh
 
 ### Filament
 
-I printed these two parts with [Atomic Filament Bright White Opaque PETG Pro](https://atomicfilament.com/products/bright-white-opaque-petg-pro) on a [Prusa i3 MK2S](http://shop.prusa3d.com/en/3d-printers/59-original-prusa-i3-mk2-kit.html) with 40% infill, .15mm layers, no supports, and 6 bottom layers.  The finished results look almost injection molded.
+I printed these two parts with [AmazonBasics White PETG](https://amzn.to/2T3dFXr) on a [Prusa i3 MK3](https://shop.prusa3d.com/en/3d-printers/180-original-prusa-i3-mk3-kit.html) with 20% infill, .15mm layers, no supports, and 6 bottom layers.  PETG provides good flexibility when mounting the device into your wall, as sometimes the drywall, workbox, etc require a little bit of flex.  PLA might work, but may crack in some installations.  If you have both on hand, print the front in PETG and the back in PLA.
 
 ### Inserts
 
-The mounting holes for the Nextion panel are sized to fit [M2 x 3mm threaded inserts](https://www.amazon.com/a16041800ux0765-Cylinder-Knurled-Threaded-Embedded/dp/B01IZ15A5U) but should accept an M3 screw (tightly).  See [the enclosure build documentation](../Documentation/04_Project_Enclosure.md#threaded-inserts) for more details.
+The mounting holes for the Nextion panel are sized to fit [M2 x 3mm threaded inserts](https://amzn.to/2Mp4GgG) but should accept an M3 screw (tightly).  See [the enclosure build documentation](../Documentation/04_Project_Enclosure.md#threaded-inserts) for more details.
 
 ### SketchUp
 
