@@ -148,7 +148,7 @@ automation:
   # with the formula: (degF - 122) * 0.3694
   - alias: hasp_plate01_p9_3DPrinterTempGraph
     trigger:
-      platform: time
+      platform: time_pattern
       seconds: '/30'
     condition:
     - condition: template
