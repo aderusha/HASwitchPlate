@@ -31,7 +31,7 @@ automation:
   # Send the current time every minute
   - alias: hasp_plate01_p2_ClockUpdate
     trigger:
-      platform: time
+      platform: time_pattern
       # Matches every minute
       seconds: 00
     condition:
