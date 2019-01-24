@@ -6,7 +6,7 @@ automation:
 # elevation below -10 == backlight 20
   - alias: hasp_plate01_00_BacklightBySun
     trigger:
-    - platform: time
+    - platform: time_pattern
       # Matches every minute
       seconds: 00
     condition:
