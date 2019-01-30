@@ -8,17 +8,17 @@ The [enclosure provided](../3D_Printable_Models) includes STL files ready for sl
 
 ### High voltage AC cabling
 
-The AC power cables should be at least 18AWG 300V stranded cable with a white jacket soldered to the `AC/N` pad on the PCB and a similar wire with a black jacket soldered to `AN/L`.  These are fed through a [rubber push-in grommet](https://amzn.to/2MmYgP4) mounted into the rear enclosure.  I've had good luck stripping an existing 3 conductor power cord and using the black/white wires inside.
+The AC power cables should be at least 18AWG 300V stranded cable with a white jacket soldered to the `AC/N` pad on the PCB and a similar wire with a black jacket soldered to `AN/L`.  These are fed through a [rubber push-in grommet](https://amzn.to/2G9y49I) mounted into the rear enclosure.  I've had good luck stripping an existing 3 conductor power cord and using the black/white wires inside.
 
 ### Threaded Inserts
 
-The two halves of the enclosure are held together by [four 20mm M2 flat-head screws](https://amzn.to/2T8hF9h) through the rear of the enclosure into a set of [four 3mm M2 threaded inserts](https://amzn.to/2Mp4GgG) installed into the front plate.
+The two halves of the enclosure are held together by [four 20mm M2 flat-head screws](https://amzn.to/2Gb5pAZ) through the rear of the enclosure into a set of [four 3mm M2 threaded inserts](https://amzn.to/2SgVO21) installed into the front plate.
 
 To install the threaded inserts in the front plate, thread the end of an M2 screw into the insert with the end of the screw flush with the bottom face of the insert (meaning, it's not sticking out the other side).  Apply a thin bead of slow-set superglue around the outside edge of the insert, taking care not to get glue on the screw itself as you don't want to pull the glue up into the threads when removing the screw.  Then, take a hammer and *gently* tap it into place on the front plate.  You can crack the plastic if you swing too hard, you just need enough force to push the knurled ridges on the outside of the insert into the plate.
 
 ### PCB Installation
 
-Installing the [HASP PCB](../PCB) requires a pair of small m2-ish screws, I'm using [M2 self-tapping 6MM screws](https://amzn.to/2T6L83l) but most any 4-6mm M2 screws should work fine too.  There shouldn't be much strain on these two so I haven't bothered with inserts here.
+Installing the [HASP PCB](../PCB) requires a pair of small m2-ish screws, I'm using [M2 self-tapping 6MM screws](https://amzn.to/2TnlsQ6) but most any 4-6mm M2 screws should work fine too.  There shouldn't be much strain on these two so I haven't bothered with inserts here.
 
 ![Parts installed](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/PCB_Assembly_Parts_Installed.jpg?raw=true)
 

@@ -20,7 +20,7 @@ For most users, you'll want to print [HASwitchPlate_front_single.stl](HASwitchPl
 
 * **[HASwitchPlate_rear_lcdmod.stl](HASwitchPlate_rear_lcdmod.stl)** The `lcdmod` enclosure requires the removal of the 4-pin XHP connector from the Nextion LCD panel.  This option allows for better clearance around the screw posts which may help in tight work boxes, but the process of safely removing the connecter may require a hot air station.
 * **[HASwitchPlate_rear_nolcdmod.stl](HASwitchPlate_rear_nolcdmod.stl)** The `nolcdmod` enclosure does not require removing the 4-pin XHP connector from the Nextion LCD panel.  This simplifies the build process but has just a little less room behind the device for the work box screws.  We're not talking a lot here, so if you don't have the hot air station this option will probably work fine for you.
-* **[HASwitchPlate_rear_lcdmod_minimum_clearance.stl](HASwitchPlate_rear_lcdmod_minimum_clearance.stl)** The `lcdmod_minimum_clearance` rear enclosure has been modified to provide the tightest fit around the HASP components that I can work out.  The walls are flimsy and thin, it will require supports to print, and you'll need 4 x [4mm M2 countersunk screws](https://www.amazon.com/uxcell-Stainless-Countersunk-Phillips-Machine/dp/B01L7Q5DR0) to assemble.  I don't recommend this enclosure unless you can't get the standard enclosure to fit in your workbox.
+* **[HASwitchPlate_rear_lcdmod_minimum_clearance.stl](HASwitchPlate_rear_lcdmod_minimum_clearance.stl)** The `lcdmod_minimum_clearance` rear enclosure has been modified to provide the tightest fit around the HASP components that I can work out.  The walls are flimsy and thin, it will require supports to print, and you'll need 4 x [4mm M2 countersunk screws](https://amzn.to/2G9yOM2) to assemble.  I don't recommend this enclosure unless you can't get the standard enclosure to fit in your workbox.
 * **[HASwitchPlate_rear_dev.stl](HASwitchPlate_rear_dev.stl)** The `dev` enclosure has USB, SD card, and Nextion XHP connector exposed for development/test purposes.  This is unsafe to install in your workbox.
 
 ### Desktop models
@@ -39,11 +39,11 @@ The careful observer might note that the dimensions of the model vary just sligh
 
 ### Filament
 
-I printed these two parts with [AmazonBasics White PETG](https://amzn.to/2T3dFXr) on a [Prusa i3 MK3](https://shop.prusa3d.com/en/3d-printers/180-original-prusa-i3-mk3-kit.html) with 20% infill, .15mm layers, no supports, and 6 bottom layers.  PETG provides good flexibility when mounting the device into your wall, as sometimes the drywall, workbox, etc require a little bit of flex.  PLA might work, but may crack in some installations.  If you have both on hand, print the front in PETG and the back in PLA.
+I printed these two parts with [AmazonBasics White PETG](https://amzn.to/2MFxQZ3) on a [Prusa i3 MK3](https://shop.prusa3d.com/en/3d-printers/180-original-prusa-i3-mk3-kit.html) with 20% infill, .15mm layers, no supports, and 6 bottom layers.  PETG provides good flexibility when mounting the device into your wall, as sometimes the drywall, workbox, etc require a little bit of flex.  PLA might work, but may crack in some installations.  If you have both on hand, print the front in PETG and the back in PLA.
 
 ### Inserts
 
-The mounting holes for the Nextion panel are sized to fit [M2 x 3mm threaded inserts](https://amzn.to/2Mp4GgG) but should accept an M3 screw (tightly).  See [the enclosure build documentation](../Documentation/04_Project_Enclosure.md#threaded-inserts) for more details.
+The mounting holes for the Nextion panel are sized to fit [M2 x 3mm threaded inserts](https://amzn.to/2SgVO21) but should accept an M3 screw (tightly).  See [the enclosure build documentation](../Documentation/04_Project_Enclosure.md#threaded-inserts) for more details.
 
 ### SketchUp
 

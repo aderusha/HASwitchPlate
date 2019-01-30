@@ -22,17 +22,17 @@ To build a simple version of this project you will minimally need the [Nextion d
 
 A complete build that's ready to install will require the following components:
 
-* [Nextion 2.4" LCD Touchscreen display](https://amzn.to/2ATp4BV)
-* [WeMos D1 Mini ESP8266 WiFi microcontroller](https://amzn.to/2U7tnRm)
+* [Nextion 2.4" LCD Touchscreen display](https://amzn.to/2DIpahB)
+* [WeMos D1 Mini ESP8266 WiFi microcontroller](https://amzn.to/2Gc92Xs)
 * [3D printed switch plate](3D_Printable_Models/HASwitchPlate_front_single.stl)
 * [3D printed rear cover](3D_Printable_Models/HASwitchPlate_rear_nolcdmod.stl)
-* [Mean Well IRM-03-5 AC to 5VDC Power supply](https://amzn.to/2T7DwgR)
+* [Mean Well IRM-03-5 AC to 5VDC Power supply](https://amzn.to/2MNF7Gx)
 * [PCB](PCB/)
-* [4pin 2.54mm JST-XH female PCB header](https://amzn.to/2WaV3Xv)
-* [Rubber grommet](https://amzn.to/2MmYgP4)
-* [6" each of white and black 300V 18AWG stranded power cables](https://amzn.to/2MofGLo)
-* [Two M2 self-tapping 6MM screws](https://amzn.to/2T6L83l) (or just any 4-6mm M2 screws) to mount PCB in rear enclosure
-* [Four 20mm M2 flathead screws](https://amzn.to/2T8hF9h) and [four 3mm M2 threaded inserts](https://amzn.to/2Mp4GgG) to fasten both halves of the enclosure together
+* [4pin 2.54mm JST-XH PCB header](https://amzn.to/2MFV15p)
+* [Rubber grommet](https://amzn.to/2G9y49I)
+* [6" each of white and black 300V 18AWG stranded power cables](https://amzn.to/2SjXO9G)
+* [Two M2 self-tapping 6MM screws](https://amzn.to/2TnlsQ6) (or just any 4-6mm M2 screws) to mount PCB in rear enclosure
+* [Four 20mm M2 flathead screws](https://amzn.to/2Gb5pAZ) and [four 3mm M2 threaded inserts](https://amzn.to/2SgVO21) to fasten both halves of the enclosure together
 
 ## Get Started!
 
