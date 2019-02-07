@@ -27,9 +27,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // OPTIONAL: Assign default values here.
-char wifiSSID[32] = ""; // Leave unset for wireless autoconfig.
-char wifiPass[64] = ""; // Note that these values will be lost if auto-update is used,
-                        // and that's probably OK because they will be saved in EEPROM.
+char wifiSSID[32] = ""; // Leave unset for wireless autoconfig. Note that these values will be lost
+char wifiPass[64] = ""; // when updating, but that's probably OK because they will be saved in EEPROM.
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // These defaults may be overwritten with values saved by the web interface
@@ -60,10 +59,11 @@ char motionPinConfig[3] = "0";
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 
-const float haspVersion = 0.34;                     // Current HASP software release version
+const float haspVersion = 0.35;                     // Current HASP software release version
 byte nextionReturnBuffer[128];                      // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;                     // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                      // Track active LCD page
+bool lcdConnected = false;                          // Set to true when we've heard something from the LCD
 char wifiConfigPass[9];                             // AP config password, always 8 chars + NUL
 char wifiConfigAP[19];                              // AP config SSID, haspNode + 3 chars
 bool shouldSaveConfig = false;                      // Flag to save json config to SPIFFS
@@ -76,8 +76,9 @@ unsigned int nextionRetryMax = 5;                   // Attempt to connect to pan
 bool updateEspAvailable = false;                    // Flag for update check to report new ESP FW version
 float updateEspAvailableVersion;                    // Float to hold the new ESP FW version number
 bool updateLcdAvailable = false;                    // Flag for update check to report new LCD FW version
-bool debugSerialEnabled = true;                     // Enable serial debug output
+bool debugSerialEnabled = true;                     // Enable USB serial debug output
 bool debugTelnetEnabled = false;                    // Enable telnet debug output
+bool debugSerialD8Enabled = true;                   // Enable hardware serial debug output on pin D8
 const unsigned long telnetInputMax = 128;           // Size of user input buffer for user telnet session
 bool motionEnabled = false;                         // Motion sensor is enabled
 bool mdnsEnabled = true;                            // mDNS enabled
@@ -92,7 +93,8 @@ const String lcdVersionQuery = "p[0].b[2].val";     // Object ID for lcdVersion 
 bool startupCompleteFlag = false;                   // Startup process has completed
 const long statusUpdateInterval = 300000;           // Time in msec between publishing MQTT status updates (5 minutes)
 long statusUpdateTimer = 0;                         // Timer for update check
-const unsigned long connectTimeout = 300;           // Timeout for WiFi and MQTT connection attempts
+const unsigned long connectTimeout = 300;           // Timeout for WiFi and MQTT connection attempts in seconds
+const unsigned long reConnectTimeout = 15;          // Timeout for WiFi reconnection attempts in seconds
 byte espMac[6];                                     // Byte array to store our MAC address
 const uint16_t mqttMaxPacketSize = 4096;            // Size of buffer for incoming MQTT message
 String mqttClientId;                                // Auto-generated MQTT ClientID
@@ -135,10 +137,27 @@ void setup()
   digitalWrite(nextionResetPin, HIGH);
   Serial.begin(115200);  // Serial - LCD RX (after swap), debug TX
   Serial1.begin(115200); // Serial1 - LCD TX, no RX
+  Serial.swap();
 
-  Serial.println(F("\r\nSYSTEM: Hardware initialized, starting program load"));
+  debugPrintln(String(F("SYSTEM: Starting HASwitchPlate v")) + String(haspVersion));
+  debugPrintln(String(F("SYSTEM: Last reset reason: ")) + String(ESP.getResetInfo()));
 
   configRead(); // Check filesystem for a saved config.json
+
+  // Wait up to 5 seconds for serial input from LCD
+  while (!lcdConnected && (millis() < 5000))
+  {
+    nextionHandleInput();
+  }
+  if (lcdConnected)
+  {
+    debugPrintln(F("HMI: LCD responding, continuing program load"));
+    nextionSendCmd("connect");
+  }
+  else
+  {
+    debugPrintln(F("HMI: LCD not responding, continuing program load"));
+  }
 
   espWifiSetup(); // Start up networking
 
@@ -195,15 +214,14 @@ void setup()
     debugPrintln(String(F("TELNET: debug server enabled at telnet:")) + WiFi.localIP().toString());
   }
 
-  debugPrintln(F("SYSTEM: Init complete, swapping debug serial output to D8\r\n"));
-  Serial.swap();
+  debugPrintln(F("SYSTEM: System init complete."));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop()
 { // Main execution loop
 
-  if (Serial.available() > 0)
+  if (nextionHandleInput())
   { // Process user input from HMI
     nextionProcessInput();
   }
@@ -214,7 +232,7 @@ void loop()
     { // If we're currently connected, disconnect so we can try again
       WiFi.disconnect();
     }
-    espWifiSetup();
+    espWifiReconnect();
   }
 
   if (!mqttClient.connected())
@@ -224,7 +242,6 @@ void loop()
   }
 
   mqttClient.loop();        // MQTT client loop
-  delay(10);                // https://github.com/256dpi/arduino-mqtt#notes
   ArduinoOTA.handle();      // Arduino OTA loop
   webServer.handleClient(); // webServer loop
   if (mdnsEnabled)
@@ -298,7 +315,7 @@ void mqttConnect()
     while (mqttServer[0] == 0)
     { // Handle HTTP and OTA while we're waiting for MQTT to be configured
       yield();
-      if (Serial.available() > 0)
+      if (nextionHandleInput())
       { // Process user input from HMI
         nextionProcessInput();
       }
@@ -403,7 +420,7 @@ void mqttConnect()
       while ((millis() - mqttReconnectTimer) < 10000)
       { // Handle HTTP and OTA while we're waiting 10sec for MQTT to reconnect
         yield();
-        if (Serial.available() > 0)
+        if (nextionHandleInput())
         { // Process user input from HMI
           nextionProcessInput();
         }
@@ -435,11 +452,11 @@ void mqttCallback(String &strTopic, String &strPayload)
   // '[...]/device/command/p[1].b[4].txt' -m '' = nextionGetAttr("p[1].b[4].txt")
   // '[...]/device/command/p[1].b[4].txt' -m '"Lights On"' = nextionSetAttr("p[1].b[4].txt", "\"Lights On\"")
 
-  debugPrintln(String(F("MQTT IN:  '")) + strTopic + "' : '" + strPayload + "'");
+  debugPrintln(String(F("MQTT IN: '")) + strTopic + "' : '" + strPayload + "'");
 
   if (((strTopic == mqttCommandTopic) || (strTopic == mqttGroupCommandTopic)) && (strPayload == ""))
-  {                     // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
-    mqttStatusUpdate(); // return status JSON via MQTT;
+  { // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
+    mqttStatusUpdate(); // return status JSON via MQTT
   }
   else if (strTopic == mqttCommandTopic || strTopic == mqttGroupCommandTopic)
   { // '[...]/device/command' -m 'dim=50' == nextionSendCmd("dim=50")
@@ -454,12 +471,12 @@ void mqttCallback(String &strTopic, String &strPayload)
     }
   }
   else if (strTopic == (mqttCommandTopic + "/json") || strTopic == (mqttGroupCommandTopic + "/json"))
-  {                               // '[...]/device/command/json' -m '["dim=5", "page 1"]' = nextionSendCmd("dim=50"), nextionSendCmd("page 1")
+  { // '[...]/device/command/json' -m '["dim=5", "page 1"]' = nextionSendCmd("dim=50"), nextionSendCmd("page 1")
     nextionParseJson(strPayload); // Send to nextionParseJson()
   }
   else if (strTopic == (mqttCommandTopic + "/statusupdate") || strTopic == (mqttGroupCommandTopic + "/statusupdate"))
-  {                     // '[...]/device/command/statusupdate' == mqttStatusUpdate()
-    mqttStatusUpdate(); // return status JSON via MQTT;
+  { // '[...]/device/command/statusupdate' == mqttStatusUpdate()
+    mqttStatusUpdate(); // return status JSON via MQTT
   }
   else if (strTopic == (mqttCommandTopic + "/lcdupdate") || strTopic == (mqttGroupCommandTopic + "/lcdupdate"))
   { // '[...]/device/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' == nextionStartOtaDownload("http://192.168.0.10/local/HASwitchPlate.tft")
@@ -546,18 +563,40 @@ void mqttCallback(String &strTopic, String &strPayload)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void mqttStatusUpdate()
 { // Periodically publish a JSON string indicating system status
-  DynamicJsonBuffer updateBuffer(200);
-  JsonObject &statusUpdate = updateBuffer.createObject();
-  statusUpdate["status"] = "available";
-  statusUpdate["espVersion"] = haspVersion;
-  statusUpdate["updateEspAvailable"] = updateEspAvailable;
-  statusUpdate["lcdVersion"] = lcdVersion;
-  statusUpdate["updateLcdAvailable"] = updateLcdAvailable;
-  statusUpdate["espUptime"] = long(millis() / 1000);
-  statusUpdate["signalStrength"] = WiFi.RSSI();
-  statusUpdate["haspIP"] = WiFi.localIP().toString();
-  String mqttStatusPayload;
-  statusUpdate.printTo(mqttStatusPayload);
+  String mqttStatusPayload = "{";
+  mqttStatusPayload += String(F("\"status\":\"available\","));
+  mqttStatusPayload += String(F("\"espVersion\":")) + String(haspVersion) + String(F(","));
+  if (updateEspAvailable)
+  {
+    mqttStatusPayload += String(F("\"updateEspAvailable\":true,"));
+  }
+  else
+  {
+    mqttStatusPayload += String(F("\"updateEspAvailable\":false,"));
+  }
+  if (lcdConnected)
+  {
+    mqttStatusPayload += String(F("\"lcdConnected\":true,"));
+  }
+  else
+  {
+    mqttStatusPayload += String(F("\"lcdConnected\":false,"));
+  }
+  mqttStatusPayload += String(F("\"lcdVersion\":\"")) + String(lcdVersion) + String(F("\","));
+  if (updateLcdAvailable)
+  {
+    mqttStatusPayload += String(F("\"updateLcdAvailable\":true,"));
+  }
+  else
+  {
+    mqttStatusPayload += String(F("\"updateLcdAvailable\":false,"));
+  }
+  mqttStatusPayload += String(F("\"espUptime\":")) + String(long(millis() / 1000)) + String(F(","));
+  mqttStatusPayload += String(F("\"signalStrength\":")) + String(WiFi.RSSI()) + String(F(","));
+  mqttStatusPayload += String(F("\"haspIP\":\"")) + WiFi.localIP().toString() + String(F("\","));
+  mqttStatusPayload += String(F("\"heapFree\":")) + String(ESP.getFreeHeap());
+  mqttStatusPayload += "}";
+
   mqttClient.publish(mqttSensorTopic, mqttStatusPayload);
   mqttClient.publish(mqttStatusTopic, "ON", true, 1);
   debugPrintln(String(F("MQTT: status update: ")) + String(mqttStatusPayload));
@@ -565,48 +604,44 @@ void mqttStatusUpdate()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void nextionHandleInput()
+bool nextionHandleInput()
 { // Handle incoming serial data from the Nextion panel
   // This will collect serial data from the panel and place it into the global buffer
-  // nextionReturnBuffer[nextionReturnIndex] until it finds a string of 3 consecutive
-  // 0xFF values or runs into the timeout
-  bool nextionCommandIncoming = true;           // we'll flip this to false when we receive 3 consecutive 0xFFs
-  unsigned long nextionCommandTimeout = 1000;   // timeout for receiving termination string in milliseconds
-  int nextionTermByteCnt = 0;                   // counter for our 3 consecutive 0xFFs
-  unsigned long nextionCommandTimer = millis(); // record current time for our timeout
-  nextionReturnIndex = 0;                       // reset the global nextionReturnIndex back to zero
-  String hmiDebug = "HMI IN: ";                 // assemble a string for debug output
+  // nextionReturnBuffer[nextionReturnIndex]
+  // Return: true if we've received a string of 3 consecutive 0xFF values
+  // Return: false otherwise
+  bool nextionCommandComplete = false;
+  static int nextionTermByteCnt = 0;   // counter for our 3 consecutive 0xFFs
+  static String hmiDebug = "HMI IN: "; // assemble a string for debug output
 
-  while (nextionCommandIncoming && ((millis() - nextionCommandTimer) < nextionCommandTimeout))
-  { // Load the nextionBuffer until we receive a termination command or we hit our timeout
-    if (Serial.available())
+  if (Serial.available())
+  {
+    lcdConnected = true;
+    byte nextionCommandByte = Serial.read();
+    hmiDebug += (" 0x" + String(nextionCommandByte, HEX));
+    // check to see if we have one of 3 consecutive 0xFF which indicates the end of a command
+    if (nextionCommandByte == 0xFF)
     {
-      byte nextionCommandByte = Serial.read();
-      hmiDebug += (" 0x" + String(nextionCommandByte, HEX));
-      // check to see if we have one of 3 consecutive 0xFF which indicates the end of a command
-      if (nextionCommandByte == 0xFF)
-      {
-        nextionTermByteCnt++;
-        if (nextionTermByteCnt >= 3)
-        {
-          nextionCommandIncoming = false;
-        }
+      nextionTermByteCnt++;
+      if (nextionTermByteCnt >= 3)
+      { // We have received a complete command
+        nextionCommandComplete = true;
+        nextionTermByteCnt = 0; // reset counter
       }
-      else
-      {
-        nextionTermByteCnt = 0; // reset counter if a non-term byte was encountered
-      }
-      nextionReturnBuffer[nextionReturnIndex] = nextionCommandByte;
-      nextionReturnIndex++;
     }
     else
-    { // If there's a pause in the action, check on our buddy MQTT
-      yield();
-      mqttClient.loop();
-      delay(10);
+    {
+      nextionTermByteCnt = 0; // reset counter if a non-term byte was encountered
     }
+    nextionReturnBuffer[nextionReturnIndex] = nextionCommandByte;
+    nextionReturnIndex++;
   }
-  debugPrintln(hmiDebug);
+  if (nextionCommandComplete)
+  {
+    debugPrintln(hmiDebug);
+    hmiDebug = "HMI IN: ";
+  }
+  return nextionCommandComplete;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -614,8 +649,6 @@ void nextionProcessInput()
 { // Process incoming serial commands from the Nextion panel
   // Command reference: https://www.itead.cc/wiki/Nextion_Instruction_Set#Format_of_Device_Return_Data
   // tl;dr, command byte, command data, 0xFF 0xFF 0xFF
-
-  nextionHandleInput(); // Call nextionHandleInput() to load nextionReturnBuffer[] and set nextionReturnIndex
 
   if (nextionReturnBuffer[0] == 0x65)
   { // Handle incoming touch command
@@ -777,6 +810,7 @@ void nextionProcessInput()
     // Just reset mqttGetSubtopic and move on with life.
     mqttGetSubtopic = "";
   }
+  nextionReturnIndex = 0; // Done handling the buffer, reset index back to 0
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -786,8 +820,7 @@ void nextionSetAttr(String hmiAttribute, String hmiValue)
   Serial1.print("=");
   Serial1.print(utf8ascii(hmiValue));
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
-  Serial1.flush();
-  debugPrintln(String(F("HMI OUT:  '")) + hmiAttribute + "=" + hmiValue + "'");
+  debugPrintln(String(F("HMI OUT: '")) + hmiAttribute + "=" + hmiValue + "'");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -797,9 +830,7 @@ void nextionGetAttr(String hmiAttribute)
   // return of that value will be handled by nextionProcessInput and placed into mqttGetSubtopic
   Serial1.print("get " + hmiAttribute);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
-  Serial1.flush();
-  debugPrintln(String(F("HMI OUT:  'get ")) + hmiAttribute + "'");
-  nextionProcessInput();
+  debugPrintln(String(F("HMI OUT: 'get ")) + hmiAttribute + "'");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -807,8 +838,7 @@ void nextionSendCmd(String nextionCmd)
 { // Send a raw command to the Nextion panel
   Serial1.print(utf8ascii(nextionCmd));
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
-  Serial1.flush();
-  debugPrintln(String(F("HMI OUT:  ")) + nextionCmd);
+  debugPrintln(String(F("HMI OUT: ")) + nextionCmd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -966,13 +996,17 @@ bool nextionOtaResponse()
         otaSuccessVal = true;
         break;
       }
+      else
+      {
+        // debugPrintln(String(inByte, HEX));
+      }
     }
     else
     {
       delay(1);
     }
   }
-  delay(10);
+  // delay(50);
   return otaSuccessVal;
 }
 
@@ -1026,11 +1060,35 @@ void nextionSetSpeed()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void nextionReset()
 {
+  debugPrintln(F("HMI: Rebooting LCD"));
   digitalWrite(nextionResetPin, LOW);
   Serial1.print("rest");
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   Serial1.flush();
-  delay(2000);
+  delay(100);
+  digitalWrite(nextionResetPin, HIGH);
+
+  unsigned long lcdResetTimer = millis();
+  const unsigned long lcdResetTimeout = 5000;
+
+  lcdConnected = false;
+  while (!lcdConnected && (millis() < (lcdResetTimer + lcdResetTimeout)))
+  {
+    nextionHandleInput();
+  }
+  if (lcdConnected)
+  {
+    debugPrintln(F("HMI: Rebooting LCD completed"));
+    if (nextionActivePage)
+    {
+      nextionSendCmd("page " + String(nextionActivePage));
+    }
+  }
+  else
+  {
+    debugPrintln(F("ERROR: Rebooting LCD completed, but LCD is not responding."));
+  }
+  mqttClient.publish(mqttStatusTopic, "OFF");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1066,10 +1124,8 @@ void espWifiSetup()
     // WiFiManager local initialization. Once its business is done, there is no need to keep it around
     WiFiManager wifiManager;
 
-    // set config save notify callback
-    wifiManager.setSaveConfigCallback(configSaveCallback);
-
-    wifiManager.setCustomHeadElement(HASP_STYLE);
+    wifiManager.setSaveConfigCallback(configSaveCallback); // set config save notify callback
+    wifiManager.setCustomHeadElement(HASP_STYLE);          // add custom style
 
     // Add all your parameters here
     wifiManager.addParameter(&custom_haspNodeHeader);
@@ -1147,6 +1203,25 @@ void espWifiSetup()
   if (nextionActivePage)
   {
     nextionSendCmd("page " + String(nextionActivePage));
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void espWifiReconnect()
+{ // Existing WiFi connection dropped, try to reconnect
+  debugPrintln(F("Reconnecting to WiFi network..."));
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(wifiSSID, wifiPass);
+
+  unsigned long wifiReconnectTimer = millis();
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    if (millis() >= (wifiReconnectTimer + (reConnectTimeout * 1000)))
+    { // If we've been trying to reconnect for reConnectTimeout seconds, reboot and try again
+      debugPrintln(F("WIFI: Failed to reconnect and hit timeout"));
+      espReset();
+    }
   }
 }
 
@@ -1439,6 +1514,7 @@ void configClearSaved()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void webHandleNotFound()
 { // webServer 404
+  debugPrintln(String(F("HTTP: Sending 404 to client connected from: ")) + webServer.client().remoteIP().toString());
   String httpMessage = "File Not Found\n\n";
   httpMessage += "URI: ";
   httpMessage += webServer.uri();
@@ -1452,7 +1528,6 @@ void webHandleNotFound()
     httpMessage += " " + webServer.argName(i) + ": " + webServer.arg(i) + "\n";
   }
   webServer.send(404, "text/plain", httpMessage);
-  debugPrintln(httpMessage);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1465,17 +1540,7 @@ void webHandleRoot()
       return webServer.requestAuthentication();
     }
   }
-
-  // If we haven't collected the Nextion model, try now
-  if (nextionModel == "")
-  {
-    nextionSendCmd("connect");
-    delay(10);
-    if (Serial.available() > 0)
-    { // Process user input from HMI
-      nextionProcessInput();
-    }
-  }
+  debugPrintln(String(F("HTTP: Sending root page to client connected from: ")) + webServer.client().remoteIP().toString());
   String httpMessage = FPSTR(HTTP_HEAD);
   httpMessage.replace("{v}", String(haspNode));
   httpMessage += FPSTR(HTTP_SCRIPT);
@@ -1599,6 +1664,7 @@ void webHandleSaveConfig()
       return webServer.requestAuthentication();
     }
   }
+  debugPrintln(String(F("HTTP: Sending /saveConfig page to client connected from: ")) + webServer.client().remoteIP().toString());
   String httpMessage = FPSTR(HTTP_HEAD);
   httpMessage.replace("{v}", String(haspNode));
   httpMessage += FPSTR(HTTP_SCRIPT);
@@ -1734,6 +1800,7 @@ void webHandleResetConfig()
       return webServer.requestAuthentication();
     }
   }
+  debugPrintln(String(F("HTTP: Sending /resetConfig page to client connected from: ")) + webServer.client().remoteIP().toString());
   String httpMessage = FPSTR(HTTP_HEAD);
   httpMessage.replace("{v}", String(haspNode));
   httpMessage += FPSTR(HTTP_SCRIPT);
@@ -1773,18 +1840,7 @@ void webHandleFirmware()
       return webServer.requestAuthentication();
     }
   }
-
-  // If we haven't collected the Nextion model, try now
-  if (nextionModel == "")
-  {
-    nextionSendCmd("connect");
-    delay(10);
-    if (Serial.available() > 0)
-    { // Process user input from HMI
-      nextionProcessInput();
-    }
-  }
-
+  debugPrintln(String(F("HTTP: Sending /firmware page to client connected from: ")) + webServer.client().remoteIP().toString());
   String httpMessage = FPSTR(HTTP_HEAD);
   httpMessage.replace("{v}", (String(haspNode) + " update"));
   httpMessage += FPSTR(HTTP_SCRIPT);
@@ -1853,6 +1909,7 @@ void webHandleEspFirmware()
     }
   }
 
+  debugPrintln(String(F("HTTP: Sending /espfirmware page to client connected from: ")) + webServer.client().remoteIP().toString());
   String httpMessage = FPSTR(HTTP_HEAD);
   httpMessage.replace("{v}", (String(haspNode) + " ESP update"));
   httpMessage += FPSTR(HTTP_SCRIPT);
@@ -1984,7 +2041,7 @@ void webHandleLcdUpload()
         lcdOtaChunkCounter = 0;
         if (nextionOtaResponse())
         {
-          // debugPrintln(String(F("LCD OTA: Part ")) + String(lcdOtaPartNum) + String(F(" OK, ")) + String(lcdOtaPercentComplete) + String(F("% complete")));
+          debugPrintln(String(F("LCD OTA: Part ")) + String(lcdOtaPartNum) + String(F(" OK, ")) + String(lcdOtaPercentComplete) + String(F("% complete")));
         }
         else
         {
@@ -2010,7 +2067,7 @@ void webHandleLcdUpload()
       if (nextionOtaResponse())
       {
         debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
-        delay(5000); // extra delay while the LCD does its thing
+        // delay(5000); // extra delay while the LCD does its thing
         espReset();
       }
       else
@@ -2027,13 +2084,13 @@ void webHandleLcdUpload()
       if (nextionOtaResponse())
       {
         debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
-        delay(5000); // extra delay while the LCD does its thing
+        // delay(5000); // extra delay while the LCD does its thing
         espReset();
       }
       else
       {
         debugPrintln(F("LCD OTA: Failure"));
-        delay(5000); // delay for user to read output
+        // delay(5000); // delay for user to read output
         espReset();
       }
     }
@@ -2041,13 +2098,13 @@ void webHandleLcdUpload()
   else if (upload.status == UPLOAD_FILE_ABORTED)
   {
     debugPrintln(F("LCD OTA: ERROR: upload.status returned: UPLOAD_FILE_ABORTED"));
-    delay(5000); // delay for user to read output
+    // delay(5000); // delay for user to read output
     espReset();
   }
   else
   {
     debugPrintln(String(F("LCD OTA: upload.status returned: ")) + String(upload.status));
-    delay(5000); // delay for user to read output
+    // delay(5000); // delay for user to read output
     espReset();
   }
 }
@@ -2062,6 +2119,7 @@ void webHandleLcdDownload()
       return webServer.requestAuthentication();
     }
   }
+  debugPrintln(String(F("HTTP: Sending /lcddownload page to client connected from: ")) + webServer.client().remoteIP().toString());
   String httpMessage = FPSTR(HTTP_HEAD);
   httpMessage.replace("{v}", (String(haspNode) + " LCD update"));
   httpMessage += FPSTR(HTTP_SCRIPT);
@@ -2089,6 +2147,7 @@ void webHandleTftFileSize()
       return webServer.requestAuthentication();
     }
   }
+  debugPrintln(String(F("HTTP: Sending /tftFileSize page to client connected from: ")) + webServer.client().remoteIP().toString());
   String httpMessage = FPSTR(HTTP_HEAD);
   httpMessage.replace("{v}", (String(haspNode) + " TFT Filesize"));
   httpMessage += FPSTR(HTTP_HEAD_END);
@@ -2108,6 +2167,7 @@ void webHandleReboot()
       return webServer.requestAuthentication();
     }
   }
+  debugPrintln(String(F("HTTP: Sending /reboot page to client connected from: ")) + webServer.client().remoteIP().toString());
   String httpMessage = FPSTR(HTTP_HEAD);
   httpMessage.replace("{v}", (String(haspNode) + " HASP reboot"));
   httpMessage += FPSTR(HTTP_SCRIPT);
@@ -2153,7 +2213,6 @@ bool updateCheck()
   updateClient.end();
 
   DynamicJsonBuffer updateJsonBuffer(sizeof(updatePayload));
-
   // Parse JSON object
   JsonObject &updateJson = updateJsonBuffer.parseObject(updatePayload);
   if (!updateJson.success())
@@ -2166,6 +2225,7 @@ bool updateCheck()
     if (updateJson["d1_mini"]["version"].success())
     {
       updateEspAvailableVersion = updateJson["d1_mini"]["version"].as<float>();
+      debugPrintln(String(F("UPDATE: updateEspAvailableVersion: ")) + String(updateEspAvailableVersion));
       espFirmwareUrl = updateJson["d1_mini"]["firmware"].as<String>();
       if (updateEspAvailableVersion > haspVersion)
       {
@@ -2176,6 +2236,7 @@ bool updateCheck()
     if (nextionModel && updateJson[nextionModel]["version"].success())
     {
       updateLcdAvailableVersion = updateJson[nextionModel]["version"].as<int>();
+      debugPrintln(String(F("UPDATE: updateLcdAvailableVersion: ")) + String(updateLcdAvailableVersion));
       lcdFirmwareUrl = updateJson[nextionModel]["firmware"].as<String>();
       if (updateLcdAvailableVersion > lcdVersion)
       {

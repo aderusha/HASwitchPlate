@@ -56,6 +56,22 @@ X -Vout 4 800 0 100 L 50 50 1 1 w
 ENDDRAW
 ENDDEF
 #
+# SLC03-series
+#
+DEF SLC03-series U 0 40 Y Y 1 F N
+F0 "U" 400 250 50 H V C CNN
+F1 "SLC03-series" 400 -150 50 H V C CNN
+F2 "" 400 -250 50 H I C CNN
+F3 "" 400 -350 50 H I C CNN
+DRAW
+S 100 200 700 -100 0 1 0 f
+X -Vin 1 0 0 100 R 50 50 1 1 W
+X -Vout 10 800 0 100 L 50 50 1 1 w
+X +Vin 16 0 100 100 R 50 50 1 1 W
+X +Vout 9 800 100 100 L 50 50 1 1 w
+ENDDRAW
+ENDDEF
+#
 # Screw_Terminal_01x02-HASwitchPlate-library
 #
 DEF Screw_Terminal_01x02-HASwitchPlate-library J 0 40 Y N 1 F N

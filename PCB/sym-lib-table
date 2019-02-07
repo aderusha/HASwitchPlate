@@ -1,3 +1,0 @@
-(sym_lib_table
-  (lib (name HASwitchPlate-library)(type Legacy)(uri ${KIPRJMOD}/HASwitchPlate-library.lib)(options "")(descr ""))
-)

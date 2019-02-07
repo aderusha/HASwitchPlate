@@ -79,6 +79,9 @@ Finally, you'll need to restart Home Assistant to apply your changes then contin
 
 ## First time setup
 
+> ### NOTICE
+> If you're running Lovelace (now the new default Home Assistant web UI), there [currently is no way for a project like HASP to add panels](https://community.home-assistant.io/t/lovelace-in-ha-package-files/92619).  You'll need to switch to the "states" UI before proceeding.  If your installation is accessed at `http://hassio.local:8123`, navigate to `http://hassio.local:8123/states` to access the states UI.
+
 Upon startup the default HMI display file contains empty buttons with no text.  Launch the Home Assistant web UI and look for a new tab with your chosen device name.  Select that tab and look for the automation titled `hasp_<your_device_name>_00_FirstTimeSetup`.  Select that automation and click "TRIGGER" to apply the basic configuration to your new device.
 
 ![Home_Assistant_FirstTimeSetup](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Home_Assistant_FirstTimeSetup.png?raw=true)

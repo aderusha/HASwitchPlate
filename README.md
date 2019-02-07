@@ -28,6 +28,8 @@ A complete build that's ready to install will require the following components:
 * [3D printed rear cover](3D_Printable_Models/HASwitchPlate_rear_nolcdmod.stl)
 * [Mean Well IRM-03-5 AC to 5VDC Power supply](https://amzn.to/2MNF7Gx)
 * [PCB](PCB/)
+* [2N3904 NPN Transistor](https://amzn.to/2TBCBFH)
+* [1k Ohm Resistor](https://amzn.to/2t7UFvF)
 * [4pin 2.54mm JST-XH PCB header](https://amzn.to/2MFV15p)
 * [Rubber grommet](https://amzn.to/2G9y49I)
 * [6" each of white and black 300V 18AWG stranded power cables](https://amzn.to/2SjXO9G)
