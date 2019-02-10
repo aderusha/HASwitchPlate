@@ -59,7 +59,7 @@ char motionPinConfig[3] = "0";
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 
-const float haspVersion = 0.36;                     // Current HASP software release version
+const float haspVersion = 0.37;                     // Current HASP software release version
 byte nextionReturnBuffer[128];                      // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;                     // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                      // Track active LCD page
@@ -99,7 +99,9 @@ byte espMac[6];                                     // Byte array to store our M
 const uint16_t mqttMaxPacketSize = 4096;            // Size of buffer for incoming MQTT message
 String mqttClientId;                                // Auto-generated MQTT ClientID
 String mqttGetSubtopic;                             // MQTT subtopic for incoming commands requesting .val
+String mqttGetSubtopicJSON;                         // MQTT object buffer for JSON status when reqeusting .val
 String mqttStateTopic;                              // MQTT topic for outgoing panel interactions
+String mqttStateJSONTopic;                          // MQTT topic for outgoing panel interactions in JSON format
 String mqttCommandTopic;                            // MQTT topic for incoming panel commands
 String mqttGroupCommandTopic;                       // MQTT topic for incoming group panel commands
 String mqttStatusTopic;                             // MQTT topic for publishing device connectivity state
@@ -325,6 +327,7 @@ void mqttConnect()
   }
   // MQTT topic string definitions
   mqttStateTopic = "hasp/" + String(haspNode) + "/state";
+  mqttStateJSONTopic = "hasp/" + String(haspNode) + "/state/JSON";
   mqttCommandTopic = "hasp/" + String(haspNode) + "/command";
   mqttGroupCommandTopic = "hasp/" + String(groupName) + "/command";
   mqttStatusTopic = "hasp/" + String(haspNode) + "/status";
@@ -667,6 +670,8 @@ void nextionProcessInput()
       String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
       debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'ON'");
       mqttClient.publish(mqttButtonTopic, "ON");
+      String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + String(nextionPage) + String(F("].b[")) + String(nextionButtonID) + String(F("]\", \"value\":\"ON\"}"));
+      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
     }
     if (nextionButtonAction == 0x00)
     {
@@ -674,10 +679,13 @@ void nextionProcessInput()
       String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
       debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'OFF'");
       mqttClient.publish(mqttButtonTopic, "OFF");
+      String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + String(nextionPage) + String(F("].b[")) + String(nextionButtonID) + String(F("]\", \"value\":\"OFF\"}"));
+      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);      
       // Now see if this object has a .val that might have been updated.
       // works for sliders, two-state buttons, etc, throws a 0x1A error for normal buttons
       // which we'll catch and ignore
       mqttGetSubtopic = "/p[" + nextionPage + "].b[" + nextionButtonID + "].val";
+      mqttGetSubtopicJSON = "p[" + nextionPage + "].b[" + nextionButtonID + "].val";
       nextionGetAttr("p[" + nextionPage + "].b[" + nextionButtonID + "].val");
     }
   }
@@ -774,6 +782,8 @@ void nextionProcessInput()
     {
       String mqttReturnTopic = mqttStateTopic + mqttGetSubtopic;
       mqttClient.publish(mqttReturnTopic, getString);
+      String mqttButtonJSONEvent = String(F("{\"event\":\"")) + mqttGetSubtopicJSON + String(F("\", \"value\":")) + getString + String(F("}"));
+      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       mqttGetSubtopic = "";
     }
   }
