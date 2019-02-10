@@ -14,6 +14,7 @@ sitemap hasp label="HASP"
         Text item=HASP_Plate01_Plate_Sensor_ESPUptime
         Text item=HASP_Plate01_Plate_Sensor_SignalStrength
         Text item=HASP_Plate01_Plate_Sensor_HaspIP
+	Switch item=HASP_Plate01_Plate_Refresh
         Frame{
             Switch item=HASP_Plate01_Light_Power
             Text item=HASP_Plate01_Light_Status
