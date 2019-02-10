@@ -327,7 +327,7 @@ void mqttConnect()
   }
   // MQTT topic string definitions
   mqttStateTopic = "hasp/" + String(haspNode) + "/state";
-  mqttStateJSONTopic = "hasp/" + String(haspNode) + "/state/JSON";
+  mqttStateJSONTopic = "hasp/" + String(haspNode) + "/state/json";
   mqttCommandTopic = "hasp/" + String(haspNode) + "/command";
   mqttGroupCommandTopic = "hasp/" + String(groupName) + "/command";
   mqttStatusTopic = "hasp/" + String(haspNode) + "/status";
