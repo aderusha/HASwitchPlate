@@ -1,5 +1,3 @@
-//import java.util.Calendar
-
 /* -------------------------------------- BEGIN USER CONFIG -------------------------------------- */
 
 /* Configuration for the three page selection buttons at the bottom of the page */
@@ -132,405 +130,354 @@ Several examples are included (commented out) to get you started, whether you ju
 button is pressed, or toggle the output item depending on its current state.
 */
 
-rule "Handle HASP Master Page 0"
+rule "Handle HASP Master"
 when
-    Item HASP_Plate01_Button_P0B1 received update ON
+    Item HASP_Plate01_Plate_State_JSON_Value received update
 then
-    if(HASP_Plate01_Light_Power.state == OFF)
+    //parse out data from JSON string (page, button, value)
+    var String eventpage = HASP_Plate01_Plate_State_JSON_Event.state.toString.split("\\[").get(1).split("\\]").get(0)
+    var String eventbutton = HASP_Plate01_Plate_State_JSON_Event.state.toString.split("\\[").get(2).split("\\]").get(0)
+
+    if (HASP_Plate01_Plate_State_JSON_Value.state == 'OFF')
     {
-        HASP_Plate01_Light_Power.sendCommand(ON)
+        //Do nothing (button release event)
+        logInfo ("HASP", "Ignoring OFF event")
     }
     else
-    {   
-        /*
-            Act on buttons from Page 0 here
-        */
-        if (triggeringItem == HASP_Plate01_Button_P0B1)
-        {
-            //Insert action to perform if button 0 was pressed
-    
-            HASP_Plate01_Page.sendCommand(2)                         //This is only for when the HASP starts in page 0 and you need to go to a different page, this will send it to Page 2
-        }
-    }
-end
-
-rule "Handle HASP Master Page 1"
-when
-    Member of HASP_Plate01_Page1_Button_Group received update ON
-then
-    if(HASP_Plate01_Light_Power.state == OFF)
     {
-        HASP_Plate01_Light_Power.sendCommand(ON)
-    }
-    else
-    {   
-        /*
-            Act on buttons from Page 1 here
-        */
-        if (triggeringItem == HASP_Plate01_Button_P1B4)
+        //Handle Page/button/dimmer value event
+        if(HASP_Plate01_Light_Power.state == OFF)
         {
-            //Insert action to perform if button 4 was pressed
-    
-            Scene_Morning.sendCommand(ON)                         //Example - Latching ON - send ON command from HASP button to turn item on
+            HASP_Plate01_Light_Power.sendCommand(ON)
         }
-        else if (triggeringItem == HASP_Plate01_Button_P1B5)
-        {
-            //Insert action to perform if button 5 was pressed
+        else
+        {   
+            if ((eventbutton == '1' || eventbutton == '2' || eventbutton == '3') && eventpage != '0') //Handle the pressing of one of the 3 bottom page buttons
+            {
+                switch(eventbutton)
+                {
+                    case '1':
+                    {
+                        HASP_Plate01_Page.sendCommand(plate01_pagebutton1page as Number)
+                    }
+                    case '2':
+                    {
+                        HASP_Plate01_Page.sendCommand(plate01_pagebutton2page as Number)
+                    }
+                    case '3':
+                    {
+                        HASP_Plate01_Page.sendCommand(plate01_pagebutton3page as Number)
+                    }
+                }               
+                HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+            }
+            else
+            {
+                switch(eventpage)
+                {
+                    case '0':
+                    {
+                        /*
+                            Act on buttons from Page 0 here
+                        */
+                        if (eventbutton == '1')
+                        {
+                            //Insert action to perform if button 0 was pressed
+                    
+                            HASP_Plate01_Page.sendCommand(2 as Number)                         //This is only for when the HASP starts in page 0 and you need to go to a different page, this will send it to Page 2
+                        }
+                    }
+                    case '1':
+                    {
+                        /*
+                            Act on buttons from Page 1 here
+                        */
+                        if (eventbutton == '4')
+                        {
+                            //Insert action to perform if button 4 was pressed
+                    
+                            Scene_Morning.sendCommand(ON)                         //Example - Latching ON - send ON command from HASP button to turn item on
+                        }
+                        else if (eventbutton == '5')
+                        {
+                            //Insert action to perform if button 5 was pressed
 
-            // if(Scene_Evening == ON)                                    //Example - Toggle - change item state using HASP button (turn OFF if ON and ON if OFF)
-            // {
-            //     Scene_Evening.sendCommand(OFF)
-            // }
-            // else
-            // {
-            //     Scene_Evening.sendCommand(ON)
-            // }
-            Scene_Evening.sendCommand(ON)
+                            // if(Scene_Evening == ON)                                    //Example - Toggle - change item state using HASP button (turn OFF if ON and ON if OFF)
+                            // {
+                            //     Scene_Evening.sendCommand(OFF)
+                            // }
+                            // else
+                            // {
+                            //     Scene_Evening.sendCommand(ON)
+                            // }
+                            Scene_Evening.sendCommand(ON)
+                        }
+                        else if (eventbutton == '6')
+                        {
+                            //Insert action to perform if button 6 was pressed
+                            Scene_Night.sendCommand(ON)
+                        }
+                        else if (eventbutton == '7')
+                        {
+                            //Insert action to perform if button 7 was pressed
+                            Scene_Bedtime.sendCommand(ON)
+                        }
+                        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+                    }
+                    case '2':
+                    {
+                        /*
+                            Act on buttons from Page 2 here
+                        */
+                        if (eventbutton == '4')
+                        {
+                            //Insert action to perform if button 4 was pressed
+                        }
+                        else if (eventbutton == '5')
+                        {
+                            //Insert action to perform if button 5 was pressed
+                        }
+                        else if (eventbutton == '6')
+                        {
+                            //Insert action to perform if button 6 was pressed
+                        }
+                        else if (eventbutton == '7')
+                        {
+                            //Insert action to perform if button 7 was pressed
+                        }        
+                        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+                    }
+                    case '3':
+                    {
+                        /*
+                            Act on buttons from Page 3 here
+                        */
+                        if (eventbutton == '4')
+                        {
+                            //Insert action to perform if button 4 was pressed
+                        }
+                        else if (eventbutton == '5')
+                        {
+                            //Insert action to perform if button 5 was pressed
+                        }
+                        else if (eventbutton == '6')
+                        {
+                            //Insert action to perform if button 6 was pressed
+                        }
+                        else if (eventbutton == '7')
+                        {
+                            //Insert action to perform if button 7 was pressed
+                        }
+                        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press                    
+                    }
+                    case '4':
+                    {
+                        /*
+                            Act on buttons/dimmers from Page 4 here
+                        */
+                        if (eventbutton == '4')
+                        {
+                            //Insert action to perform if button 4 was pressed
+                        }
+                        else if (eventbutton == '5')
+                        {
+                            //Insert action to perform if button 5 was pressed
+                        }
+                        else if (eventbutton == '6')
+                        {
+                            //Insert action to perform if button 6 was pressed
+                        }
+                        else if (eventbutton == '7')
+                        {
+                            //Insert action to perform if dimmer 1 was moved
+                        }
+                        else if (eventbutton == '8')
+                        {
+                            //Insert action to perform if dimmer 2 was moved
+                        }
+                        else if (eventbutton == '9')
+                        {
+                            //Insert action to perform if dimmer 3 was moved
+                        }
+                        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press                    
+                    }
+                    case '5':
+                    {
+                        /*
+                            Act on buttons/dimmers from Page 5 here
+                        */
+                        if (eventbutton == '4')
+                        {
+                            //Insert action to perform if button 4 was pressed
+                        }
+                        else if (eventbutton == '5')
+                        {
+                            //Insert action to perform if button 5 was pressed
+                        }
+                        else if (eventbutton == '6')
+                        {
+                            //Insert action to perform if button 6 was pressed
+                        }
+                        else if (eventbutton == '7')
+                        {
+                            //Insert action to perform if dimmer 1 was moved
+                            if (HASP_Plate01_Plate_State_JSON_Value.state != 'ON'){
+                                HASP_Plate01_Light_Dimmer.sendCommand(HASP_Plate01_Plate_State_JSON_Value.state.toString) //Example - send dimmer value to HASP Backlight item
+                            }
+                        }
+                        else if (eventbutton == '8')
+                        {
+                            //Insert action to perform if dimmer 2 was moved
+                        }
+                        else if (eventbutton == '9')
+                        {
+                            //Insert action to perform if dimmer 3 was moved
+                        }
+                        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press                    
+                    }
+                    case '6':
+                    {
+                        /*
+                            Act on buttons/dimmers from Page 6 here
+                        */
+                        if (eventbutton == '4')
+                        {
+                            //Insert action to perform if button 4 was pressed
+                        }
+                        else if (eventbutton == '5')
+                        {
+                            //Insert action to perform if button 5 was pressed
+                        }
+                        else if (eventbutton == '6')
+                        {
+                            //Insert action to perform if button 6 was pressed
+                        }
+                        else if (eventbutton == '7')
+                        {
+                            //Insert action to perform if button 7 was moved
+                        }
+                        else if (eventbutton == '8')
+                        {
+                            //Insert action to perform if button 8 was moved
+                        }
+                        else if (eventbutton == '9')
+                        {
+                            //Insert action to perform if button 9 was moved
+                        }
+                        else if (eventbutton == '10')
+                        {
+                            //Insert action to perform if button 10 was moved
+                        }
+                        else if (eventbutton == '11')
+                        {
+                            //Insert action to perform if button 11 was moved
+                        }    
+                        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press                    
+                    }
+                    case '7':
+                    {
+                        /*
+                            Act on buttons/dimmers from Page 7 here
+                        */
+                        if (eventbutton == '4')
+                        {
+                            //Insert action to perform if button 4 was pressed
+                        }
+                        else if (eventbutton == '5')
+                        {
+                            //Insert action to perform if button 5 was pressed
+                        }
+                        else if (eventbutton == '6')
+                        {
+                            //Insert action to perform if button 6 was pressed
+                        }
+                        else if (eventbutton == '7')
+                        {
+                            //Insert action to perform if button 7 was moved
+                        }
+                        else if (eventbutton == '8')
+                        {
+                            //Insert action to perform if button 8 was moved
+                        }
+                        else if (eventbutton == '9')
+                        {
+                            //Insert action to perform if button 9 was moved
+                        }
+                        else if (eventbutton == '10')
+                        {
+                            //Insert action to perform if button 10 was moved
+                        }
+                        else if (eventbutton == '11')
+                        {
+                            //Insert action to perform if button 11 was moved
+                        }      
+                        else if (eventbutton == '12')
+                        {
+                            //Insert action to perform if button 12 was moved
+                        }     
+                        else if (eventbutton == '13')
+                        {
+                            //Insert action to perform if button 13 was moved
+                        }  
+                        else if (eventbutton == '14')
+                        {
+                            //Insert action to perform if button 14 was moved
+                        }  
+                        else if (eventbutton == '15')
+                        {
+                            //Insert action to perform if button 15 was moved
+                        }   
+                        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press                     
+                    }
+                    case '8':
+                    {
+                        /*
+                            Act on buttons/dimmers from Page 8 here
+                        */
+                        if (eventbutton == '4')
+                        {
+                            //Insert action to perform if button 4 was pressed
+                        }
+                        else if (eventbutton == '5')
+                        {
+                            //Insert action to perform if button 5 was pressed
+                        }
+                        else if (eventbutton == '6')
+                        {
+                            //Insert action to perform if button 6 was pressed
+                        }
+                        else if (eventbutton == '7')
+                        {
+                            //Insert action to perform if button 7 was moved
+                        }
+                        else if (eventbutton == '8')
+                        {
+                            //Insert action to perform if button 8 was moved
+                        }
+                        else if (eventbutton == '9')
+                        {
+                            //Insert action to perform if dimmer 9 was moved
+                        }
+                        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press                    
+                    }
+                    case '9':
+                    {
+                        /*
+                            Act on buttons/dimmers from Page 9 here
+                        */
+                        if (eventbutton == '4')
+                        {
+                            //Insert action to perform if button 4 was pressed
+                        }
+                        else if (eventbutton == '5')
+                        {
+                            //Insert action to perform if button 5 was pressed
+                        }
+                        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
+                    }
+                }
+            }
         }
-        else if (triggeringItem == HASP_Plate01_Button_P1B6)
-        {
-            //Insert action to perform if button 6 was pressed
-            Scene_Night.sendCommand(ON)
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P1B7)
-        {
-            //Insert action to perform if button 7 was pressed
-            Scene_Bedtime.sendCommand(ON)
-        }
-        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
-    }
-end
-
-rule "Handle HASP Master Page 2"
-when
-    Member of HASP_Plate01_Page2_Button_Group received update ON
-then
-    if(HASP_Plate01_Light_Power.state == OFF)
-    {
-        HASP_Plate01_Light_Power.sendCommand(ON)
-    }
-    else
-    {   
-        /*
-            Act on buttons from Page 2 here
-        */
-        if (triggeringItem == HASP_Plate01_Button_P2B4)
-        {
-            //Insert action to perform if button 4 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P2B5)
-        {
-            //Insert action to perform if button 5 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P2B6)
-        {
-            //Insert action to perform if button 6 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P2B7)
-        {
-            //Insert action to perform if button 7 was pressed
-        }        
-        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
-    }
-end
-
-rule "Handle HASP Master Page 3"
-when
-    Member of HASP_Plate01_Page3_Button_Group received update ON
-then
-    if(HASP_Plate01_Light_Power.state == OFF)
-    {
-        HASP_Plate01_Light_Power.sendCommand(ON)
-    }
-    else
-    {   
-        /*
-            Act on buttons from Page 3 here
-        */
-        if (triggeringItem == HASP_Plate01_Button_P3B4)
-        {
-            //Insert action to perform if button 4 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P3B5)
-        {
-            //Insert action to perform if button 5 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P3B6)
-        {
-            //Insert action to perform if button 6 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P3B7)
-        {
-            //Insert action to perform if button 7 was pressed
-        }
-        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
-    }
-end
-
-rule "Handle HASP Master Page 4"
-when
-    Member of HASP_Plate01_Page4_Button_Group received update ON or
-    Member of HASP_Plate01_Page4_Dimmer_Group received update
-then
-    if(HASP_Plate01_Light_Power.state == OFF)
-    {
-        HASP_Plate01_Light_Power.sendCommand(ON)
-    }
-    else
-    {   
-        /*
-            Act on buttons/dimmers from Page 4 here
-        */
-        if (triggeringItem == HASP_Plate01_Button_P4B4)
-        {
-            //Insert action to perform if button 4 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P4B5)
-        {
-            //Insert action to perform if button 5 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P4B6)
-        {
-            //Insert action to perform if button 6 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Dimmer_P4B7)
-        {
-            //Insert action to perform if dimmer 1 was moved
-        }
-        else if (triggeringItem == HASP_Plate01_Dimmer_P4B8)
-        {
-            //Insert action to perform if dimmer 2 was moved
-        }
-        else if (triggeringItem == HASP_Plate01_Dimmer_P4B9)
-        {
-            //Insert action to perform if dimmer 3 was moved
-        }
-        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
-    }
-end
-
-rule "Handle HASP Master Page 5"
-when
-    Member of HASP_Plate01_Page5_Button_Group received update ON or
-    Member of HASP_Plate01_Page5_Dimmer_Group received update
-then
-    if(HASP_Plate01_Light_Power.state == OFF)
-    {
-        HASP_Plate01_Light_Power.sendCommand(ON)
-    }
-    else
-    {   
-        /*
-            Act on buttons/dimmers from Page 5 here
-        */
-        if (triggeringItem == HASP_Plate01_Button_P5B4)
-        {
-            //Insert action to perform if button 4 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P5B5)
-        {
-            //Insert action to perform if button 5 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P5B6)
-        {
-            //Insert action to perform if button 6 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Dimmer_P5B7)
-        {
-            //Insert action to perform if dimmer 1 was moved
-
-            HASP_Plate01_Light_Dimmer.sendCommand(HASP_Plate01_Dimmer_P5B7.state.toString) //Example - send dimmer value to HASP Backlight item
-        }
-        else if (triggeringItem == HASP_Plate01_Dimmer_P5B8)
-        {
-            //Insert action to perform if dimmer 2 was moved
-        }
-        else if (triggeringItem == HASP_Plate01_Dimmer_P5B9)
-        {
-            //Insert action to perform if dimmer 3 was moved
-        }
-        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
-    }
-end
-
-rule "Handle HASP Master Page 6"
-when
-    Member of HASP_Plate01_Page6_Button_Group received update ON
-then
-    if(HASP_Plate01_Light_Power.state == OFF)
-    {
-        HASP_Plate01_Light_Power.sendCommand(ON)
-    }
-    else
-    {   
-        /*
-            Act on buttons/dimmers from Page 6 here
-        */
-        if (triggeringItem == HASP_Plate01_Button_P6B4)
-        {
-            //Insert action to perform if button 4 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P6B5)
-        {
-            //Insert action to perform if button 5 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P6B6)
-        {
-            //Insert action to perform if button 6 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P6B7)
-        {
-            //Insert action to perform if button 7 was moved
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P6B8)
-        {
-            //Insert action to perform if button 8 was moved
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P6B9)
-        {
-            //Insert action to perform if button 9 was moved
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P6B10)
-        {
-            //Insert action to perform if button 10 was moved
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P6B11)
-        {
-            //Insert action to perform if button 11 was moved
-        }    
-        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
-    }    
-end
-
-rule "Handle HASP Master Page 7"
-when
-    Member of HASP_Plate01_Page7_Button_Group received update ON
-then
-    if(HASP_Plate01_Light_Power.state == OFF)
-    {
-        HASP_Plate01_Light_Power.sendCommand(ON)
-    }
-    else
-    {   
-        /*
-            Act on buttons/dimmers from Page 7 here
-        */
-        if (triggeringItem == HASP_Plate01_Button_P7B4)
-        {
-            //Insert action to perform if button 4 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P7B5)
-        {
-            //Insert action to perform if button 5 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P7B6)
-        {
-            //Insert action to perform if button 6 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P7B7)
-        {
-            //Insert action to perform if button 7 was moved
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P7B8)
-        {
-            //Insert action to perform if button 8 was moved
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P7B9)
-        {
-            //Insert action to perform if button 9 was moved
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P7B10)
-        {
-            //Insert action to perform if button 10 was moved
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P7B11)
-        {
-            //Insert action to perform if button 11 was moved
-        }      
-        else if (triggeringItem == HASP_Plate01_Button_P7B12)
-        {
-            //Insert action to perform if button 12 was moved
-        }     
-        else if (triggeringItem == HASP_Plate01_Button_P7B13)
-        {
-            //Insert action to perform if button 13 was moved
-        }  
-        else if (triggeringItem == HASP_Plate01_Button_P7B14)
-        {
-            //Insert action to perform if button 14 was moved
-        }  
-        else if (triggeringItem == HASP_Plate01_Button_P7B15)
-        {
-            //Insert action to perform if button 15 was moved
-        }   
-        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press 
-    }             
-end
-
-rule "Handle HASP Master Page 8"
-when
-    Member of HASP_Plate01_Page8_Button_Group received update ON or
-    Member of HASP_Plate01_Page8_Dimmer_Group received update
-then
-    if(HASP_Plate01_Light_Power.state == OFF)
-    {
-        HASP_Plate01_Light_Power.sendCommand(ON)
-    }
-    else
-    {   
-        /*
-            Act on buttons/dimmers from Page 8 here
-        */
-        if (triggeringItem == HASP_Plate01_Button_P8B4)
-        {
-            //Insert action to perform if button 4 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P8B5)
-        {
-            //Insert action to perform if button 5 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P8B6)
-        {
-            //Insert action to perform if button 6 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P8B7)
-        {
-            //Insert action to perform if button 7 was moved
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P8B8)
-        {
-            //Insert action to perform if button 8 was moved
-        }
-        else if (triggeringItem == HASP_Plate01_Dimmer_P8B9)
-        {
-            //Insert action to perform if dimmer 9 was moved
-        }
-        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
-    }
-end
-
-rule "Handle HASP Master Page 9"
-when
-    Member of HASP_Plate01_Page9_Button_Group received update ON
-then
-    if(HASP_Plate01_Light_Power.state == OFF)
-    {
-        HASP_Plate01_Light_Power.sendCommand(ON)
-    }
-    else
-    {   
-        /*
-            Act on buttons/dimmers from Page 9 here
-        */
-        if (triggeringItem == HASP_Plate01_Button_P9B4)
-        {
-            //Insert action to perform if button 4 was pressed
-        }
-        else if (triggeringItem == HASP_Plate01_Button_P9B5)
-        {
-            //Insert action to perform if button 5 was pressed
-        }
-        HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
     }
 end
 
@@ -573,7 +520,8 @@ rule "Handle HASP Master Page 5 dimmers"
 when 
     Item HASP_Plate01_Light_Brightness received update
 then
-    HASP_Plate01_Dimmer_P5B8_Val.sendCommand(HASP_Plate01_Light_Brightness.state as Number)
+    var jsonString = '["p[5].b[8].val=' + HASP_Plate01_Light_Brightness.state + '"]'
+    HASP_Plate01_Plate_Command_JSON.sendCommand(jsonString)    
 end
 
 rule "Handle HASP Master Page 9 chart"
@@ -755,38 +703,11 @@ then
    
 end
 
-/* Select hasp_plate01_page in response to page button 1 */
-rule "HASP Master respond to page button 1"
-when
-    Member of HASP_Plate01_Button1_Group received update ON
-then
-    HASP_Plate01_Page.sendCommand(plate01_pagebutton1page as Number)
-    HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
-end
-
-/* Select hasp_plate01_page in response to page button 2 */
-rule "HASP Master respond to page button 2"
-when
-    Member of HASP_Plate01_Button2_Group received update ON
-then
-    HASP_Plate01_Page.sendCommand(plate01_pagebutton2page as Number)
-    HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
-end
-
-/* Select hasp_plate01_page in response to page button 3 */
-rule "HASP Master respond to page button 3"
-when
-    Member of HASP_Plate01_Button3_Group received update ON
-then
-    HASP_Plate01_Page.sendCommand(plate01_pagebutton3page as Number)
-    HASP_Plate01_Light_Power.sendCommand(ON) //refresh backlight timer following button press
-end
-
 /* Set page button colors based on current page */
 rule "HASP Master set page button colors on page change"
 when
     Item HASP_Plate01_Page_Current received update 
-then    
+then
     if (HASP_Plate01_Page_Current.state != 0)
     {
         var jsonString = '["p['+ (HASP_Plate01_Page_Current.state.toString) + '].b[1].bco=25388", ' +
@@ -805,7 +726,7 @@ then
         {
                 jsonString = jsonString + ', "p['+ (HASP_Plate01_Page_Current.state.toString) + '].b[3].bco=65535"]'
         }
-        else
+        else 
         {
                 jsonString = jsonString + ']'
         }
