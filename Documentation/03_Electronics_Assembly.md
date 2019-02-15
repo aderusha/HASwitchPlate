@@ -25,14 +25,14 @@ If you are still testing the HASP before complete assembly, continue to the [Hom
 
 ### BOM
 
-* [Nextion 2.4" LCD Touchscreen display](https://amzn.to/2DIpahB)
-* [WeMos D1 Mini ESP8266 WiFi microcontroller](https://amzn.to/2Gc92Xs)
-* [Mean Well IRM-03-5 AC to 5VDC Power supply](https://amzn.to/2MNF7Gx)
-* [2N3904 NPN Transistor](https://amzn.to/2TBCBFH)
-* [1k Ohm Resistor](https://amzn.to/2t7UFvF)
-* [4pin 2.54mm JST-XH PCB header](https://amzn.to/2MFV15p) *(note that these are the knockoff 2.54mm versions of the 2.50 XH series from JST.  What they lack for in authenticity they make up for in ubiquity and dirt cheap pricing)*
+* [Nextion 2.4" LCD Touchscreen display](https://amzn.to/2TRTEU2)
+* [WeMos D1 Mini ESP8266 WiFi microcontroller](https://amzn.to/2UZlga4)
+* [Mean Well IRM-03-5 AC to 5VDC Power supply](https://amzn.to/2UUWGa8)
+* [2N3904 NPN Transistor](https://amzn.to/2TRuwwD)
+* [1k Ohm Resistor](https://amzn.to/2Ec3kTZ)
+* [4pin 2.54mm JST-XH PCB header](https://amzn.to/2Eaywmt) *(note that these are the knockoff 2.54mm versions of the 2.50 XH series from JST.  What they lack for in authenticity they make up for in ubiquity and dirt cheap pricing)*
 * [PCB](../PCB)
-* [6" each of white and black 300V 18AWG stranded power cables](https://amzn.to/2SjXO9G)
+* [6" each of white and black 300V 18AWG stranded power cables](https://amzn.to/2EcMmoA)
 
 > ## WARNING: do not connect AC power and USB at the same time, as there is a chance you could fry your USB ports.  Always disconnect AC before connecting USB or serial to the ESP8266 and Nextion panel (or doing anything else to the device for that matter)
 
@@ -54,7 +54,7 @@ The transistor and resistor act as a switch on the GND connection for the Nextio
 
 ### High voltage AC cabling
 
-The AC power cables should be at least [18AWG 300V stranded cable](https://amzn.to/2SjXO9G) with a white jacket soldered to the `AC/N` pad on the PCB and a similar wire with a black jacket soldered to `AN/L`.  These are fed through a [rubber push-in grommet](https://amzn.to/2G9y49I) mounted into the rear enclosure.  I've had good luck stripping an existing 3 conductor power cord and using the black/white wires inside.
+The AC power cables should be at least [18AWG 300V stranded cable](https://amzn.to/2EcMmoA) with a white jacket soldered to the `AC/N` pad on the PCB and a similar wire with a black jacket soldered to `AN/L`.  These are fed through a [rubber push-in grommet](https://amzn.to/2N6Etny) mounted into the rear enclosure.  I've had good luck stripping an existing 3 conductor power cord and using the black/white wires inside.
 
 ### Nextion LCD Modification
 
@@ -66,7 +66,7 @@ In any event, you're going to need to solder the cable harness included with the
 
 ### DC Power Option
 
-The [Mean Well IRM-03-5 AC to 5VDC Power supply](https://amzn.to/2MNF7Gx) can be substituted with any of the following [Mean Well SLC03-series DC-DC power supplies](http://www.meanwellusa.com/productPdf.aspx?i=786) if you'd prefer a low-voltage DC option.  This should be suitable for use over existing Cat5 cables, speaker cables, alarm cabling, etc already in your wall.  Check to confirm that the existing cable wire gauge will be safe for the load you will be putting on the system, and try not to put voltage down a wire where other expensive and flammable things might be connected which aren't expecting it.
+The [Mean Well IRM-03-5 AC to 5VDC Power supply](https://amzn.to/2UUWGa8) can be substituted with any of the following [Mean Well SLC03-series DC-DC power supplies](http://www.meanwellusa.com/productPdf.aspx?i=786) if you'd prefer a low-voltage DC option.  This should be suitable for use over existing Cat5 cables, speaker cables, alarm cabling, etc already in your wall.  Check to confirm that the existing cable wire gauge will be safe for the load you will be putting on the system, and try not to put voltage down a wire where other expensive and flammable things might be connected which aren't expecting it.
 
 | Model     | Input Voltage Range |
 |-----------|---------------------|
@@ -80,7 +80,7 @@ These DC-DC supplies are smaller than the AC-DC supply and have a different foot
 
 ### Schematic for protoboard assembly
 
-This project was initially built on a [4x6 protoboard](https://amzn.to/2MEnxEy) and the enclosure should still accommodate this approach if you have boards on hand.  Note that this approach is probably dangerous as 120VAC and protoboards are a bad mix.
+This project was initially built on a [4x6 protoboard](https://amzn.to/2N6IqbM) and the enclosure should still accommodate this approach if you have boards on hand.  Note that this approach is probably dangerous as 120VAC and protoboards are a bad mix.
 
 The parts should be fit much as shown in the PCB images above.  In my case the bottom-most row of 8 pins on the WeMos D1 mini [as shown in this image](https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Documentation/Images/Perfboard_Assembly_Parts_Installed.jpg) would not fit on the perforated area of the board, instead I soldered the pin header with the pins projecting upward from the board to attach wires above.  It wasn't pretty, it's likely not safe, and you really should use the PCB.
 
