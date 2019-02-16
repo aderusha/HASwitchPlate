@@ -542,7 +542,7 @@ end
 /* Restore saved page and rebuild config on reconnect */
 rule "HASP Foyer Restore page on connect"
 when
-    Item HASP_Plate02_Plate_Sensor_Status changed to "available" or
+    Item HASP_Plate02_Plate_Status changed to "ON" or
     Item HASP_Plate02_Plate_Refresh received command ON
 then
   
