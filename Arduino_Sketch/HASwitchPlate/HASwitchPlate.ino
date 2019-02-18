@@ -598,6 +598,8 @@ void mqttStatusUpdate()
   mqttStatusPayload += String(F("\"signalStrength\":")) + String(WiFi.RSSI()) + String(F(","));
   mqttStatusPayload += String(F("\"haspIP\":\"")) + WiFi.localIP().toString() + String(F("\","));
   mqttStatusPayload += String(F("\"heapFree\":")) + String(ESP.getFreeHeap());
+  mqttStatusPayload += String(F("\"heapFragmentation\":")) + String(ESP.getHeapFragmentation());
+  mqttStatusPayload += String(F("\"espCore\":")) + String(ESP.getCoreVersion());
   mqttStatusPayload += "}";
 
   mqttClient.publish(mqttSensorTopic, mqttStatusPayload);
@@ -679,8 +681,8 @@ void nextionProcessInput()
       String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
       debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'OFF'");
       mqttClient.publish(mqttButtonTopic, "OFF");
-//      String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + String(nextionPage) + String(F("].b[")) + String(nextionButtonID) + String(F("]\", \"value\":\"OFF\"}"));
-//      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);      
+      //      String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + String(nextionPage) + String(F("].b[")) + String(nextionButtonID) + String(F("]\", \"value\":\"OFF\"}"));
+      //      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       // Now see if this object has a .val that might have been updated.
       // works for sliders, two-state buttons, etc, throws a 0x1A error for normal buttons
       // which we'll catch and ignore
@@ -877,7 +879,7 @@ void nextionStartOtaDownload(String otaUrl)
 
   debugPrintln(String(F("LCD OTA: Attempting firmware download from:")) + otaUrl);
   HTTPClient lcdOtaHttp;
-  lcdOtaHttp.begin(otaUrl);
+  lcdOtaHttp.begin(wifiClient, otaUrl);
   int lcdOtaHttpReturn = lcdOtaHttp.GET();
   if (lcdOtaHttpReturn > 0)
   { // HTTP header has been sent and Server response header has been handled
@@ -1297,7 +1299,7 @@ void espStartOta(String espOtaUrl)
   nextionSetAttr("p[0].b[1].txt", "\"HTTP update\\rstarting...\"");
   WiFiUDP::stopAll(); // Keep mDNS responder from breaking things
 
-  t_httpUpdate_return returnCode = ESPhttpUpdate.update(espOtaUrl);
+  t_httpUpdate_return returnCode = ESPhttpUpdate.update(wifiClient, espOtaUrl);
   switch (returnCode)
   {
   case HTTP_UPDATE_FAILED:
@@ -1655,6 +1657,8 @@ void webHandleRoot()
   httpMessage += String(F("<br/><b>Sketch Size: </b>")) + String(ESP.getSketchSize()) + String(F(" bytes"));
   httpMessage += String(F("<br/><b>Free Sketch Space: </b>")) + String(ESP.getFreeSketchSpace()) + String(F(" bytes"));
   httpMessage += String(F("<br/><b>Heap Free: </b>")) + String(ESP.getFreeHeap());
+  httpMessage += String(F("<br/><b>Heap Fragmentation: </b>")) + String(ESP.getHeapFragmentation());
+  httpMessage += String(F("<br/><b>ESP core version: </b>")) + String(ESP.getCoreVersion());
   httpMessage += String(F("<br/><b>IP Address: </b>")) + String(WiFi.localIP().toString());
   httpMessage += String(F("<br/><b>Signal Strength: </b>")) + String(WiFi.RSSI());
   httpMessage += String(F("<br/><b>Uptime: </b>")) + String(long(millis() / 1000));
@@ -2201,7 +2205,7 @@ bool updateCheck()
   HTTPClient updateClient;
   debugPrintln(String(F("UPDATE: Checking update URL: ")) + String(UPDATE_URL));
   String updatePayload;
-  updateClient.begin(UPDATE_URL);
+  updateClient.begin(wifiClient, UPDATE_URL);
 
   // start connection and send HTTP header
   int httpCode = updateClient.GET();
