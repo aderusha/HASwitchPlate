@@ -99,7 +99,7 @@ byte espMac[6];                                     // Byte array to store our M
 const uint16_t mqttMaxPacketSize = 4096;            // Size of buffer for incoming MQTT message
 String mqttClientId;                                // Auto-generated MQTT ClientID
 String mqttGetSubtopic;                             // MQTT subtopic for incoming commands requesting .val
-String mqttGetSubtopicJSON;                         // MQTT object buffer for JSON status when reqeusting .val
+String mqttGetSubtopicJSON;                         // MQTT object buffer for JSON status when requesting .val
 String mqttStateTopic;                              // MQTT topic for outgoing panel interactions
 String mqttStateJSONTopic;                          // MQTT topic for outgoing panel interactions in JSON format
 String mqttCommandTopic;                            // MQTT topic for incoming panel commands
@@ -117,6 +117,7 @@ long tftFileSize = 0;                               // Filesize for TFT firmware
 uint8_t nextionResetPin = D6;                       // Pin for Nextion power rail switch (GPIO12/D6)
 
 WiFiClient wifiClient;
+WiFiClient wifiMQTTClient;
 MQTTClient mqttClient(mqttMaxPacketSize);
 ESP8266WebServer webServer(80);
 ESP8266HTTPUpdateServer httpOTAUpdate;
@@ -166,7 +167,7 @@ void setup()
   if (mdnsEnabled)
   {
     MDNS.begin(haspNode); // Add mDNS hostname
-    // MDNS.addService("http", "tcp", 80); this breaks Wemo devices when Home Assistant discovery is enabled.  No idea why.
+    MDNS.addService("http", "tcp", 80);
     if (debugTelnetEnabled)
     {
       MDNS.addService("telnet", "tcp", 23);
@@ -201,7 +202,7 @@ void setup()
   espSetupOta();
 
   // Create server and assign callbacks for MQTT
-  mqttClient.begin(mqttServer, atoi(mqttPort), wifiClient);
+  mqttClient.begin(mqttServer, atoi(mqttPort), wifiMQTTClient);
   mqttClient.onMessage(mqttCallback);
   mqttConnect();
 
@@ -215,7 +216,6 @@ void setup()
     telnetServer.begin();
     debugPrintln(String(F("TELNET: debug server enabled at telnet:")) + WiFi.localIP().toString());
   }
-
   debugPrintln(F("SYSTEM: System init complete."));
 }
 
@@ -597,9 +597,9 @@ void mqttStatusUpdate()
   mqttStatusPayload += String(F("\"espUptime\":")) + String(long(millis() / 1000)) + String(F(","));
   mqttStatusPayload += String(F("\"signalStrength\":")) + String(WiFi.RSSI()) + String(F(","));
   mqttStatusPayload += String(F("\"haspIP\":\"")) + WiFi.localIP().toString() + String(F("\","));
-  mqttStatusPayload += String(F("\"heapFree\":")) + String(ESP.getFreeHeap());
-  mqttStatusPayload += String(F("\"heapFragmentation\":")) + String(ESP.getHeapFragmentation());
-  mqttStatusPayload += String(F("\"espCore\":")) + String(ESP.getCoreVersion());
+  mqttStatusPayload += String(F("\"heapFree\":")) + String(ESP.getFreeHeap()) + String(F(","));
+  mqttStatusPayload += String(F("\"heapFragmentation\":")) + String(ESP.getHeapFragmentation()) + String(F(","));
+  mqttStatusPayload += String(F("\"espCore\":\"")) + String(ESP.getCoreVersion()) + String(F("\""));
   mqttStatusPayload += "}";
 
   mqttClient.publish(mqttSensorTopic, mqttStatusPayload);
