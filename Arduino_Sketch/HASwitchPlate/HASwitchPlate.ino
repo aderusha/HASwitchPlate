@@ -167,7 +167,7 @@ void setup()
   if (mdnsEnabled)
   {
     MDNS.begin(haspNode); // Add mDNS hostname
-    MDNS.addService("http", "tcp", 80);
+    // MDNS.addService("http", "tcp", 80);
     if (debugTelnetEnabled)
     {
       MDNS.addService("telnet", "tcp", 23);
@@ -878,8 +878,9 @@ void nextionStartOtaDownload(String otaUrl)
   int lcdOtaPercentComplete = 0;
 
   debugPrintln(String(F("LCD OTA: Attempting firmware download from:")) + otaUrl);
+  WiFiClient lcdOtaWifi;
   HTTPClient lcdOtaHttp;
-  lcdOtaHttp.begin(wifiClient, otaUrl);
+  lcdOtaHttp.begin(lcdOtaWifi, otaUrl);
   int lcdOtaHttpReturn = lcdOtaHttp.GET();
   if (lcdOtaHttpReturn > 0)
   { // HTTP header has been sent and Server response header has been handled
