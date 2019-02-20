@@ -113,7 +113,7 @@ String mqttLightBrightStateTopic;                   // MQTT topic for outgoing p
 String mqttMotionStateTopic;                        // MQTT topic for outgoing motion sensor state
 String nextionModel;                                // Record reported model number of LCD panel
 const byte nextionSuffix[] = {0xFF, 0xFF, 0xFF};    // Standard suffix for Nextion commands
-long tftFileSize = 0;                               // Filesize for TFT firmware upload
+uint32_t tftFileSize = 0;                           // Filesize for TFT firmware upload
 uint8_t nextionResetPin = D6;                       // Pin for Nextion power rail switch (GPIO12/D6)
 
 WiFiClient wifiClient;
@@ -191,7 +191,7 @@ void setup()
   webServer.on("/resetConfig", webHandleResetConfig);
   webServer.on("/firmware", webHandleFirmware);
   webServer.on("/espfirmware", webHandleEspFirmware);
-  webServer.on("/lcdupload", HTTP_POST, []() { webServer.send(200, "text/plain", ""); }, webHandleLcdUpload);
+  webServer.on("/lcdupload", HTTP_POST, []() { webServer.sendHeader("Connection", "close"); webServer.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK"); }, webHandleLcdUpload);
   webServer.on("/tftFileSize", webHandleTftFileSize);
   webServer.on("/lcddownload", webHandleLcdDownload);
   webServer.on("/reboot", webHandleReboot);
@@ -294,6 +294,8 @@ void loop()
   {
     handleTelnetClient(); // telnetClient loop
   }
+
+  delay(10); // Spooky voodoo which claims to improve WiFi stability.
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -458,7 +460,7 @@ void mqttCallback(String &strTopic, String &strPayload)
   debugPrintln(String(F("MQTT IN: '")) + strTopic + "' : '" + strPayload + "'");
 
   if (((strTopic == mqttCommandTopic) || (strTopic == mqttGroupCommandTopic)) && (strPayload == ""))
-  { // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
+  {                     // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
     mqttStatusUpdate(); // return status JSON via MQTT
   }
   else if (strTopic == mqttCommandTopic || strTopic == mqttGroupCommandTopic)
@@ -474,11 +476,11 @@ void mqttCallback(String &strTopic, String &strPayload)
     }
   }
   else if (strTopic == (mqttCommandTopic + "/json") || strTopic == (mqttGroupCommandTopic + "/json"))
-  { // '[...]/device/command/json' -m '["dim=5", "page 1"]' = nextionSendCmd("dim=50"), nextionSendCmd("page 1")
+  {                               // '[...]/device/command/json' -m '["dim=5", "page 1"]' = nextionSendCmd("dim=50"), nextionSendCmd("page 1")
     nextionParseJson(strPayload); // Send to nextionParseJson()
   }
   else if (strTopic == (mqttCommandTopic + "/statusupdate") || strTopic == (mqttGroupCommandTopic + "/statusupdate"))
-  { // '[...]/device/command/statusupdate' == mqttStatusUpdate()
+  {                     // '[...]/device/command/statusupdate' == mqttStatusUpdate()
     mqttStatusUpdate(); // return status JSON via MQTT
   }
   else if (strTopic == (mqttCommandTopic + "/lcdupdate") || strTopic == (mqttGroupCommandTopic + "/lcdupdate"))
@@ -870,14 +872,14 @@ void nextionStartOtaDownload(String otaUrl)
   // based in large part on code posted by indev2 here:
   // http://support.iteadstudio.com/support/discussions/topics/11000007686/page/2
 
-  int lcdOtaFileSize = 0;
+  uint32_t lcdOtaFileSize = 0;
   String lcdOtaNextionCmd;
-  int lcdOtaChunkCounter = 0;
+  uint32_t lcdOtaChunkCounter = 0;
   uint16_t lcdOtaPartNum = 0;
-  int lcdOtaTransferred = 0;
-  int lcdOtaPercentComplete = 0;
+  uint32_t lcdOtaTransferred = 0;
+  uint8_t lcdOtaPercentComplete = 0;
 
-  debugPrintln(String(F("LCD OTA: Attempting firmware download from:")) + otaUrl);
+  debugPrintln(String(F("LCD OTA: Attempting firmware download from: ")) + otaUrl);
   WiFiClient lcdOtaWifi;
   HTTPClient lcdOtaHttp;
   lcdOtaHttp.begin(lcdOtaWifi, otaUrl);
@@ -887,11 +889,11 @@ void nextionStartOtaDownload(String otaUrl)
     debugPrintln(String(F("LCD OTA: HTTP GET return code:")) + String(lcdOtaHttpReturn));
     if (lcdOtaHttpReturn == HTTP_CODE_OK)
     { // file found at server
-      // get length of document (is -1 when Server sends no Content-Length header)
-      int lcdOtaRemaining = lcdOtaHttp.getSize();
+      int32_t lcdOtaRemaining = lcdOtaHttp.getSize(); // get length of document (is -1 when Server sends no Content-Length header)
       lcdOtaFileSize = lcdOtaRemaining;
-      int lcdOtaParts = (lcdOtaRemaining / 4096) + 1;
-      uint8_t lcdOtaBuffer[128] = {}; // max size of ESP8266 UART buffer
+      static uint16_t lcdOtaParts = (lcdOtaRemaining / 4096) + 1;
+      static const uint16_t lcdOtaBufferSize = 1024; // upload data buffer before sending to UART
+      static uint8_t lcdOtaBuffer[lcdOtaBufferSize] = {};
 
       debugPrintln(String(F("LCD OTA: File found at Server. Size ")) + String(lcdOtaRemaining) + String(F(" bytes in ")) + String(lcdOtaParts) + String(F(" 4k chunks.")));
 
@@ -903,14 +905,11 @@ void nextionStartOtaDownload(String otaUrl)
         mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
         mqttClient.disconnect();
       }
-
-      // get tcp stream
-      WiFiClient *stream = lcdOtaHttp.getStreamPtr();
-      // Send empty command
-      Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+      
+      WiFiClient *stream = lcdOtaHttp.getStreamPtr(); // get tcp stream
+      Serial1.write(nextionSuffix, sizeof(nextionSuffix)); // Send empty command
       Serial1.flush();
       nextionHandleInput();
-
       String lcdOtaNextionCmd = "whmi-wri " + String(lcdOtaFileSize) + ",115200,0";
       debugPrintln(String(F("LCD OTA: Sending LCD upload command: ")) + lcdOtaNextionCmd);
       Serial1.print(lcdOtaNextionCmd);
@@ -929,15 +928,26 @@ void nextionStartOtaDownload(String otaUrl)
       debugPrintln(F("LCD OTA: Starting update"));
       while (lcdOtaHttp.connected() && (lcdOtaRemaining > 0 || lcdOtaRemaining == -1))
       { // Write incoming data to panel as it arrives
-        // get available data size
-        size_t lcdOtaHttpSize = stream->available();
+        uint16_t lcdOtaHttpSize = stream->available(); // get available data size
+
         if (lcdOtaHttpSize)
         {
-          // read up to 128 bytes
-          int lcdOtaChunkSize = stream->readBytes(lcdOtaBuffer, ((lcdOtaHttpSize > sizeof(lcdOtaBuffer)) ? sizeof(lcdOtaBuffer) : lcdOtaHttpSize));
-          // write it to panel
-          Serial1.flush();
-          Serial1.write(lcdOtaBuffer, lcdOtaChunkSize);
+          static uint16_t lcdOtaChunkSize = 0;
+          if ((lcdOtaHttpSize <= lcdOtaBufferSize) && (lcdOtaHttpSize <= (4096 - lcdOtaChunkCounter)))
+          {
+            lcdOtaChunkSize = lcdOtaHttpSize;
+          }
+          else if ((lcdOtaBufferSize <= lcdOtaHttpSize) && (lcdOtaBufferSize <= (4096 - lcdOtaChunkCounter)))
+          {
+            lcdOtaChunkSize = lcdOtaBufferSize;
+          }
+          else
+          {
+            lcdOtaChunkSize = 4096 - lcdOtaChunkCounter;
+          }
+          stream->readBytes(lcdOtaBuffer, lcdOtaChunkSize);
+          Serial1.flush(); // make sure any previous writes the UART have completed
+          Serial1.write(lcdOtaBuffer, lcdOtaChunkSize); // now send buffer to the UART
           lcdOtaChunkCounter += lcdOtaChunkSize;
           if (lcdOtaChunkCounter >= 4096)
           {
@@ -947,7 +957,7 @@ void nextionStartOtaDownload(String otaUrl)
             lcdOtaPercentComplete = (lcdOtaTransferred * 100) / lcdOtaFileSize;
             lcdOtaChunkCounter = 0;
             if (nextionOtaResponse())
-            {
+            { // We've completed a chunk
               // debugPrintln(String(F("LCD OTA: Part ")) + String(lcdOtaPartNum) + String(F(" OK, ")) + String(lcdOtaPercentComplete) + String(F("% complete")));
             }
             else
@@ -2148,7 +2158,7 @@ void webHandleLcdDownload()
   httpMessage += FPSTR(HTTP_END);
   webServer.send(200, "text/html", httpMessage);
 
-  debugPrintln("LCDFW: Attempting LCD firmware update from: " + String(webServer.arg("lcdFirmware")));
+  // debugPrintln("LCDFW: Attempting LCD firmware update from: " + String(webServer.arg("lcdFirmware")));
   nextionStartOtaDownload(webServer.arg("lcdFirmware"));
 }
 
