@@ -194,6 +194,8 @@ void setup()
   webServer.on("/lcdupload", HTTP_POST, []() { webServer.send(200); }, webHandleLcdUpload);
   webServer.on("/tftFileSize", webHandleTftFileSize);
   webServer.on("/lcddownload", webHandleLcdDownload);
+  webServer.on("/lcdOtaSuccess", webHandleLcdUpdateSuccess);
+  webServer.on("/lcdOtaFailure", webHandleLcdUpdateFailure);
   webServer.on("/reboot", webHandleReboot);
   webServer.onNotFound(webHandleNotFound);
   webServer.begin();
@@ -2107,12 +2109,27 @@ void webHandleLcdUpload()
       if (nextionOtaResponse())
       {
         debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
-        delay(5000); // extra delay while the LCD does its thing
+        webServer.sendHeader("Location", "/lcdOtaSuccess");
+        webServer.send(303);
+        uint32_t lcdOtaDelay = millis();
+        while ((millis() - lcdOtaDelay) < 5000)
+        { // extra 5sec delay while the LCD handles any local firmware updates from new versions of code sent to it
+          webServer.handleClient();
+          delay(1);
+        }
         espReset();
       }
       else
       {
         debugPrintln(F("LCD OTA: Failure"));
+        webServer.sendHeader("Location", "/lcdOtaFailure");
+        webServer.send(303);
+        uint32_t lcdOtaDelay = millis();
+        while ((millis() - lcdOtaDelay) < 1000)
+        { // extra 1sec delay for client to grab failure page
+          webServer.handleClient();
+          delay(1);
+        }
         espReset();
       }
     }
@@ -2123,17 +2140,29 @@ void webHandleLcdUpload()
     if (lcdOtaTransferred >= tftFileSize)
     {
       if (nextionOtaResponse())
-      {
+      { // YAY WE DID IT
         debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
-        webServer.sendHeader("Location", "/");
+        webServer.sendHeader("Location", "/lcdOtaSuccess");
         webServer.send(303);
-        delay(5000); // extra delay while the LCD does its thing
+        uint32_t lcdOtaDelay = millis();
+        while ((millis() - lcdOtaDelay) < 5000)
+        { // extra 5sec delay while the LCD handles any local firmware updates from new versions of code sent to it
+          webServer.handleClient();
+          delay(1);
+        }
         espReset();
       }
       else
       {
         debugPrintln(F("LCD OTA: Failure"));
-        webServer.send(500, "text/plain", "500: LCD OTA Failure. Rebooting.");
+        webServer.sendHeader("Location", "/lcdOtaFailure");
+        webServer.send(303);
+        uint32_t lcdOtaDelay = millis();
+        while ((millis() - lcdOtaDelay) < 1000)
+        { // extra 1sec delay for client to grab failure page
+          webServer.handleClient();
+          delay(1);
+        }
         espReset();
       }
     }
@@ -2141,15 +2170,79 @@ void webHandleLcdUpload()
   else if (upload.status == UPLOAD_FILE_ABORTED)
   { // Something went kablooey
     debugPrintln(F("LCD OTA: ERROR: upload.status returned: UPLOAD_FILE_ABORTED"));
-    // delay(5000); // delay for user to read output
+    debugPrintln(F("LCD OTA: Failure"));
+    webServer.sendHeader("Location", "/lcdOtaFailure");
+    webServer.send(303);
+    uint32_t lcdOtaDelay = millis();
+    while ((millis() - lcdOtaDelay) < 1000)
+    { // extra 1sec delay for client to grab failure page
+      webServer.handleClient();
+      delay(1);
+    }
     espReset();
   }
   else
   { // Something went weird, we should never get here...
     debugPrintln(String(F("LCD OTA: upload.status returned: ")) + String(upload.status));
-    // delay(5000); // delay for user to read output
+    debugPrintln(F("LCD OTA: Failure"));
+    webServer.sendHeader("Location", "/lcdOtaFailure");
+    webServer.send(303);
+    uint32_t lcdOtaDelay = millis();
+    while ((millis() - lcdOtaDelay) < 1000)
+    { // extra 1sec delay for client to grab failure page
+      webServer.handleClient();
+      delay(1);
+    }
     espReset();
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void webHandleLcdUpdateSuccess()
+{ // http://plate01/lcdOtaSuccess
+  if (configPassword[0] != '\0')
+  { //Request HTTP auth if configPassword is set
+    if (!webServer.authenticate(configUser, configPassword))
+    {
+      return webServer.requestAuthentication();
+    }
+  }
+  debugPrintln(String(F("HTTP: Sending /lcdOtaSuccess page to client connected from: ")) + webServer.client().remoteIP().toString());
+  String httpMessage = FPSTR(HTTP_HEAD);
+  httpMessage.replace("{v}", (String(haspNode) + " LCD update success"));
+  httpMessage += FPSTR(HTTP_SCRIPT);
+  httpMessage += FPSTR(HTTP_STYLE);
+  httpMessage += String(HASP_STYLE);
+  httpMessage += String(F("<meta http-equiv='refresh' content='15;url=/' />"));
+  httpMessage += FPSTR(HTTP_HEAD_END);
+  httpMessage += String(F("<h1>")) + String(haspNode) + String(F(" LCD update success</h1>"));
+  httpMessage += String(F("Restarting HASwitchPlate to apply changes..."));
+  httpMessage += FPSTR(HTTP_END);
+  webServer.send(200, "text/html", httpMessage);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void webHandleLcdUpdateFailure()
+{ // http://plate01/lcdOtaFailure
+  if (configPassword[0] != '\0')
+  { //Request HTTP auth if configPassword is set
+    if (!webServer.authenticate(configUser, configPassword))
+    {
+      return webServer.requestAuthentication();
+    }
+  }
+  debugPrintln(String(F("HTTP: Sending /lcdOtaFailure page to client connected from: ")) + webServer.client().remoteIP().toString());
+  String httpMessage = FPSTR(HTTP_HEAD);
+  httpMessage.replace("{v}", (String(haspNode) + " LCD update failed"));
+  httpMessage += FPSTR(HTTP_SCRIPT);
+  httpMessage += FPSTR(HTTP_STYLE);
+  httpMessage += String(HASP_STYLE);
+  httpMessage += String(F("<meta http-equiv='refresh' content='15;url=/' />"));
+  httpMessage += FPSTR(HTTP_HEAD_END);
+  httpMessage += String(F("<h1>")) + String(haspNode) + String(F(" LCD update failed :(</h1>"));
+  httpMessage += String(F("Restarting HASwitchPlate to reset device..."));
+  httpMessage += FPSTR(HTTP_END);
+  webServer.send(200, "text/html", httpMessage);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
