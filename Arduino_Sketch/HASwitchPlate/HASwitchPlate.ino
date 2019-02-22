@@ -419,18 +419,18 @@ void mqttConnect()
         debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Restarting device.")));
         espReset();
       }
-      debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Trying again in 10 seconds.")));
-      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\\rMQTT Connect to" + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\rRetry in 10 sec\"");
+      debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Trying again in 30 seconds.")));
+      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\\rMQTT Connect to" + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\rRetry in 30 sec\"");
       unsigned long mqttReconnectTimer = millis(); // record current time for our timeout
-      while ((millis() - mqttReconnectTimer) < 10000)
-      { // Handle HTTP and OTA while we're waiting 10sec for MQTT to reconnect
-        yield();
+      while ((millis() - mqttReconnectTimer) < 30000)
+      { // Handle HTTP and OTA while we're waiting 30sec for MQTT to reconnect
         if (nextionHandleInput())
         { // Process user input from HMI
           nextionProcessInput();
         }
         webServer.handleClient();
         ArduinoOTA.handle();
+        delay(10);
       }
     }
   }
@@ -2000,14 +2000,7 @@ void webHandleLcdUpload()
     httpMessage += FPSTR(HTTP_END);
     webServer.send(200, "text/html", httpMessage);
 
-    WiFiUDP::stopAll(); // Keep mDNS responder and MQTT traffic from breaking things
-    if (mqttClient.connected())
-    {
-      debugPrintln(F("LCD OTA: LCD firmware upload starting, closing MQTT connection."));
-      mqttClient.publish(mqttStatusTopic, "OFF");
-      mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
-      mqttClient.disconnect();
-    }
+    WiFiUDP::stopAll(); // Keep mDNS responder from breaking things
 
     debugPrintln(String(F("LCD OTA: Attempting firmware upload")));
     debugPrintln(String(F("LCD OTA: upload.filename: ")) + String(upload.filename));
@@ -2029,7 +2022,7 @@ void webHandleLcdUpload()
 
     if (nextionOtaResponse())
     {
-      debugPrintln(F("LCD OTA: LCD upload command accepted."));
+      debugPrintln(F("LCD OTA: LCD upload command accepted"));
     }
     else
     {
@@ -2037,7 +2030,24 @@ void webHandleLcdUpload()
       espReset();
     }
   }
-  else if (upload.status == UPLOAD_FILE_WRITE)
+  else if (upload.status == UPLOAD_FILE_END)
+  {
+    if (lcdOtaTransferred >= tftFileSize)
+    {
+      if (nextionOtaResponse())
+      {
+        debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
+        delay(5000); // extra delay while the LCD does its thing
+        espReset();
+      }
+      else
+      {
+        debugPrintln(F("LCD OTA: Failure"));
+        espReset();
+      }
+    }
+  }
+  else //if (upload.status == UPLOAD_FILE_WRITE)
   {
     static int lcdOtaChunkCounter = 0;
     static uint16_t lcdOtaPartNum = 0;
@@ -2092,7 +2102,7 @@ void webHandleLcdUpload()
       if (nextionOtaResponse())
       {
         debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
-        // delay(5000); // extra delay while the LCD does its thing
+        delay(5000); // extra delay while the LCD does its thing
         espReset();
       }
       else
@@ -2102,36 +2112,7 @@ void webHandleLcdUpload()
       }
     }
   }
-  else if (upload.status == UPLOAD_FILE_END)
-  {
-    if (lcdOtaTransferred >= tftFileSize)
-    {
-      if (nextionOtaResponse())
-      {
-        debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
-        // delay(5000); // extra delay while the LCD does its thing
-        espReset();
-      }
-      else
-      {
-        debugPrintln(F("LCD OTA: Failure"));
-        // delay(5000); // delay for user to read output
-        espReset();
-      }
-    }
-  }
-  else if (upload.status == UPLOAD_FILE_ABORTED)
-  {
-    debugPrintln(F("LCD OTA: ERROR: upload.status returned: UPLOAD_FILE_ABORTED"));
-    // delay(5000); // delay for user to read output
-    espReset();
-  }
-  else
-  {
-    debugPrintln(String(F("LCD OTA: upload.status returned: ")) + String(upload.status));
-    // delay(5000); // delay for user to read output
-    espReset();
-  }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2385,14 +2366,13 @@ void handleTelnetClient()
 void debugPrintln(String debugText)
 { // Debug output line of text to our debug targets
   String debugTimeText = "[+" + String(float(millis()) / 1000, 3) + "s] " + debugText;
+  Serial.println(debugTimeText);
   if (debugSerialEnabled)
   {
     SoftwareSerial debugSerial = SoftwareSerial(17, 1); // 17==nc for RX, 1==TX pin
     debugSerial.begin(115200);
     debugSerial.println(debugTimeText);
     debugSerial.flush();
-    Serial.println(debugTimeText);
-    Serial.flush();
   }
   if (debugTelnetEnabled)
   {
@@ -2411,15 +2391,13 @@ void debugPrint(String debugText)
   // happens.  Far better to put everything into a line and send it all out in one packet using
   // debugPrintln.
   if (debugSerialEnabled)
+  Serial.print(debugText);
   {
     SoftwareSerial debugSerial = SoftwareSerial(17, 1); // 17==nc for RX, 1==TX pin
     debugSerial.begin(115200);
     debugSerial.print(debugText);
     debugSerial.flush();
-    Serial.print(debugText);
-    Serial.flush();
   }
-
   if (debugTelnetEnabled)
   {
     if (telnetClient.connected())
