@@ -191,7 +191,7 @@ void setup()
   webServer.on("/resetConfig", webHandleResetConfig);
   webServer.on("/firmware", webHandleFirmware);
   webServer.on("/espfirmware", webHandleEspFirmware);
-  webServer.on("/lcdupload", HTTP_POST, []() { webServer.sendHeader("Connection", "close"); webServer.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK"); }, webHandleLcdUpload);
+  webServer.on("/lcdupload", HTTP_POST, []() { webServer.send(200); }, webHandleLcdUpload);
   webServer.on("/tftFileSize", webHandleTftFileSize);
   webServer.on("/lcddownload", webHandleLcdDownload);
   webServer.on("/reboot", webHandleReboot);
@@ -888,7 +888,7 @@ void nextionStartOtaDownload(String otaUrl)
   { // HTTP header has been sent and Server response header has been handled
     debugPrintln(String(F("LCD OTA: HTTP GET return code:")) + String(lcdOtaHttpReturn));
     if (lcdOtaHttpReturn == HTTP_CODE_OK)
-    { // file found at server
+    {                                                 // file found at server
       int32_t lcdOtaRemaining = lcdOtaHttp.getSize(); // get length of document (is -1 when Server sends no Content-Length header)
       lcdOtaFileSize = lcdOtaRemaining;
       static uint16_t lcdOtaParts = (lcdOtaRemaining / 4096) + 1;
@@ -905,8 +905,8 @@ void nextionStartOtaDownload(String otaUrl)
         mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
         mqttClient.disconnect();
       }
-      
-      WiFiClient *stream = lcdOtaHttp.getStreamPtr(); // get tcp stream
+
+      WiFiClient *stream = lcdOtaHttp.getStreamPtr();      // get tcp stream
       Serial1.write(nextionSuffix, sizeof(nextionSuffix)); // Send empty command
       Serial1.flush();
       nextionHandleInput();
@@ -927,12 +927,12 @@ void nextionStartOtaDownload(String otaUrl)
       }
       debugPrintln(F("LCD OTA: Starting update"));
       while (lcdOtaHttp.connected() && (lcdOtaRemaining > 0 || lcdOtaRemaining == -1))
-      { // Write incoming data to panel as it arrives
+      {                                                // Write incoming data to panel as it arrives
         uint16_t lcdOtaHttpSize = stream->available(); // get available data size
 
         if (lcdOtaHttpSize)
         {
-          static uint16_t lcdOtaChunkSize = 0;
+          uint16_t lcdOtaChunkSize = 0;
           if ((lcdOtaHttpSize <= lcdOtaBufferSize) && (lcdOtaHttpSize <= (4096 - lcdOtaChunkCounter)))
           {
             lcdOtaChunkSize = lcdOtaHttpSize;
@@ -946,7 +946,7 @@ void nextionStartOtaDownload(String otaUrl)
             lcdOtaChunkSize = 4096 - lcdOtaChunkCounter;
           }
           stream->readBytes(lcdOtaBuffer, lcdOtaChunkSize);
-          Serial1.flush(); // make sure any previous writes the UART have completed
+          Serial1.flush();                              // make sure any previous writes the UART have completed
           Serial1.write(lcdOtaBuffer, lcdOtaChunkSize); // now send buffer to the UART
           lcdOtaChunkCounter += lcdOtaChunkSize;
           if (lcdOtaChunkCounter >= 4096)
@@ -1966,11 +1966,12 @@ void webHandleLcdUpload()
     }
   }
 
-  static int lcdOtaTransferred = 0;
-  static int lcdOtaRemaining;
-  static int lcdOtaParts;
+  static uint32_t lcdOtaTransferred = 0;
+  static uint32_t lcdOtaRemaining;
+  static uint16_t lcdOtaParts;
 
   HTTPUpload &upload = webServer.upload();
+
   if (tftFileSize == 0)
   {
     debugPrintln(String(F("LCD OTA: FAILED, no filesize sent.")));
@@ -1988,18 +1989,6 @@ void webHandleLcdUpload()
   }
   else if (upload.status == UPLOAD_FILE_START)
   {
-    String httpMessage = FPSTR(HTTP_HEAD);
-    httpMessage.replace("{v}", (String(haspNode) + " LCD update"));
-    httpMessage += FPSTR(HTTP_SCRIPT);
-    httpMessage += FPSTR(HTTP_STYLE);
-    httpMessage += String(HASP_STYLE);
-    httpMessage += String(F("<meta http-equiv='refresh' content='30;url=/' />"));
-    httpMessage += FPSTR(HTTP_HEAD_END);
-    httpMessage += String(F("<h1>")) + String(haspNode) + " LCD update</h1>";
-    httpMessage += String(F("Completing LCD firmware update from: ")) + String(upload.filename);
-    httpMessage += FPSTR(HTTP_END);
-    webServer.send(200, "text/html", httpMessage);
-
     WiFiUDP::stopAll(); // Keep mDNS responder from breaking things
 
     debugPrintln(String(F("LCD OTA: Attempting firmware upload")));
@@ -2009,8 +1998,8 @@ void webHandleLcdUpload()
     lcdOtaRemaining = tftFileSize;
     lcdOtaParts = (lcdOtaRemaining / 4096) + 1;
     debugPrintln(String(F("LCD OTA: File upload beginning. Size ")) + String(lcdOtaRemaining) + String(F(" bytes in ")) + String(lcdOtaParts) + String(F(" 4k chunks.")));
-    // Send empty command to LCD
-    Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+
+    Serial1.write(nextionSuffix, sizeof(nextionSuffix)); // Send empty command to LCD
     Serial1.flush();
     nextionHandleInput();
 
@@ -2030,36 +2019,34 @@ void webHandleLcdUpload()
       espReset();
     }
   }
-  else if (upload.status == UPLOAD_FILE_END)
-  {
-    if (lcdOtaTransferred >= tftFileSize)
-    {
-      if (nextionOtaResponse())
-      {
-        debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
-        delay(5000); // extra delay while the LCD does its thing
-        espReset();
-      }
-      else
-      {
-        debugPrintln(F("LCD OTA: Failure"));
-        espReset();
-      }
-    }
-  }
-  else //if (upload.status == UPLOAD_FILE_WRITE)
-  {
+  else if (upload.status == UPLOAD_FILE_WRITE)
+  { // Handle upload data
     static int lcdOtaChunkCounter = 0;
     static uint16_t lcdOtaPartNum = 0;
     static int lcdOtaPercentComplete = 0;
-    uint8_t lcdOtaBuffer[128] = {}; // max size of ESP8266 UART buffer
+    static const uint16_t lcdOtaBufferSize = 1024; // upload data buffer before sending to UART
+    static uint8_t lcdOtaBuffer[lcdOtaBufferSize] = {};
     uint16_t lcdOtaUploadIndex = 0;
-    size_t lcdOtaPacketRemaining = upload.currentSize;
+    int32_t lcdOtaPacketRemaining = upload.currentSize;
+
     while (lcdOtaPacketRemaining > 0)
     { // Write incoming data to panel as it arrives
-      // read up to 128 bytes or whatever is left of the current packet
-      size_t lcdOtaChunkSize = ((lcdOtaPacketRemaining > sizeof(lcdOtaBuffer)) ? sizeof(lcdOtaBuffer) : lcdOtaPacketRemaining);
-      for (uint8_t i = 0; i < lcdOtaChunkSize; i++)
+      // determine chunk size as lowest value of lcdOtaPacketRemaining, lcdOtaBufferSize, or 4096 - lcdOtaChunkCounter
+      uint16_t lcdOtaChunkSize = 0;
+      if ((lcdOtaPacketRemaining <= lcdOtaBufferSize) && (lcdOtaPacketRemaining <= (4096 - lcdOtaChunkCounter)))
+      {
+        lcdOtaChunkSize = lcdOtaPacketRemaining;
+      }
+      else if ((lcdOtaBufferSize <= lcdOtaPacketRemaining) && (lcdOtaBufferSize <= (4096 - lcdOtaChunkCounter)))
+      {
+        lcdOtaChunkSize = lcdOtaBufferSize;
+      }
+      else
+      {
+        lcdOtaChunkSize = 4096 - lcdOtaChunkCounter;
+      }
+
+      for (uint16_t i = 0; i < lcdOtaChunkSize; i++)
       { // Load up the UART buffer
         lcdOtaBuffer[i] = upload.buf[lcdOtaUploadIndex];
         lcdOtaUploadIndex++;
@@ -2085,7 +2072,7 @@ void webHandleLcdUpload()
       }
       else
       {
-        delay(20);
+        delay(10);
       }
       if (lcdOtaRemaining > 0)
       {
@@ -2112,7 +2099,38 @@ void webHandleLcdUpload()
       }
     }
   }
-
+  else if (upload.status == UPLOAD_FILE_END)
+  { // Upload completed
+    if (lcdOtaTransferred >= tftFileSize)
+    {
+      if (nextionOtaResponse())
+      {
+        debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
+        webServer.sendHeader("Location","/");
+        webServer.send(303);
+        delay(5000); // extra delay while the LCD does its thing
+        espReset();
+      }
+      else
+      {
+        debugPrintln(F("LCD OTA: Failure"));
+        webServer.send(500, "text/plain", "500: LCD OTA Failure. Rebooting.");
+        espReset();
+      }
+    }
+  }
+  else if (upload.status == UPLOAD_FILE_ABORTED)
+  { // Something went kablooie
+    debugPrintln(F("LCD OTA: ERROR: upload.status returned: UPLOAD_FILE_ABORTED"));
+    // delay(5000); // delay for user to read output
+    espReset();
+  }
+  else
+  { // Something went weird, we should never get here...
+    debugPrintln(String(F("LCD OTA: upload.status returned: ")) + String(upload.status));
+    // delay(5000); // delay for user to read output
+    espReset();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2391,7 +2409,7 @@ void debugPrint(String debugText)
   // happens.  Far better to put everything into a line and send it all out in one packet using
   // debugPrintln.
   if (debugSerialEnabled)
-  Serial.print(debugText);
+    Serial.print(debugText);
   {
     SoftwareSerial debugSerial = SoftwareSerial(17, 1); // 17==nc for RX, 1==TX pin
     debugSerial.begin(115200);
