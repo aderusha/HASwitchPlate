@@ -878,6 +878,8 @@ void nextionStartOtaDownload(String otaUrl)
   uint16_t lcdOtaPartNum = 0;
   uint32_t lcdOtaTransferred = 0;
   uint8_t lcdOtaPercentComplete = 0;
+  const uint32_t lcdOtaTimeout = 30000; // timeout for receiving new data in milliseconds
+  static uint32_t lcdOtaTimer = 0;      // timer for upload timeout
 
   debugPrintln(String(F("LCD OTA: Attempting firmware download from: ")) + otaUrl);
   WiFiClient lcdOtaWifi;
@@ -926,6 +928,7 @@ void nextionStartOtaDownload(String otaUrl)
         espReset();
       }
       debugPrintln(F("LCD OTA: Starting update"));
+      lcdOtaTimer = millis();
       while (lcdOtaHttp.connected() && (lcdOtaRemaining > 0 || lcdOtaRemaining == -1))
       {                                                // Write incoming data to panel as it arrives
         uint16_t lcdOtaHttpSize = stream->available(); // get available data size
@@ -958,7 +961,8 @@ void nextionStartOtaDownload(String otaUrl)
             lcdOtaChunkCounter = 0;
             if (nextionOtaResponse())
             { // We've completed a chunk
-              // debugPrintln(String(F("LCD OTA: Part ")) + String(lcdOtaPartNum) + String(F(" OK, ")) + String(lcdOtaPercentComplete) + String(F("% complete")));
+              debugPrintln(String(F("LCD OTA: Part ")) + String(lcdOtaPartNum) + String(F(" OK, ")) + String(lcdOtaPercentComplete) + String(F("% complete")));
+              lcdOtaTimer = millis();
             }
             else
             {
@@ -976,6 +980,12 @@ void nextionStartOtaDownload(String otaUrl)
           {
             lcdOtaRemaining -= lcdOtaChunkSize;
           }
+        }
+        delay(10);
+        if ((lcdOtaTimer > 0) && ((millis() - lcdOtaTimer) > lcdOtaTimeout))
+        { // Our timer expired so reset
+          debugPrintln(F("LCD OTA: ERROR: LCD upload timeout.  Restarting."));
+          espReset();
         }
       }
       lcdOtaPartNum++;
@@ -1969,6 +1979,8 @@ void webHandleLcdUpload()
   static uint32_t lcdOtaTransferred = 0;
   static uint32_t lcdOtaRemaining;
   static uint16_t lcdOtaParts;
+  const uint32_t lcdOtaTimeout = 30000; // timeout for receiving new data in milliseconds
+  static uint32_t lcdOtaTimer = 0;      // timer for upload timeout
 
   HTTPUpload &upload = webServer.upload();
 
@@ -1986,6 +1998,11 @@ void webHandleLcdUpload()
     httpMessage += String(F("No update file size reported.  You must use a modern browser with Javascript enabled."));
     httpMessage += FPSTR(HTTP_END);
     webServer.send(200, "text/html", httpMessage);
+  }
+  else if ((lcdOtaTimer > 0) && ((millis() - lcdOtaTimer) > lcdOtaTimeout))
+  { // Our timer expired so reset
+    debugPrintln(F("LCD OTA: ERROR: LCD upload timeout.  Restarting."));
+    espReset();
   }
   else if (upload.status == UPLOAD_FILE_START)
   {
@@ -2018,6 +2035,7 @@ void webHandleLcdUpload()
       debugPrintln(F("LCD OTA: LCD upload command FAILED."));
       espReset();
     }
+    lcdOtaTimer = millis();
   }
   else if (upload.status == UPLOAD_FILE_WRITE)
   { // Handle upload data
@@ -2098,6 +2116,7 @@ void webHandleLcdUpload()
         espReset();
       }
     }
+    lcdOtaTimer = millis();
   }
   else if (upload.status == UPLOAD_FILE_END)
   { // Upload completed
@@ -2106,7 +2125,7 @@ void webHandleLcdUpload()
       if (nextionOtaResponse())
       {
         debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
-        webServer.sendHeader("Location","/");
+        webServer.sendHeader("Location", "/");
         webServer.send(303);
         delay(5000); // extra delay while the LCD does its thing
         espReset();
@@ -2120,7 +2139,7 @@ void webHandleLcdUpload()
     }
   }
   else if (upload.status == UPLOAD_FILE_ABORTED)
-  { // Something went kablooie
+  { // Something went kablooey
     debugPrintln(F("LCD OTA: ERROR: upload.status returned: UPLOAD_FILE_ABORTED"));
     // delay(5000); // delay for user to read output
     espReset();
