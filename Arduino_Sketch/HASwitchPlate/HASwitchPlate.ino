@@ -59,7 +59,7 @@ char motionPinConfig[3] = "0";
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 
-const float haspVersion = 0.36;                     // Current HASP software release version
+const float haspVersion = 0.37;                     // Current HASP software release version
 byte nextionReturnBuffer[128];                      // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;                     // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                      // Track active LCD page
@@ -99,7 +99,9 @@ byte espMac[6];                                     // Byte array to store our M
 const uint16_t mqttMaxPacketSize = 4096;            // Size of buffer for incoming MQTT message
 String mqttClientId;                                // Auto-generated MQTT ClientID
 String mqttGetSubtopic;                             // MQTT subtopic for incoming commands requesting .val
+String mqttGetSubtopicJSON;                         // MQTT object buffer for JSON status when requesting .val
 String mqttStateTopic;                              // MQTT topic for outgoing panel interactions
+String mqttStateJSONTopic;                          // MQTT topic for outgoing panel interactions in JSON format
 String mqttCommandTopic;                            // MQTT topic for incoming panel commands
 String mqttGroupCommandTopic;                       // MQTT topic for incoming group panel commands
 String mqttStatusTopic;                             // MQTT topic for publishing device connectivity state
@@ -111,15 +113,17 @@ String mqttLightBrightStateTopic;                   // MQTT topic for outgoing p
 String mqttMotionStateTopic;                        // MQTT topic for outgoing motion sensor state
 String nextionModel;                                // Record reported model number of LCD panel
 const byte nextionSuffix[] = {0xFF, 0xFF, 0xFF};    // Standard suffix for Nextion commands
-long tftFileSize = 0;                               // Filesize for TFT firmware upload
+uint32_t tftFileSize = 0;                           // Filesize for TFT firmware upload
 uint8_t nextionResetPin = D6;                       // Pin for Nextion power rail switch (GPIO12/D6)
 
 WiFiClient wifiClient;
+WiFiClient wifiMQTTClient;
 MQTTClient mqttClient(mqttMaxPacketSize);
 ESP8266WebServer webServer(80);
 ESP8266HTTPUpdateServer httpOTAUpdate;
 WiFiServer telnetServer(23);
 WiFiClient telnetClient;
+MDNSResponder::hMDNSService hMDNSService;
 
 // Additional CSS style to match Hass theme
 const char HASP_STYLE[] = "<style>button{background-color:#03A9F4;}body{width:60%;margin:auto;}input:invalid{border:1px solid red;}input[type=checkbox]{width:20px;}</style>";
@@ -162,19 +166,17 @@ void setup()
   espWifiSetup(); // Start up networking
 
   if (mdnsEnabled)
-  {
-    MDNS.begin(haspNode); // Add mDNS hostname
-    // MDNS.addService("http", "tcp", 80); this breaks Wemo devices when Home Assistant discovery is enabled.  No idea why.
+  { // Setup mDNS service discovery if enabled
+    hMDNSService = MDNS.addService(haspNode, "http", "tcp", 80);
     if (debugTelnetEnabled)
     {
-      MDNS.addService("telnet", "tcp", 23);
+      MDNS.addService(haspNode, "telnet", "tcp", 23);
     }
-    MDNS.addServiceTxt("arduino", "tcp", "app_name", "HASwitchPlate");
-    MDNS.addServiceTxt("arduino", "tcp", "app_version", String(haspVersion));
-    MDNS.addServiceTxt("arduino", "tcp", "mac", WiFi.macAddress());
+    MDNS.addServiceTxt(hMDNSService, "app_name", "HASwitchPlate");
+    MDNS.addServiceTxt(hMDNSService, "app_version", String(haspVersion).c_str());    
     MDNS.update();
   }
-
+  
   if ((configPassword[0] != '\0') && (configUser[0] != '\0'))
   {
     httpOTAUpdate.setup(&webServer, "/update", configUser, configPassword);
@@ -188,9 +190,11 @@ void setup()
   webServer.on("/resetConfig", webHandleResetConfig);
   webServer.on("/firmware", webHandleFirmware);
   webServer.on("/espfirmware", webHandleEspFirmware);
-  webServer.on("/lcdupload", HTTP_POST, []() { webServer.send(200, "text/plain", ""); }, webHandleLcdUpload);
+  webServer.on("/lcdupload", HTTP_POST, []() { webServer.send(200); }, webHandleLcdUpload);
   webServer.on("/tftFileSize", webHandleTftFileSize);
   webServer.on("/lcddownload", webHandleLcdDownload);
+  webServer.on("/lcdOtaSuccess", webHandleLcdUpdateSuccess);
+  webServer.on("/lcdOtaFailure", webHandleLcdUpdateFailure);
   webServer.on("/reboot", webHandleReboot);
   webServer.onNotFound(webHandleNotFound);
   webServer.begin();
@@ -199,7 +203,7 @@ void setup()
   espSetupOta();
 
   // Create server and assign callbacks for MQTT
-  mqttClient.begin(mqttServer, atoi(mqttPort), wifiClient);
+  mqttClient.begin(mqttServer, atoi(mqttPort), wifiMQTTClient);
   mqttClient.onMessage(mqttCallback);
   mqttConnect();
 
@@ -208,12 +212,10 @@ void setup()
 
   if (debugTelnetEnabled)
   { // Setup telnet server for remote debug output
-
     telnetServer.setNoDelay(true);
     telnetServer.begin();
     debugPrintln(String(F("TELNET: debug server enabled at telnet:")) + WiFi.localIP().toString());
   }
-
   debugPrintln(F("SYSTEM: System init complete."));
 }
 
@@ -292,6 +294,8 @@ void loop()
   {
     handleTelnetClient(); // telnetClient loop
   }
+
+  delay(10); // Spooky voodoo which claims to improve WiFi stability.
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -325,6 +329,7 @@ void mqttConnect()
   }
   // MQTT topic string definitions
   mqttStateTopic = "hasp/" + String(haspNode) + "/state";
+  mqttStateJSONTopic = "hasp/" + String(haspNode) + "/state/json";
   mqttCommandTopic = "hasp/" + String(haspNode) + "/command";
   mqttGroupCommandTopic = "hasp/" + String(groupName) + "/command";
   mqttStatusTopic = "hasp/" + String(haspNode) + "/status";
@@ -414,18 +419,18 @@ void mqttConnect()
         debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Restarting device.")));
         espReset();
       }
-      debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Trying again in 10 seconds.")));
-      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\\rMQTT Connect to" + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\rRetry in 10 sec\"");
+      debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Trying again in 30 seconds.")));
+      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\\rMQTT Connect to" + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\rRetry in 30 sec\"");
       unsigned long mqttReconnectTimer = millis(); // record current time for our timeout
-      while ((millis() - mqttReconnectTimer) < 10000)
-      { // Handle HTTP and OTA while we're waiting 10sec for MQTT to reconnect
-        yield();
+      while ((millis() - mqttReconnectTimer) < 30000)
+      { // Handle HTTP and OTA while we're waiting 30sec for MQTT to reconnect
         if (nextionHandleInput())
         { // Process user input from HMI
           nextionProcessInput();
         }
         webServer.handleClient();
         ArduinoOTA.handle();
+        delay(10);
       }
     }
   }
@@ -455,7 +460,7 @@ void mqttCallback(String &strTopic, String &strPayload)
   debugPrintln(String(F("MQTT IN: '")) + strTopic + "' : '" + strPayload + "'");
 
   if (((strTopic == mqttCommandTopic) || (strTopic == mqttGroupCommandTopic)) && (strPayload == ""))
-  { // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
+  {                     // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
     mqttStatusUpdate(); // return status JSON via MQTT
   }
   else if (strTopic == mqttCommandTopic || strTopic == mqttGroupCommandTopic)
@@ -471,11 +476,11 @@ void mqttCallback(String &strTopic, String &strPayload)
     }
   }
   else if (strTopic == (mqttCommandTopic + "/json") || strTopic == (mqttGroupCommandTopic + "/json"))
-  { // '[...]/device/command/json' -m '["dim=5", "page 1"]' = nextionSendCmd("dim=50"), nextionSendCmd("page 1")
+  {                               // '[...]/device/command/json' -m '["dim=5", "page 1"]' = nextionSendCmd("dim=50"), nextionSendCmd("page 1")
     nextionParseJson(strPayload); // Send to nextionParseJson()
   }
   else if (strTopic == (mqttCommandTopic + "/statusupdate") || strTopic == (mqttGroupCommandTopic + "/statusupdate"))
-  { // '[...]/device/command/statusupdate' == mqttStatusUpdate()
+  {                     // '[...]/device/command/statusupdate' == mqttStatusUpdate()
     mqttStatusUpdate(); // return status JSON via MQTT
   }
   else if (strTopic == (mqttCommandTopic + "/lcdupdate") || strTopic == (mqttGroupCommandTopic + "/lcdupdate"))
@@ -594,7 +599,9 @@ void mqttStatusUpdate()
   mqttStatusPayload += String(F("\"espUptime\":")) + String(long(millis() / 1000)) + String(F(","));
   mqttStatusPayload += String(F("\"signalStrength\":")) + String(WiFi.RSSI()) + String(F(","));
   mqttStatusPayload += String(F("\"haspIP\":\"")) + WiFi.localIP().toString() + String(F("\","));
-  mqttStatusPayload += String(F("\"heapFree\":")) + String(ESP.getFreeHeap());
+  mqttStatusPayload += String(F("\"heapFree\":")) + String(ESP.getFreeHeap()) + String(F(","));
+  mqttStatusPayload += String(F("\"heapFragmentation\":")) + String(ESP.getHeapFragmentation()) + String(F(","));
+  mqttStatusPayload += String(F("\"espCore\":\"")) + String(ESP.getCoreVersion()) + String(F("\""));
   mqttStatusPayload += "}";
 
   mqttClient.publish(mqttSensorTopic, mqttStatusPayload);
@@ -667,6 +674,8 @@ void nextionProcessInput()
       String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
       debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'ON'");
       mqttClient.publish(mqttButtonTopic, "ON");
+      String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + String(nextionPage) + String(F("].b[")) + String(nextionButtonID) + String(F("]\", \"value\":\"ON\"}"));
+      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
     }
     if (nextionButtonAction == 0x00)
     {
@@ -674,10 +683,15 @@ void nextionProcessInput()
       String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
       debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'OFF'");
       mqttClient.publish(mqttButtonTopic, "OFF");
+      // Burger King Hobbies is up to something with these two lines below, not sure what exactly.
+      //      String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + String(nextionPage) + String(F("].b[")) + String(nextionButtonID) + String(F("]\", \"value\":\"OFF\"}"));
+      //      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+      //
       // Now see if this object has a .val that might have been updated.
       // works for sliders, two-state buttons, etc, throws a 0x1A error for normal buttons
       // which we'll catch and ignore
       mqttGetSubtopic = "/p[" + nextionPage + "].b[" + nextionButtonID + "].val";
+      mqttGetSubtopicJSON = "p[" + nextionPage + "].b[" + nextionButtonID + "].val";
       nextionGetAttr("p[" + nextionPage + "].b[" + nextionButtonID + "].val");
     }
   }
@@ -774,6 +788,8 @@ void nextionProcessInput()
     {
       String mqttReturnTopic = mqttStateTopic + mqttGetSubtopic;
       mqttClient.publish(mqttReturnTopic, getString);
+      String mqttButtonJSONEvent = String(F("{\"event\":\"")) + mqttGetSubtopicJSON + String(F("\", \"value\":")) + getString + String(F("}"));
+      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       mqttGetSubtopic = "";
     }
   }
@@ -858,27 +874,30 @@ void nextionStartOtaDownload(String otaUrl)
   // based in large part on code posted by indev2 here:
   // http://support.iteadstudio.com/support/discussions/topics/11000007686/page/2
 
-  int lcdOtaFileSize = 0;
+  uint32_t lcdOtaFileSize = 0;
   String lcdOtaNextionCmd;
-  int lcdOtaChunkCounter = 0;
+  uint32_t lcdOtaChunkCounter = 0;
   uint16_t lcdOtaPartNum = 0;
-  int lcdOtaTransferred = 0;
-  int lcdOtaPercentComplete = 0;
+  uint32_t lcdOtaTransferred = 0;
+  uint8_t lcdOtaPercentComplete = 0;
+  const uint32_t lcdOtaTimeout = 30000; // timeout for receiving new data in milliseconds
+  static uint32_t lcdOtaTimer = 0;      // timer for upload timeout
 
-  debugPrintln(String(F("LCD OTA: Attempting firmware download from:")) + otaUrl);
+  debugPrintln(String(F("LCD OTA: Attempting firmware download from: ")) + otaUrl);
+  WiFiClient lcdOtaWifi;
   HTTPClient lcdOtaHttp;
-  lcdOtaHttp.begin(otaUrl);
+  lcdOtaHttp.begin(lcdOtaWifi, otaUrl);
   int lcdOtaHttpReturn = lcdOtaHttp.GET();
   if (lcdOtaHttpReturn > 0)
   { // HTTP header has been sent and Server response header has been handled
     debugPrintln(String(F("LCD OTA: HTTP GET return code:")) + String(lcdOtaHttpReturn));
     if (lcdOtaHttpReturn == HTTP_CODE_OK)
-    { // file found at server
-      // get length of document (is -1 when Server sends no Content-Length header)
-      int lcdOtaRemaining = lcdOtaHttp.getSize();
+    {                                                 // file found at server
+      int32_t lcdOtaRemaining = lcdOtaHttp.getSize(); // get length of document (is -1 when Server sends no Content-Length header)
       lcdOtaFileSize = lcdOtaRemaining;
-      int lcdOtaParts = (lcdOtaRemaining / 4096) + 1;
-      uint8_t lcdOtaBuffer[128] = {}; // max size of ESP8266 UART buffer
+      static uint16_t lcdOtaParts = (lcdOtaRemaining / 4096) + 1;
+      static const uint16_t lcdOtaBufferSize = 1024; // upload data buffer before sending to UART
+      static uint8_t lcdOtaBuffer[lcdOtaBufferSize] = {};
 
       debugPrintln(String(F("LCD OTA: File found at Server. Size ")) + String(lcdOtaRemaining) + String(F(" bytes in ")) + String(lcdOtaParts) + String(F(" 4k chunks.")));
 
@@ -891,13 +910,10 @@ void nextionStartOtaDownload(String otaUrl)
         mqttClient.disconnect();
       }
 
-      // get tcp stream
-      WiFiClient *stream = lcdOtaHttp.getStreamPtr();
-      // Send empty command
-      Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+      WiFiClient *stream = lcdOtaHttp.getStreamPtr();      // get tcp stream
+      Serial1.write(nextionSuffix, sizeof(nextionSuffix)); // Send empty command
       Serial1.flush();
       nextionHandleInput();
-
       String lcdOtaNextionCmd = "whmi-wri " + String(lcdOtaFileSize) + ",115200,0";
       debugPrintln(String(F("LCD OTA: Sending LCD upload command: ")) + lcdOtaNextionCmd);
       Serial1.print(lcdOtaNextionCmd);
@@ -914,17 +930,29 @@ void nextionStartOtaDownload(String otaUrl)
         espReset();
       }
       debugPrintln(F("LCD OTA: Starting update"));
+      lcdOtaTimer = millis();
       while (lcdOtaHttp.connected() && (lcdOtaRemaining > 0 || lcdOtaRemaining == -1))
-      { // Write incoming data to panel as it arrives
-        // get available data size
-        size_t lcdOtaHttpSize = stream->available();
+      {                                                // Write incoming data to panel as it arrives
+        uint16_t lcdOtaHttpSize = stream->available(); // get available data size
+
         if (lcdOtaHttpSize)
         {
-          // read up to 128 bytes
-          int lcdOtaChunkSize = stream->readBytes(lcdOtaBuffer, ((lcdOtaHttpSize > sizeof(lcdOtaBuffer)) ? sizeof(lcdOtaBuffer) : lcdOtaHttpSize));
-          // write it to panel
-          Serial1.flush();
-          Serial1.write(lcdOtaBuffer, lcdOtaChunkSize);
+          uint16_t lcdOtaChunkSize = 0;
+          if ((lcdOtaHttpSize <= lcdOtaBufferSize) && (lcdOtaHttpSize <= (4096 - lcdOtaChunkCounter)))
+          {
+            lcdOtaChunkSize = lcdOtaHttpSize;
+          }
+          else if ((lcdOtaBufferSize <= lcdOtaHttpSize) && (lcdOtaBufferSize <= (4096 - lcdOtaChunkCounter)))
+          {
+            lcdOtaChunkSize = lcdOtaBufferSize;
+          }
+          else
+          {
+            lcdOtaChunkSize = 4096 - lcdOtaChunkCounter;
+          }
+          stream->readBytes(lcdOtaBuffer, lcdOtaChunkSize);
+          Serial1.flush();                              // make sure any previous writes the UART have completed
+          Serial1.write(lcdOtaBuffer, lcdOtaChunkSize); // now send buffer to the UART
           lcdOtaChunkCounter += lcdOtaChunkSize;
           if (lcdOtaChunkCounter >= 4096)
           {
@@ -934,8 +962,9 @@ void nextionStartOtaDownload(String otaUrl)
             lcdOtaPercentComplete = (lcdOtaTransferred * 100) / lcdOtaFileSize;
             lcdOtaChunkCounter = 0;
             if (nextionOtaResponse())
-            {
-              // debugPrintln(String(F("LCD OTA: Part ")) + String(lcdOtaPartNum) + String(F(" OK, ")) + String(lcdOtaPercentComplete) + String(F("% complete")));
+            { // We've completed a chunk
+              debugPrintln(String(F("LCD OTA: Part ")) + String(lcdOtaPartNum) + String(F(" OK, ")) + String(lcdOtaPercentComplete) + String(F("% complete")));
+              lcdOtaTimer = millis();
             }
             else
             {
@@ -954,19 +983,29 @@ void nextionStartOtaDownload(String otaUrl)
             lcdOtaRemaining -= lcdOtaChunkSize;
           }
         }
+        delay(10);
+        if ((lcdOtaTimer > 0) && ((millis() - lcdOtaTimer) > lcdOtaTimeout))
+        { // Our timer expired so reset
+          debugPrintln(F("LCD OTA: ERROR: LCD upload timeout.  Restarting."));
+          espReset();
+        }
       }
       lcdOtaPartNum++;
       lcdOtaTransferred += lcdOtaChunkCounter;
       if ((lcdOtaTransferred == lcdOtaFileSize) && nextionOtaResponse())
       {
-        debugPrintln(String(F("LCD OTA: success, wrote ")) + String(lcdOtaTransferred) + " of " + String(lcdOtaFileSize) + " bytes.");
-        delay(5000); // extra delay while the LCD does its thing
+        debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
+        uint32_t lcdOtaDelay = millis();
+        while ((millis() - lcdOtaDelay) < 5000)
+        { // extra 5sec delay while the LCD handles any local firmware updates from new versions of code sent to it
+          webServer.handleClient();
+          delay(1);
+        }
         espReset();
       }
       else
       {
-        debugPrintln(F("LCD OTA: failure"));
-        delay(2000); // extra delay while the LCD does its thing
+        debugPrintln(F("LCD OTA: Failure"));
         espReset();
       }
     }
@@ -1287,7 +1326,7 @@ void espStartOta(String espOtaUrl)
   nextionSetAttr("p[0].b[1].txt", "\"HTTP update\\rstarting...\"");
   WiFiUDP::stopAll(); // Keep mDNS responder from breaking things
 
-  t_httpUpdate_return returnCode = ESPhttpUpdate.update(espOtaUrl);
+  t_httpUpdate_return returnCode = ESPhttpUpdate.update(wifiClient, espOtaUrl);
   switch (returnCode)
   {
   case HTTP_UPDATE_FAILED:
@@ -1645,6 +1684,8 @@ void webHandleRoot()
   httpMessage += String(F("<br/><b>Sketch Size: </b>")) + String(ESP.getSketchSize()) + String(F(" bytes"));
   httpMessage += String(F("<br/><b>Free Sketch Space: </b>")) + String(ESP.getFreeSketchSpace()) + String(F(" bytes"));
   httpMessage += String(F("<br/><b>Heap Free: </b>")) + String(ESP.getFreeHeap());
+  httpMessage += String(F("<br/><b>Heap Fragmentation: </b>")) + String(ESP.getHeapFragmentation());
+  httpMessage += String(F("<br/><b>ESP core version: </b>")) + String(ESP.getCoreVersion());
   httpMessage += String(F("<br/><b>IP Address: </b>")) + String(WiFi.localIP().toString());
   httpMessage += String(F("<br/><b>Signal Strength: </b>")) + String(WiFi.RSSI());
   httpMessage += String(F("<br/><b>Uptime: </b>")) + String(long(millis() / 1000));
@@ -1941,11 +1982,14 @@ void webHandleLcdUpload()
     }
   }
 
-  static int lcdOtaTransferred = 0;
-  static int lcdOtaRemaining;
-  static int lcdOtaParts;
+  static uint32_t lcdOtaTransferred = 0;
+  static uint32_t lcdOtaRemaining;
+  static uint16_t lcdOtaParts;
+  const uint32_t lcdOtaTimeout = 30000; // timeout for receiving new data in milliseconds
+  static uint32_t lcdOtaTimer = 0;      // timer for upload timeout
 
   HTTPUpload &upload = webServer.upload();
+
   if (tftFileSize == 0)
   {
     debugPrintln(String(F("LCD OTA: FAILED, no filesize sent.")));
@@ -1961,28 +2005,14 @@ void webHandleLcdUpload()
     httpMessage += FPSTR(HTTP_END);
     webServer.send(200, "text/html", httpMessage);
   }
+  else if ((lcdOtaTimer > 0) && ((millis() - lcdOtaTimer) > lcdOtaTimeout))
+  { // Our timer expired so reset
+    debugPrintln(F("LCD OTA: ERROR: LCD upload timeout.  Restarting."));
+    espReset();
+  }
   else if (upload.status == UPLOAD_FILE_START)
   {
-    String httpMessage = FPSTR(HTTP_HEAD);
-    httpMessage.replace("{v}", (String(haspNode) + " LCD update"));
-    httpMessage += FPSTR(HTTP_SCRIPT);
-    httpMessage += FPSTR(HTTP_STYLE);
-    httpMessage += String(HASP_STYLE);
-    httpMessage += String(F("<meta http-equiv='refresh' content='30;url=/' />"));
-    httpMessage += FPSTR(HTTP_HEAD_END);
-    httpMessage += String(F("<h1>")) + String(haspNode) + " LCD update</h1>";
-    httpMessage += String(F("Completing LCD firmware update from: ")) + String(upload.filename);
-    httpMessage += FPSTR(HTTP_END);
-    webServer.send(200, "text/html", httpMessage);
-
-    WiFiUDP::stopAll(); // Keep mDNS responder and MQTT traffic from breaking things
-    if (mqttClient.connected())
-    {
-      debugPrintln(F("LCD OTA: LCD firmware upload starting, closing MQTT connection."));
-      mqttClient.publish(mqttStatusTopic, "OFF");
-      mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
-      mqttClient.disconnect();
-    }
+    WiFiUDP::stopAll(); // Keep mDNS responder from breaking things
 
     debugPrintln(String(F("LCD OTA: Attempting firmware upload")));
     debugPrintln(String(F("LCD OTA: upload.filename: ")) + String(upload.filename));
@@ -1991,8 +2021,8 @@ void webHandleLcdUpload()
     lcdOtaRemaining = tftFileSize;
     lcdOtaParts = (lcdOtaRemaining / 4096) + 1;
     debugPrintln(String(F("LCD OTA: File upload beginning. Size ")) + String(lcdOtaRemaining) + String(F(" bytes in ")) + String(lcdOtaParts) + String(F(" 4k chunks.")));
-    // Send empty command to LCD
-    Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+
+    Serial1.write(nextionSuffix, sizeof(nextionSuffix)); // Send empty command to LCD
     Serial1.flush();
     nextionHandleInput();
 
@@ -2004,27 +2034,43 @@ void webHandleLcdUpload()
 
     if (nextionOtaResponse())
     {
-      debugPrintln(F("LCD OTA: LCD upload command accepted."));
+      debugPrintln(F("LCD OTA: LCD upload command accepted"));
     }
     else
     {
       debugPrintln(F("LCD OTA: LCD upload command FAILED."));
       espReset();
     }
+    lcdOtaTimer = millis();
   }
   else if (upload.status == UPLOAD_FILE_WRITE)
-  {
+  { // Handle upload data
     static int lcdOtaChunkCounter = 0;
     static uint16_t lcdOtaPartNum = 0;
     static int lcdOtaPercentComplete = 0;
-    uint8_t lcdOtaBuffer[128] = {}; // max size of ESP8266 UART buffer
+    static const uint16_t lcdOtaBufferSize = 1024; // upload data buffer before sending to UART
+    static uint8_t lcdOtaBuffer[lcdOtaBufferSize] = {};
     uint16_t lcdOtaUploadIndex = 0;
-    size_t lcdOtaPacketRemaining = upload.currentSize;
+    int32_t lcdOtaPacketRemaining = upload.currentSize;
+
     while (lcdOtaPacketRemaining > 0)
     { // Write incoming data to panel as it arrives
-      // read up to 128 bytes or whatever is left of the current packet
-      size_t lcdOtaChunkSize = ((lcdOtaPacketRemaining > sizeof(lcdOtaBuffer)) ? sizeof(lcdOtaBuffer) : lcdOtaPacketRemaining);
-      for (uint8_t i = 0; i < lcdOtaChunkSize; i++)
+      // determine chunk size as lowest value of lcdOtaPacketRemaining, lcdOtaBufferSize, or 4096 - lcdOtaChunkCounter
+      uint16_t lcdOtaChunkSize = 0;
+      if ((lcdOtaPacketRemaining <= lcdOtaBufferSize) && (lcdOtaPacketRemaining <= (4096 - lcdOtaChunkCounter)))
+      {
+        lcdOtaChunkSize = lcdOtaPacketRemaining;
+      }
+      else if ((lcdOtaBufferSize <= lcdOtaPacketRemaining) && (lcdOtaBufferSize <= (4096 - lcdOtaChunkCounter)))
+      {
+        lcdOtaChunkSize = lcdOtaBufferSize;
+      }
+      else
+      {
+        lcdOtaChunkSize = 4096 - lcdOtaChunkCounter;
+      }
+
+      for (uint16_t i = 0; i < lcdOtaChunkSize; i++)
       { // Load up the UART buffer
         lcdOtaBuffer[i] = upload.buf[lcdOtaUploadIndex];
         lcdOtaUploadIndex++;
@@ -2050,7 +2096,7 @@ void webHandleLcdUpload()
       }
       else
       {
-        delay(20);
+        delay(10);
       }
       if (lcdOtaRemaining > 0)
       {
@@ -2067,46 +2113,140 @@ void webHandleLcdUpload()
       if (nextionOtaResponse())
       {
         debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
-        // delay(5000); // extra delay while the LCD does its thing
+        webServer.sendHeader("Location", "/lcdOtaSuccess");
+        webServer.send(303);
+        uint32_t lcdOtaDelay = millis();
+        while ((millis() - lcdOtaDelay) < 5000)
+        { // extra 5sec delay while the LCD handles any local firmware updates from new versions of code sent to it
+          webServer.handleClient();
+          delay(1);
+        }
         espReset();
       }
       else
       {
         debugPrintln(F("LCD OTA: Failure"));
+        webServer.sendHeader("Location", "/lcdOtaFailure");
+        webServer.send(303);
+        uint32_t lcdOtaDelay = millis();
+        while ((millis() - lcdOtaDelay) < 1000)
+        { // extra 1sec delay for client to grab failure page
+          webServer.handleClient();
+          delay(1);
+        }
         espReset();
       }
     }
+    lcdOtaTimer = millis();
   }
   else if (upload.status == UPLOAD_FILE_END)
-  {
+  { // Upload completed
     if (lcdOtaTransferred >= tftFileSize)
     {
       if (nextionOtaResponse())
-      {
+      { // YAY WE DID IT
         debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
-        // delay(5000); // extra delay while the LCD does its thing
+        webServer.sendHeader("Location", "/lcdOtaSuccess");
+        webServer.send(303);
+        uint32_t lcdOtaDelay = millis();
+        while ((millis() - lcdOtaDelay) < 5000)
+        { // extra 5sec delay while the LCD handles any local firmware updates from new versions of code sent to it
+          webServer.handleClient();
+          delay(1);
+        }
         espReset();
       }
       else
       {
         debugPrintln(F("LCD OTA: Failure"));
-        // delay(5000); // delay for user to read output
+        webServer.sendHeader("Location", "/lcdOtaFailure");
+        webServer.send(303);
+        uint32_t lcdOtaDelay = millis();
+        while ((millis() - lcdOtaDelay) < 1000)
+        { // extra 1sec delay for client to grab failure page
+          webServer.handleClient();
+          delay(1);
+        }
         espReset();
       }
     }
   }
   else if (upload.status == UPLOAD_FILE_ABORTED)
-  {
+  { // Something went kablooey
     debugPrintln(F("LCD OTA: ERROR: upload.status returned: UPLOAD_FILE_ABORTED"));
-    // delay(5000); // delay for user to read output
+    debugPrintln(F("LCD OTA: Failure"));
+    webServer.sendHeader("Location", "/lcdOtaFailure");
+    webServer.send(303);
+    uint32_t lcdOtaDelay = millis();
+    while ((millis() - lcdOtaDelay) < 1000)
+    { // extra 1sec delay for client to grab failure page
+      webServer.handleClient();
+      delay(1);
+    }
     espReset();
   }
   else
-  {
+  { // Something went weird, we should never get here...
     debugPrintln(String(F("LCD OTA: upload.status returned: ")) + String(upload.status));
-    // delay(5000); // delay for user to read output
+    debugPrintln(F("LCD OTA: Failure"));
+    webServer.sendHeader("Location", "/lcdOtaFailure");
+    webServer.send(303);
+    uint32_t lcdOtaDelay = millis();
+    while ((millis() - lcdOtaDelay) < 1000)
+    { // extra 1sec delay for client to grab failure page
+      webServer.handleClient();
+      delay(1);
+    }
     espReset();
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void webHandleLcdUpdateSuccess()
+{ // http://plate01/lcdOtaSuccess
+  if (configPassword[0] != '\0')
+  { //Request HTTP auth if configPassword is set
+    if (!webServer.authenticate(configUser, configPassword))
+    {
+      return webServer.requestAuthentication();
+    }
+  }
+  debugPrintln(String(F("HTTP: Sending /lcdOtaSuccess page to client connected from: ")) + webServer.client().remoteIP().toString());
+  String httpMessage = FPSTR(HTTP_HEAD);
+  httpMessage.replace("{v}", (String(haspNode) + " LCD update success"));
+  httpMessage += FPSTR(HTTP_SCRIPT);
+  httpMessage += FPSTR(HTTP_STYLE);
+  httpMessage += String(HASP_STYLE);
+  httpMessage += String(F("<meta http-equiv='refresh' content='15;url=/' />"));
+  httpMessage += FPSTR(HTTP_HEAD_END);
+  httpMessage += String(F("<h1>")) + String(haspNode) + String(F(" LCD update success</h1>"));
+  httpMessage += String(F("Restarting HASwitchPlate to apply changes..."));
+  httpMessage += FPSTR(HTTP_END);
+  webServer.send(200, "text/html", httpMessage);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void webHandleLcdUpdateFailure()
+{ // http://plate01/lcdOtaFailure
+  if (configPassword[0] != '\0')
+  { //Request HTTP auth if configPassword is set
+    if (!webServer.authenticate(configUser, configPassword))
+    {
+      return webServer.requestAuthentication();
+    }
+  }
+  debugPrintln(String(F("HTTP: Sending /lcdOtaFailure page to client connected from: ")) + webServer.client().remoteIP().toString());
+  String httpMessage = FPSTR(HTTP_HEAD);
+  httpMessage.replace("{v}", (String(haspNode) + " LCD update failed"));
+  httpMessage += FPSTR(HTTP_SCRIPT);
+  httpMessage += FPSTR(HTTP_STYLE);
+  httpMessage += String(HASP_STYLE);
+  httpMessage += String(F("<meta http-equiv='refresh' content='15;url=/' />"));
+  httpMessage += FPSTR(HTTP_HEAD_END);
+  httpMessage += String(F("<h1>")) + String(haspNode) + String(F(" LCD update failed :(</h1>"));
+  httpMessage += String(F("Restarting HASwitchPlate to reset device..."));
+  httpMessage += FPSTR(HTTP_END);
+  webServer.send(200, "text/html", httpMessage);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2133,7 +2273,7 @@ void webHandleLcdDownload()
   httpMessage += FPSTR(HTTP_END);
   webServer.send(200, "text/html", httpMessage);
 
-  debugPrintln("LCDFW: Attempting LCD firmware update from: " + String(webServer.arg("lcdFirmware")));
+  // debugPrintln("LCDFW: Attempting LCD firmware update from: " + String(webServer.arg("lcdFirmware")));
   nextionStartOtaDownload(webServer.arg("lcdFirmware"));
 }
 
@@ -2191,7 +2331,7 @@ bool updateCheck()
   HTTPClient updateClient;
   debugPrintln(String(F("UPDATE: Checking update URL: ")) + String(UPDATE_URL));
   String updatePayload;
-  updateClient.begin(UPDATE_URL);
+  updateClient.begin(wifiClient, UPDATE_URL);
 
   // start connection and send HTTP header
   int httpCode = updateClient.GET();
@@ -2360,14 +2500,13 @@ void handleTelnetClient()
 void debugPrintln(String debugText)
 { // Debug output line of text to our debug targets
   String debugTimeText = "[+" + String(float(millis()) / 1000, 3) + "s] " + debugText;
+  Serial.println(debugTimeText);
   if (debugSerialEnabled)
   {
     SoftwareSerial debugSerial = SoftwareSerial(17, 1); // 17==nc for RX, 1==TX pin
     debugSerial.begin(115200);
     debugSerial.println(debugTimeText);
     debugSerial.flush();
-    Serial.println(debugTimeText);
-    Serial.flush();
   }
   if (debugTelnetEnabled)
   {
@@ -2386,15 +2525,13 @@ void debugPrint(String debugText)
   // happens.  Far better to put everything into a line and send it all out in one packet using
   // debugPrintln.
   if (debugSerialEnabled)
+    Serial.print(debugText);
   {
     SoftwareSerial debugSerial = SoftwareSerial(17, 1); // 17==nc for RX, 1==TX pin
     debugSerial.begin(115200);
     debugSerial.print(debugText);
     debugSerial.flush();
-    Serial.print(debugText);
-    Serial.flush();
   }
-
   if (debugTelnetEnabled)
   {
     if (telnetClient.connected())
