@@ -123,6 +123,7 @@ ESP8266WebServer webServer(80);
 ESP8266HTTPUpdateServer httpOTAUpdate;
 WiFiServer telnetServer(23);
 WiFiClient telnetClient;
+MDNSResponder::hMDNSService hMDNSService;
 
 // Additional CSS style to match Hass theme
 const char HASP_STYLE[] = "<style>button{background-color:#03A9F4;}body{width:60%;margin:auto;}input:invalid{border:1px solid red;}input[type=checkbox]{width:20px;}</style>";
@@ -165,19 +166,17 @@ void setup()
   espWifiSetup(); // Start up networking
 
   if (mdnsEnabled)
-  {
-    MDNS.begin(haspNode); // Add mDNS hostname
-    // MDNS.addService("http", "tcp", 80);
+  { // Setup mDNS service discovery if enabled
+    hMDNSService = MDNS.addService(haspNode, "http", "tcp", 80);
     if (debugTelnetEnabled)
     {
-      MDNS.addService("telnet", "tcp", 23);
+      MDNS.addService(haspNode, "telnet", "tcp", 23);
     }
-    MDNS.addServiceTxt("arduino", "tcp", "app_name", "HASwitchPlate");
-    MDNS.addServiceTxt("arduino", "tcp", "app_version", String(haspVersion));
-    MDNS.addServiceTxt("arduino", "tcp", "mac", WiFi.macAddress());
+    MDNS.addServiceTxt(hMDNSService, "app_name", "HASwitchPlate");
+    MDNS.addServiceTxt(hMDNSService, "app_version", String(haspVersion).c_str());    
     MDNS.update();
   }
-
+  
   if ((configPassword[0] != '\0') && (configUser[0] != '\0'))
   {
     httpOTAUpdate.setup(&webServer, "/update", configUser, configPassword);
@@ -213,7 +212,6 @@ void setup()
 
   if (debugTelnetEnabled)
   { // Setup telnet server for remote debug output
-
     telnetServer.setNoDelay(true);
     telnetServer.begin();
     debugPrintln(String(F("TELNET: debug server enabled at telnet:")) + WiFi.localIP().toString());
@@ -994,14 +992,18 @@ void nextionStartOtaDownload(String otaUrl)
       lcdOtaTransferred += lcdOtaChunkCounter;
       if ((lcdOtaTransferred == lcdOtaFileSize) && nextionOtaResponse())
       {
-        debugPrintln(String(F("LCD OTA: success, wrote ")) + String(lcdOtaTransferred) + " of " + String(lcdOtaFileSize) + " bytes.");
-        delay(5000); // extra delay while the LCD does its thing
+        debugPrintln(String(F("LCD OTA: Success, wrote ")) + String(lcdOtaTransferred) + " of " + String(tftFileSize) + " bytes.");
+        uint32_t lcdOtaDelay = millis();
+        while ((millis() - lcdOtaDelay) < 5000)
+        { // extra 5sec delay while the LCD handles any local firmware updates from new versions of code sent to it
+          webServer.handleClient();
+          delay(1);
+        }
         espReset();
       }
       else
       {
-        debugPrintln(F("LCD OTA: failure"));
-        delay(2000); // extra delay while the LCD does its thing
+        debugPrintln(F("LCD OTA: Failure"));
         espReset();
       }
     }
