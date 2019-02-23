@@ -683,8 +683,10 @@ void nextionProcessInput()
       String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
       debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'OFF'");
       mqttClient.publish(mqttButtonTopic, "OFF");
+      // Burger King Hobbies is up to something with these two lines below, not sure what exactly.
       //      String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + String(nextionPage) + String(F("].b[")) + String(nextionButtonID) + String(F("]\", \"value\":\"OFF\"}"));
       //      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+      //
       // Now see if this object has a .val that might have been updated.
       // works for sliders, two-state buttons, etc, throws a 0x1A error for normal buttons
       // which we'll catch and ignore

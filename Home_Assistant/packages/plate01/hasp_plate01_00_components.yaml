@@ -47,16 +47,11 @@ binary_sensor:
 sensor:
   - platform: mqtt
     name: plate01 Sensor
-    state_topic: "hasp/plate01/sensor"
-    value_template: '{{ value_json.status }}'
-    json_attributes:
-      - espVersion
-      - updateESPAvailable
-      - lcdVersion
-      - updateLcdAvailable
-      - espUptime
-      - signalStrength
-      - haspIP
+    state_topic: "hasp/plate01/status"
+    availability_topic: "hasp/plate01/status"
+    payload_available: "ON"
+    payload_not_available: "OFF"
+    json_attributes_topic:  "hasp/plate01/sensor"
 
 input_text:
   hasp_plate01_pagebutton1label:
