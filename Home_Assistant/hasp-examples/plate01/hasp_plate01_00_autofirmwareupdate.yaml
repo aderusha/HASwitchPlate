@@ -7,7 +7,7 @@ automation:
         at: '3:00:00'
     condition:
     - condition: template
-      value_template: '{{ states.sensor.plate01_status.attributes.updateESPAvailable == true }}'
+      value_template: '{{ states.sensor.plate01_status.attributes.updateEspAvailable == true }}'
     - condition: state
       entity_id: 'binary_sensor.plate01_connected'
       state: 'on'
