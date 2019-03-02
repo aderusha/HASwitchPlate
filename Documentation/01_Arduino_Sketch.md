@@ -40,7 +40,7 @@ To enable future firmware updates you'll need to modify settings in the Arudino 
 
 **Warning:** [ArduinoJson as installed by the Arduino IDE is a beta release](https://github.com/bblanchon/ArduinoJson/issues/756), which currently doesn't work with the existing codebase.  You'll need to manually install the latest stable 5.x release for this sketch to work.
 
-ESP8266 for Arduino version 2.4.2 breaks LCD firmware uploading from the web page, use version 2.4.1 of the ESP8266 board manager package to compile until this error is resolved.  If using PlatformIO, set the directive `platform = espressif8266@1.7.3` in your `platformio.ini`.
+HASP now makes use of functionality from the ESP8266 for Arduino version 2.5.0, so make sure you're up-to-date on your board manager in the Arduino IDE.
 
 ## First-time Setup
 
