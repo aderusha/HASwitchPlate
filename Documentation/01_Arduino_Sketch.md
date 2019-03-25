@@ -25,22 +25,18 @@ Now proceed to [First-time Setup](#first-time-setup) to connect to your wireless
 
 ## Arduino IDE
 
-[Download the IDE for your platform](https://www.arduino.cc/en/Main/Software) and [follow these instructions to add support for the ESP8266 platform](https://github.com/esp8266/Arduino#installing-with-boards-manager).
+[Download the IDE for your platform](https://www.arduino.cc/en/Main/Software) and [follow these instructions to add support for the ESP8266 platform](https://github.com/esp8266/Arduino#installing-with-boards-manager).  HASP is currently compiled with Arduino core for ESP8266 version 2.5.0.  Once this is installed, select the board `LOLIN(WEMOS) D1 R2 & mini` from 'Tools' > 'Board'
 
 ### Required Libraries
 
 Next you will need to add several libraries to your Arduino environment.  [Follow this guide for the general process](https://www.arduino.cc/en/Guide/Libraries) and add the following libraries to your IDE:
 
-* [ArduinoJson](https://arduinojson.org/?utm_source=meta&utm_medium=library.properties)
-* [MQTT](https://github.com/256dpi/arduino-mqtt)
-* [WiFiManager](https://github.com/tzapu/WiFiManager)
+* [ArduinoJson](https://arduinojson.org/?utm_source=meta&utm_medium=library.properties) by Benoit Blanchon version 5.13.5 (not version 6!)
+* [MQTT](https://github.com/256dpi/arduino-mqtt) by Joel Gaehwiler version 2.4.3
+* [WiFiManager](https://github.com/tzapu/WiFiManager) by tzapu version 0.14.0
 
 To enable future firmware updates you'll need to modify settings in the Arudino IDE for 1M SPIFFs, leaving 3M free for code and updates.  In the Arduino IDE select `Tools` > `Flash Size:` > `4M (1M SPIFFS)`.  If you're using [PlatformIO](https://platformio.org/) instead of Arduino, [modify the build flags](http://docs.platformio.org/en/latest/platforms/espressif8266.html#flash-size) to include `-Wl,-Teagle.flash.4m1m.ld`
 ![Arduino Erase All Flash Contents](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Arduino_1M_SPIFFS.png?raw=true)
-
-**Warning:** [ArduinoJson as installed by the Arduino IDE is a beta release](https://github.com/bblanchon/ArduinoJson/issues/756), which currently doesn't work with the existing codebase.  You'll need to manually install the latest stable 5.x release for this sketch to work.
-
-HASP now makes use of functionality from the ESP8266 for Arduino version 2.5.0, so make sure you're up-to-date on your board manager in the Arduino IDE.
 
 ## First-time Setup
 
