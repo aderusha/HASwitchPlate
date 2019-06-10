@@ -46,7 +46,7 @@ binary_sensor:
 
 sensor:
   - platform: mqtt
-    name: plate01 Sensor
+    name: plate01 Status
     state_topic: "hasp/plate01/status"
     availability_topic: "hasp/plate01/status"
     payload_available: "ON"
