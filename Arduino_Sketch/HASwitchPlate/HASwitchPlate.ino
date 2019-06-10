@@ -59,7 +59,7 @@ char motionPinConfig[3] = "0";
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 
-const float haspVersion = 0.37;                     // Current HASP software release version
+const float haspVersion = 0.38;                     // Current HASP software release version
 byte nextionReturnBuffer[128];                      // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;                     // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                      // Track active LCD page
@@ -167,14 +167,14 @@ void setup()
 
   if (mdnsEnabled)
   { // Setup mDNS service discovery if enabled
-    hMDNSService = MDNS.addService(haspNode, "http", "tcp", 80);
-    if (debugTelnetEnabled)
-    {
-      MDNS.addService(haspNode, "telnet", "tcp", 23);
-    }
-    MDNS.addServiceTxt(hMDNSService, "app_name", "HASwitchPlate");
-    MDNS.addServiceTxt(hMDNSService, "app_version", String(haspVersion).c_str());    
-    MDNS.update();
+    // hMDNSService = MDNS.addService(haspNode, "http", "tcp", 80);
+    // if (debugTelnetEnabled)
+    // {
+    //   MDNS.addService(haspNode, "telnet", "tcp", 23);
+    // }
+    // MDNS.addServiceTxt(hMDNSService, "app_name", "HASwitchPlate");
+    // MDNS.addServiceTxt(hMDNSService, "app_version", String(haspVersion).c_str());    
+    // MDNS.update();
   }
   
   if ((configPassword[0] != '\0') && (configUser[0] != '\0'))
@@ -683,10 +683,8 @@ void nextionProcessInput()
       String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
       debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'OFF'");
       mqttClient.publish(mqttButtonTopic, "OFF");
-      // Burger King Hobbies is up to something with these two lines below, not sure what exactly.
       //      String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + String(nextionPage) + String(F("].b[")) + String(nextionButtonID) + String(F("]\", \"value\":\"OFF\"}"));
       //      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
-      //
       // Now see if this object has a .val that might have been updated.
       // works for sliders, two-state buttons, etc, throws a 0x1A error for normal buttons
       // which we'll catch and ignore
@@ -1238,7 +1236,7 @@ void espWifiSetup()
   }
   // If you get here you have connected to WiFi
   nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\"");
-  debugPrintln(String(F("WIFI: Connected succesfully and assigned IP: ")) + WiFi.localIP().toString());
+  debugPrintln(String(F("WIFI: Connected successfully and assigned IP: ")) + WiFi.localIP().toString());
   if (nextionActivePage)
   {
     nextionSendCmd("page " + String(nextionActivePage));
@@ -2503,7 +2501,7 @@ void debugPrintln(String debugText)
   Serial.println(debugTimeText);
   if (debugSerialEnabled)
   {
-    SoftwareSerial debugSerial = SoftwareSerial(17, 1); // 17==nc for RX, 1==TX pin
+    SoftwareSerial debugSerial (SW_SERIAL_UNUSED_PIN, 1); // 17==nc for RX, 1==TX pin
     debugSerial.begin(115200);
     debugSerial.println(debugTimeText);
     debugSerial.flush();
@@ -2527,7 +2525,7 @@ void debugPrint(String debugText)
   if (debugSerialEnabled)
     Serial.print(debugText);
   {
-    SoftwareSerial debugSerial = SoftwareSerial(17, 1); // 17==nc for RX, 1==TX pin
+    SoftwareSerial debugSerial (SW_SERIAL_UNUSED_PIN, 1); // 17==nc for RX, 1==TX pin
     debugSerial.begin(115200);
     debugSerial.print(debugText);
     debugSerial.flush();
