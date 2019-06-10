@@ -8,7 +8,7 @@ The [enclosure provided](../3D_Printable_Models) includes STL files ready for sl
 
 ### High voltage AC cabling
 
-The AC power cables should be at least 18AWG 300V stranded cable with a white jacket soldered to the `AC/N` pad on the PCB and a similar wire with a black jacket soldered to `AN/L`.  These are fed through a [rubber push-in grommet](https://amzn.to/2N6Etny) mounted into the rear enclosure.  I've had good luck stripping an existing 3 conductor power cord and using the black/white wires inside.
+The AC power cables should be at least 18AWG 300V stranded cable with a white jacket soldered to the `AC/N` pad on the PCB and a similar wire with a black jacket soldered to `AC/L`.  These are fed through a [rubber push-in grommet](https://amzn.to/2N6Etny) mounted into the rear enclosure.  I've had good luck stripping an existing 3 conductor power cord and using the black/white wires inside.
 
 ### Threaded Inserts
 
