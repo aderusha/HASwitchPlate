@@ -167,14 +167,14 @@ void setup()
 
   if (mdnsEnabled)
   { // Setup mDNS service discovery if enabled
-    // hMDNSService = MDNS.addService(haspNode, "http", "tcp", 80);
-    // if (debugTelnetEnabled)
-    // {
-    //   MDNS.addService(haspNode, "telnet", "tcp", 23);
-    // }
-    // MDNS.addServiceTxt(hMDNSService, "app_name", "HASwitchPlate");
-    // MDNS.addServiceTxt(hMDNSService, "app_version", String(haspVersion).c_str());    
-    // MDNS.update();
+    hMDNSService = MDNS.addService(haspNode, "http", "tcp", 80);
+    if (debugTelnetEnabled)
+    {
+      MDNS.addService(haspNode, "telnet", "tcp", 23);
+    }
+    MDNS.addServiceTxt(hMDNSService, "app_name", "HASwitchPlate");
+    MDNS.addServiceTxt(hMDNSService, "app_version", String(haspVersion).c_str());    
+    MDNS.update();
   }
   
   if ((configPassword[0] != '\0') && (configUser[0] != '\0'))
