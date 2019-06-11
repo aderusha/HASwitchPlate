@@ -6,7 +6,7 @@ Configuring Home Assistant for the HASP requires making some basic changes to yo
 
 For standard Home Assistant installations you can run an [automatic deployment script](../Home_Assistant/deployhasp.sh) which will attempt to make the required changes to your Home Assistant installation to support the HASP and a [Home Assistant Packages](../Home_Assistant/packages) bundle for each HASP device which you deploy.  If you'd rather make all the changes yourself, jump to the [Manual Home Assistant installation section](#manual-home-assistant-installation).
 
-You'll need to ssh to your Home Assistant installation as a user who has access to write to your home assistant installation.  For most installations, this will be the user `homeassistant`. 
+You'll need to ssh to your Home Assistant installation as a user who has access to write to your home assistant installation.  For most installations, this will be the user `homeassistant`.
 
 ```bash
 sudo su -s /bin/bash homeassistant
@@ -80,6 +80,7 @@ Finally, you'll need to restart Home Assistant to apply your changes then contin
 ## First time setup
 
 > ### NOTICE
+>
 > If you're running Lovelace (now the new default Home Assistant web UI), there [currently is no way for a project like HASP to add panels](https://community.home-assistant.io/t/lovelace-in-ha-package-files/92619).  You'll need to switch to the "states" UI before proceeding.  If your installation is accessed at `http://hassio.local:8123`, navigate to `http://hassio.local:8123/states` to access the states UI.
 
 Upon startup the default HMI display file contains empty buttons with no text.  Launch the Home Assistant web UI and look for a new tab with your chosen device name.  Select that tab and look for the automation titled `hasp_<your_device_name>_00_FirstTimeSetup`.  Select that automation and click "TRIGGER" to apply the basic configuration to your new device.
