@@ -854,13 +854,12 @@ void nextionSendCmd(String nextionCmd)
 void nextionParseJson(String &strPayload)
 { // Parse an incoming JSON array into individual Nextion commands
   if (strPayload.endsWith(",]"))
-  { // Newer versions of ArduinoJSON no longer support JSON arrays with null elements, because the
-    // author loves breaking functionality with every release.  So, let's find any trailing null
-    // element and move on with life
+  { // Trailing null array elements are an artifact of older Home Assistant automations and need to
+    // be removed before parsing by ArduinoJSON 6+
     strPayload.remove(strPayload.length() - 2, 2);
     strPayload.concat("]");
   }
-  DynamicJsonDocument nextionCommands(mqttMaxPacketSize);
+  DynamicJsonDocument nextionCommands(mqttMaxPacketSize + 1024);
   DeserializationError jsonError = deserializeJson(nextionCommands, strPayload);
   if (jsonError)
   { // Couldn't parse incoming JSON command
