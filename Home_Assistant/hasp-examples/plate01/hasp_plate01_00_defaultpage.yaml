@@ -1,0 +1,74 @@
+##############################################################################
+# Automations and required components to return to a specified default page
+# after a period of time
+
+timer:
+  hasp_plate01_defaultpagetimer:
+    name: plate01 Default Page Timer
+
+input_number:
+  hasp_plate01_defaultpagenumber:
+    name: plate01 Default Page
+    icon: mdi:format-list-numbered
+    min: 1
+    max: 9
+    step: 1
+  hasp_plate01_defaultpagetimeout:
+    name: plate01 Default Page Timeout in seconds
+    icon: mdi:clock-end
+    mode: box
+    min: 1
+    max: 9999
+    step: 1
+
+group:
+  plate01_defaultpage:
+    name: plate01 Default Page
+    view: no
+    entities:
+      - input_number.hasp_plate01_defaultpagenumber
+      - input_number.hasp_plate01_defaultpagetimeout
+      - timer.hasp_plate01_defaultpagetimer
+
+automation:
+##############################################################################
+# Set timer
+  - alias: hasp_plate01_00_DefaultPageTimerSet
+    trigger:
+      platform: state
+      entity_id: input_number.hasp_plate01_activepage
+    action:
+    - service: timer.cancel
+      data_template:
+        entity_id: timer.hasp_plate01_defaultpagetimer
+    - service: timer.start
+      data_template:
+        entity_id: timer.hasp_plate01_defaultpagetimer
+        duration: '00:00:{{ states.input_number.hasp_plate01_defaultpagetimeout.state | int }}'
+
+##############################################################################
+# Set page at timer expiration
+  - alias: hasp_plate01_00_DefaultPageSet
+    trigger:
+      platform: event
+      event_type: timer.finished
+      event_data:
+        entity_id: timer.hasp_plate01_defaultpagetimer
+    action:
+    - service: mqtt.publish
+      data_template:
+        topic: 'hasp/plate01/command/page'
+        payload_template: '{{states.input_number.hasp_plate01_defaultpagenumber.state|int}}'
+
+##############################################################################
+# Add the default page group to the main view
+  - alias: hasp_plate01_00_DefaultPageTimerGroupUpdate
+    trigger:
+    - platform: homeassistant
+      event: start
+    action:
+    - service: group.set
+      data_template:
+        object_id: "plate01"
+        add_entities:
+          - group.plate01_defaultpage
