@@ -67,52 +67,52 @@ input_text:
 input_number:
   hasp_plate01_pagebutton1page:
     name: plate01 Page 1 Page
-    icon: mdi:format-list-numbers
+    icon: mdi:format-list-numbered
     min: 0
     max: 9
     step: 1
   hasp_plate01_pagebutton2page:
     name: plate01 Page 2 Page
-    icon: mdi:format-list-numbers
+    icon: mdi:format-list-numbered
     min: 0
     max: 9
     step: 1
   hasp_plate01_pagebutton3page:
     name: plate01 Page 3 Page
-    icon: mdi:format-list-numbers
+    icon: mdi:format-list-numbered
     min: 0
     max: 9
     step: 1
   hasp_plate01_activepage:
     name: plate01 Active Page
-    icon: mdi:format-list-numbers
+    icon: mdi:format-list-numbered
     min: 0
     max: 9
     step: 1
   hasp_plate01_alarmcode1:
     name: plate01 AlarmCode1
-    icon: mdi:format-list-numbers
+    icon: mdi:format-list-numbered
     min: -1
     max: 9
     step: 1
     initial: -1
   hasp_plate01_alarmcode2:
     name: plate01 AlarmCode2
-    icon: mdi:format-list-numbers
+    icon: mdi:format-list-numbered
     min: -1
     max: 9
     step: 1
     initial: -1
   hasp_plate01_alarmcode3:
     name: plate01 AlarmCode3
-    icon: mdi:format-list-numbers
+    icon: mdi:format-list-numbered
     min: -1
     max: 9
     step: 1
     initial: -1
   hasp_plate01_alarmcode4:
     name: plate01 AlarmCode4
-    icon: mdi:format-list-numbers
+    icon: mdi:format-list-numbered
     min: -1
     max: 9
     step: 1

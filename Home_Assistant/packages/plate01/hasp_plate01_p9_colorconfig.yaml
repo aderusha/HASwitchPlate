@@ -1,24 +1,18 @@
 ##############################################################################
 # Automations to set colors on HASP Page 9
 #
-# Here we've swapped selected/unselected as these buttons will always be
-# unselected (unless actively being pressed).
+# The graph object on page 9 cannot be set global, so we can only fire off
+# color commands when the page is selected.  We'll wait 1 second to make
+# sure the page change command is sent before the color commands.
 automation:
   - alias: hasp_plate01_p9_ColorConfig
     trigger:
-    - platform: state
-      entity_id: 'binary_sensor.plate01_connected'
-      to: 'on'
-    - platform: homeassistant
-      event: start
-    - platform: state
-      entity_id: input_number.hasp_plate01_selectedbackgroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_selectedforegroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+      platform: state
+      entity_id: input_number.hasp_plate01_activepage
+      to: '9.0'
+      for: '00:00:01'
+    # Here we've swapped selected/unselected as these buttons will always be
+    # unselected (unless actively being pressed).
     action:
     - service: mqtt.publish
       data:

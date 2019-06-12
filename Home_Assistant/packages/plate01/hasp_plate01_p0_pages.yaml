@@ -175,7 +175,7 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(1,10) -%}"p[{{i}}].b[1].txt=\"{{states.input_text.hasp_plate01_pagebutton1label.state}}\"",{%- endfor -%}]
+          [{%- for i in range(1,10) -%}"p[{{i}}].b[1].txt=\"{{states.input_text.hasp_plate01_pagebutton1label.state}}\""{% if not loop.last %},{% endif %}{%- endfor -%}]
 
 # set page button text on each page to hasp-plate01-PageButton2Label
   - alias: hasp_plate01_p0_PageButton2_Text
@@ -192,7 +192,7 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(1,10) -%}"p[{{i}}].b[2].txt=\"{{states.input_text.hasp_plate01_pagebutton2label.state}}\"",{%- endfor -%}]
+          [{%- for i in range(1,10) -%}"p[{{i}}].b[2].txt=\"{{states.input_text.hasp_plate01_pagebutton2label.state}}\""{% if not loop.last %},{% endif %}{%- endfor -%}]
 
 # set page button text on each page to hasp-plate01-PageButton3Label
   - alias: hasp_plate01_p0_PageButton3_Text
@@ -209,7 +209,7 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(1,10) -%}"p[{{i}}].b[3].txt=\"{{states.input_text.hasp_plate01_pagebutton3label.state}}\"",{%- endfor -%}]
+          [{%- for i in range(1,10) -%}"p[{{i}}].b[3].txt=\"{{states.input_text.hasp_plate01_pagebutton3label.state}}\""{% if not loop.last %},{% endif %}{%- endfor -%}]
 
 ##############################################################################
 # Set page button colors across selected pages to show active page button
@@ -273,5 +273,5 @@ automation:
               {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}
             {%- else -%}
               {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}
-            {%- endif %}",
+            {%- endif %}"{% if not loop.last %},{% endif %}
           {%- endfor -%}]
