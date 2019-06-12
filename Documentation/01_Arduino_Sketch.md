@@ -31,7 +31,7 @@ Now proceed to [First-time Setup](#first-time-setup) to connect to your wireless
 
 Next you will need to add several libraries to your Arduino environment.  [Follow this guide for the general process](https://www.arduino.cc/en/Guide/Libraries) and add the following libraries to your IDE:
 
-* [ArduinoJson](https://arduinojson.org/?utm_source=meta&utm_medium=library.properties) by Benoit Blanchon version 5.13.5 (not version 6!)
+* [ArduinoJson](https://arduinojson.org/?utm_source=meta&utm_medium=library.properties) by Benoit Blanchon version 6.11 or higher
 * [MQTT](https://github.com/256dpi/arduino-mqtt) by Joel Gaehwiler version 2.4.3
 * [WiFiManager](https://github.com/tzapu/WiFiManager) by tzapu version 0.14.0
 

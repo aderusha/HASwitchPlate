@@ -28,10 +28,10 @@ automation:
           [{%- for i in range(4,7) -%}"p[4].b[{{i}}].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",{%- endfor -%}
           {%- for i in range(4,7) -%}"p[4].b[{{i}}].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}",{%- endfor -%}
           {%- for i in range(4,7) -%}"p[4].b[{{i}}].pco2={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",{%- endfor -%}
-          {%- for i in range(4,7) -%}"p[4].b[{{i}}].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",{%- endfor -%}]
+          {%- for i in range(4,7) -%}"p[4].b[{{i}}].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
           [{%- for i in range(7,10) -%}"p[4].b[{{i}}].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",{%- endfor -%}
-          {%- for i in range(7,10) -%}"p[4].b[{{i}}].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",{%- endfor -%}]
+          {%- for i in range(7,10) -%}"p[4].b[{{i}}].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]

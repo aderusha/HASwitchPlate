@@ -59,7 +59,7 @@ char motionPinConfig[3] = "0";
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 
-const float haspVersion = 0.37;                     // Current HASP software release version
+const float haspVersion = 0.38;                     // Current HASP software release version
 byte nextionReturnBuffer[128];                      // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;                     // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                      // Track active LCD page
@@ -148,9 +148,8 @@ void setup()
 
   configRead(); // Check filesystem for a saved config.json
 
-  // Wait up to 5 seconds for serial input from LCD
   while (!lcdConnected && (millis() < 5000))
-  {
+  { // Wait up to 5 seconds for serial input from LCD
     nextionHandleInput();
   }
   if (lcdConnected)
@@ -173,16 +172,16 @@ void setup()
       MDNS.addService(haspNode, "telnet", "tcp", 23);
     }
     MDNS.addServiceTxt(hMDNSService, "app_name", "HASwitchPlate");
-    MDNS.addServiceTxt(hMDNSService, "app_version", String(haspVersion).c_str());    
+    MDNS.addServiceTxt(hMDNSService, "app_version", String(haspVersion).c_str());
     MDNS.update();
   }
-  
+
   if ((configPassword[0] != '\0') && (configUser[0] != '\0'))
-  {
+  { // Start the webserver with our assigned password if it's been configured...
     httpOTAUpdate.setup(&webServer, "/update", configUser, configPassword);
   }
   else
-  {
+  { // or without a password if not
     httpOTAUpdate.setup(&webServer, "/update");
   }
   webServer.on("/", webHandleRoot);
@@ -200,15 +199,13 @@ void setup()
   webServer.begin();
   debugPrintln(String(F("HTTP: Server started @ http://")) + WiFi.localIP().toString());
 
-  espSetupOta();
+  espSetupOta(); // Start OTA firmware update
 
-  // Create server and assign callbacks for MQTT
-  mqttClient.begin(mqttServer, atoi(mqttPort), wifiMQTTClient);
-  mqttClient.onMessage(mqttCallback);
-  mqttConnect();
+  mqttClient.begin(mqttServer, atoi(mqttPort), wifiMQTTClient); // Create MQTT service object
+  mqttClient.onMessage(mqttCallback);                           // Setup MQTT callback function
+  mqttConnect();                                                // Connect to MQTT
 
-  // Setup motion sensor if configured
-  motionSetup();
+  motionSetup(); // Setup motion sensor if configured
 
   if (debugTelnetEnabled)
   { // Setup telnet server for remote debug output
@@ -216,6 +213,7 @@ void setup()
     telnetServer.begin();
     debugPrintln(String(F("TELNET: debug server enabled at telnet:")) + WiFi.localIP().toString());
   }
+
   debugPrintln(F("SYSTEM: System init complete."));
 }
 
@@ -683,13 +681,8 @@ void nextionProcessInput()
       String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
       debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'OFF'");
       mqttClient.publish(mqttButtonTopic, "OFF");
-      // Burger King Hobbies is up to something with these two lines below, not sure what exactly.
-      //      String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + String(nextionPage) + String(F("].b[")) + String(nextionButtonID) + String(F("]\", \"value\":\"OFF\"}"));
-      //      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
-      //
-      // Now see if this object has a .val that might have been updated.
-      // works for sliders, two-state buttons, etc, throws a 0x1A error for normal buttons
-      // which we'll catch and ignore
+      // Now see if this object has a .val that might have been updated.  Works for sliders,
+      // two-state buttons, etc, throws a 0x1A error for normal buttons which we'll catch and ignore
       mqttGetSubtopic = "/p[" + nextionPage + "].b[" + nextionButtonID + "].val";
       mqttGetSubtopicJSON = "p[" + nextionPage + "].b[" + nextionButtonID + "].val";
       nextionGetAttr("p[" + nextionPage + "].b[" + nextionButtonID + "].val");
@@ -860,11 +853,25 @@ void nextionSendCmd(String nextionCmd)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void nextionParseJson(String &strPayload)
 { // Parse an incoming JSON array into individual Nextion commands
-  DynamicJsonBuffer nextionJsonBuffer(256);
-  JsonArray &nextionCommands = nextionJsonBuffer.parseArray(strPayload, 1);
-  for (uint8_t i = 0; i < nextionCommands.size(); i++)
+  if (strPayload.endsWith(",]"))
+  { // Trailing null array elements are an artifact of older Home Assistant automations and need to
+    // be removed before parsing by ArduinoJSON 6+
+    strPayload.remove(strPayload.length() - 2, 2);
+    strPayload.concat("]");
+  }
+  DynamicJsonDocument nextionCommands(mqttMaxPacketSize + 1024);
+  DeserializationError jsonError = deserializeJson(nextionCommands, strPayload);
+  if (jsonError)
+  { // Couldn't parse incoming JSON command
+    debugPrintln(String(F("MQTT: [ERROR] Failed to parse incoming JSON command with error: ")) + String(jsonError.c_str()));
+  }
+  else
   {
-    nextionSendCmd(nextionCommands[i]);
+    deserializeJson(nextionCommands, strPayload);
+    for (uint8_t i = 0; i < nextionCommands.size(); i++)
+    {
+      nextionSendCmd(nextionCommands[i]);
+    }
   }
 }
 
@@ -1238,7 +1245,7 @@ void espWifiSetup()
   }
   // If you get here you have connected to WiFi
   nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\"");
-  debugPrintln(String(F("WIFI: Connected succesfully and assigned IP: ")) + WiFi.localIP().toString());
+  debugPrintln(String(F("WIFI: Connected successfully and assigned IP: ")) + WiFi.localIP().toString());
   if (nextionActivePage)
   {
     nextionSendCmd("page " + String(nextionActivePage));
@@ -1366,67 +1373,64 @@ void espReset()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void configRead()
 { // Read saved config.json from SPIFFS
-
-  // Read configuration from FS json
-  debugPrintln(F("SPIFFS: mounting FS..."));
-
+  debugPrintln(F("SPIFFS: mounting SPIFFS"));
   if (SPIFFS.begin())
   {
-    debugPrintln(F("SPIFFS: mounted file system"));
     if (SPIFFS.exists("/config.json"))
-    {
-      // File exists, reading and loading
-      debugPrintln(F("SPIFFS: reading config file"));
+    { // File exists, reading and loading
+      debugPrintln(F("SPIFFS: reading /config.json"));
       File configFile = SPIFFS.open("/config.json", "r");
       if (configFile)
       {
-        debugPrintln(F("SPIFFS: opened config file"));
-        size_t size = configFile.size();
-        // Allocate a buffer to store contents of the file.
-        std::unique_ptr<char[]> buf(new char[size]);
+        size_t configFileSize = configFile.size(); // Allocate a buffer to store contents of the file.
+        std::unique_ptr<char[]> buf(new char[configFileSize]);
+        configFile.readBytes(buf.get(), configFileSize);
 
-        configFile.readBytes(buf.get(), size);
-        DynamicJsonBuffer configJsonBuffer(256);
-        JsonObject &configJson = configJsonBuffer.parseObject(buf.get());
-        if (configJson.success())
+        DynamicJsonDocument configJson(1024);
+        DeserializationError jsonError = deserializeJson(configJson, buf.get());
+        if (jsonError)
+        { // Couldn't parse the saved config
+          debugPrintln(String(F("SPIFFS: [ERROR] Failed to parse /config.json: ")) + String(jsonError.c_str()));
+        }
+        else
         {
-          if (configJson["mqttServer"].success())
+          if (!configJson["mqttServer"].isNull())
           {
             strcpy(mqttServer, configJson["mqttServer"]);
           }
-          if (configJson["mqttPort"].success())
+          if (!configJson["mqttPort"].isNull())
           {
             strcpy(mqttPort, configJson["mqttPort"]);
           }
-          if (configJson["mqttUser"].success())
+          if (!configJson["mqttUser"].isNull())
           {
             strcpy(mqttUser, configJson["mqttUser"]);
           }
-          if (configJson["mqttPassword"].success())
+          if (!configJson["mqttPassword"].isNull())
           {
             strcpy(mqttPassword, configJson["mqttPassword"]);
           }
-          if (configJson["haspNode"].success())
+          if (!configJson["haspNode"].isNull())
           {
             strcpy(haspNode, configJson["haspNode"]);
           }
-          if (configJson["groupName"].success())
+          if (!configJson["groupName"].isNull())
           {
             strcpy(groupName, configJson["groupName"]);
           }
-          if (configJson["configUser"].success())
+          if (!configJson["configUser"].isNull())
           {
             strcpy(configUser, configJson["configUser"]);
           }
-          if (configJson["configPassword"].success())
+          if (!configJson["configPassword"].isNull())
           {
             strcpy(configPassword, configJson["configPassword"]);
           }
-          if (configJson["motionPinConfig"].success())
+          if (!configJson["motionPinConfig"].isNull())
           {
             strcpy(motionPinConfig, configJson["motionPinConfig"]);
           }
-          if (configJson["debugSerialEnabled"].success())
+          if (!configJson["debugSerialEnabled"].isNull())
           {
             if (configJson["debugSerialEnabled"])
             {
@@ -1437,7 +1441,7 @@ void configRead()
               debugSerialEnabled = false;
             }
           }
-          if (configJson["debugTelnetEnabled"].success())
+          if (!configJson["debugTelnetEnabled"].isNull())
           {
             if (configJson["debugTelnetEnabled"])
             {
@@ -1448,7 +1452,7 @@ void configRead()
               debugTelnetEnabled = false;
             }
           }
-          if (configJson["mdnsEnabled"].success())
+          if (!configJson["mdnsEnabled"].isNull())
           {
             if (configJson["mdnsEnabled"])
             {
@@ -1460,14 +1464,18 @@ void configRead()
             }
           }
           String configJsonStr;
-          configJson.printTo(configJsonStr);
+          serializeJson(configJson, configJsonStr);
           debugPrintln(String(F("SPIFFS: parsed json:")) + configJsonStr);
         }
-        else
-        {
-          debugPrintln(F("SPIFFS: [ERROR] Failed to load json config"));
-        }
       }
+      else
+      {
+        debugPrintln(F("SPIFFS: [ERROR] Failed to read /config.json"));
+      }
+    }
+    else
+    {
+      debugPrintln(F("SPIFFS: [WARNING] /config.json not found, will be created on first config save"));
     }
   }
   else
@@ -1488,20 +1496,19 @@ void configSave()
 { // Save the custom parameters to config.json
   nextionSetAttr("p[0].b[1].txt", "\"Saving\\rconfig\"");
   debugPrintln(F("SPIFFS: Saving config"));
-  DynamicJsonBuffer jsonBuffer(256);
-  JsonObject &json = jsonBuffer.createObject();
-  json["mqttServer"] = mqttServer;
-  json["mqttPort"] = mqttPort;
-  json["mqttUser"] = mqttUser;
-  json["mqttPassword"] = mqttPassword;
-  json["haspNode"] = haspNode;
-  json["groupName"] = groupName;
-  json["configUser"] = configUser;
-  json["configPassword"] = configPassword;
-  json["motionPinConfig"] = motionPinConfig;
-  json["debugSerialEnabled"] = debugSerialEnabled;
-  json["debugTelnetEnabled"] = debugTelnetEnabled;
-  json["mdnsEnabled"] = mdnsEnabled;
+  DynamicJsonDocument jsonConfigValues(1024);
+  jsonConfigValues["mqttServer"] = mqttServer;
+  jsonConfigValues["mqttPort"] = mqttPort;
+  jsonConfigValues["mqttUser"] = mqttUser;
+  jsonConfigValues["mqttPassword"] = mqttPassword;
+  jsonConfigValues["haspNode"] = haspNode;
+  jsonConfigValues["groupName"] = groupName;
+  jsonConfigValues["configUser"] = configUser;
+  jsonConfigValues["configPassword"] = configPassword;
+  jsonConfigValues["motionPinConfig"] = motionPinConfig;
+  jsonConfigValues["debugSerialEnabled"] = debugSerialEnabled;
+  jsonConfigValues["debugTelnetEnabled"] = debugTelnetEnabled;
+  jsonConfigValues["mdnsEnabled"] = mdnsEnabled;
 
   debugPrintln(String(F("SPIFFS: mqttServer = ")) + String(mqttServer));
   debugPrintln(String(F("SPIFFS: mqttPort = ")) + String(mqttPort));
@@ -1523,7 +1530,7 @@ void configSave()
   }
   else
   {
-    json.printTo(configFile);
+    serializeJson(jsonConfigValues, configFile);
     configFile.close();
   }
   shouldSaveConfig = false;
@@ -2273,7 +2280,6 @@ void webHandleLcdDownload()
   httpMessage += FPSTR(HTTP_END);
   webServer.send(200, "text/html", httpMessage);
 
-  // debugPrintln("LCDFW: Attempting LCD firmware update from: " + String(webServer.arg("lcdFirmware")));
   nextionStartOtaDownload(webServer.arg("lcdFirmware"));
 }
 
@@ -2332,16 +2338,12 @@ bool updateCheck()
   debugPrintln(String(F("UPDATE: Checking update URL: ")) + String(UPDATE_URL));
   String updatePayload;
   updateClient.begin(wifiClient, UPDATE_URL);
+  int httpCode = updateClient.GET(); // start connection and send HTTP header
 
-  // start connection and send HTTP header
-  int httpCode = updateClient.GET();
-
-  // httpCode will be negative on error
   if (httpCode > 0)
-  {
-    // file found at server
+  { // httpCode will be negative on error
     if (httpCode == HTTP_CODE_OK)
-    {
+    { // file found at server
       updatePayload = updateClient.getString();
     }
   }
@@ -2352,17 +2354,17 @@ bool updateCheck()
   }
   updateClient.end();
 
-  DynamicJsonBuffer updateJsonBuffer(sizeof(updatePayload));
-  // Parse JSON object
-  JsonObject &updateJson = updateJsonBuffer.parseObject(updatePayload);
-  if (!updateJson.success())
-  {
-    debugPrintln(F("UPDATE: JSON parsing failed"));
+  DynamicJsonDocument updateJson(2048);
+  DeserializationError jsonError = deserializeJson(updateJson, updatePayload);
+
+  if (jsonError)
+  { // Couldn't parse the returned JSON, so bail
+    debugPrintln(String(F("UPDATE: JSON parsing failed: ")) + String(jsonError.c_str()));
     return false;
   }
   else
   {
-    if (updateJson["d1_mini"]["version"].success())
+    if (!updateJson["d1_mini"]["version"].isNull())
     {
       updateEspAvailableVersion = updateJson["d1_mini"]["version"].as<float>();
       debugPrintln(String(F("UPDATE: updateEspAvailableVersion: ")) + String(updateEspAvailableVersion));
@@ -2373,7 +2375,7 @@ bool updateCheck()
         debugPrintln(String(F("UPDATE: New ESP version available: ")) + String(updateEspAvailableVersion));
       }
     }
-    if (nextionModel && updateJson[nextionModel]["version"].success())
+    if (nextionModel && !updateJson[nextionModel]["version"].isNull())
     {
       updateLcdAvailableVersion = updateJson[nextionModel]["version"].as<int>();
       debugPrintln(String(F("UPDATE: updateLcdAvailableVersion: ")) + String(updateLcdAvailableVersion));
@@ -2503,7 +2505,7 @@ void debugPrintln(String debugText)
   Serial.println(debugTimeText);
   if (debugSerialEnabled)
   {
-    SoftwareSerial debugSerial = SoftwareSerial(17, 1); // 17==nc for RX, 1==TX pin
+    SoftwareSerial debugSerial(SW_SERIAL_UNUSED_PIN, 1); // 17==nc for RX, 1==TX pin
     debugSerial.begin(115200);
     debugSerial.println(debugTimeText);
     debugSerial.flush();
@@ -2527,7 +2529,7 @@ void debugPrint(String debugText)
   if (debugSerialEnabled)
     Serial.print(debugText);
   {
-    SoftwareSerial debugSerial = SoftwareSerial(17, 1); // 17==nc for RX, 1==TX pin
+    SoftwareSerial debugSerial(SW_SERIAL_UNUSED_PIN, 1); // 17==nc for RX, 1==TX pin
     debugSerial.begin(115200);
     debugSerial.print(debugText);
     debugSerial.flush();
