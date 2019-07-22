@@ -82,7 +82,13 @@ bool debugSerialD8Enabled = true;                   // Enable hardware serial de
 const unsigned long telnetInputMax = 128;           // Size of user input buffer for user telnet session
 bool motionEnabled = false;                         // Motion sensor is enabled
 bool mdnsEnabled = true;                            // mDNS enabled
-bool beepEnabled = true;
+bool beepEnabled = true;                            // Keypress beep enabled
+unsigned long previousMillis = 0;                   // will store last time beep was updated
+long OnTime = 1000;                                 // milliseconds of on-time
+long OffTime = 1000;                                 // milliseconds of off-time
+boolean beepState;                                  // will store beepState true or false
+unsigned int beepCounter;                           // Count the number of beeps
+byte beepPin;                                       // define beep pin output
 uint8_t motionPin = 0;                              // GPIO input pin for motion sensor if connected and enabled
 bool motionActive = false;                          // Motion is being detected
 const unsigned long motionLatchTimeout = 30000;     // Latch time for motion sensor
@@ -108,7 +114,7 @@ String mqttGroupCommandTopic;                       // MQTT topic for incoming g
 String mqttStatusTopic;                             // MQTT topic for publishing device connectivity state
 String mqttSensorTopic;                             // MQTT topic for publishing device information in JSON format
 String mqttLightCommandTopic;                       // MQTT topic for incoming panel backlight on/off commands
-String mqttBeepCommandTopic;                         // MQTT topic for error beep 
+String mqttBeepCommandTopic;                        // MQTT topic for error beep 
 String mqttLightStateTopic;                         // MQTT topic for outgoing panel backlight on/off state
 String mqttLightBrightCommandTopic;                 // MQTT topic for incoming panel backlight dimmer commands
 String mqttLightBrightStateTopic;                   // MQTT topic for outgoing panel backlight dimmer state
@@ -142,14 +148,9 @@ void setup()
   
   if (beepEnabled)
   {
-    pinMode(4, OUTPUT);
-    beep(100);
-    beep(50);
-    beep(100);
+    beepPin = 4;
+    pinMode(beepPin, OUTPUT);
   }
-  
-  
-  
   pinMode(nextionResetPin, OUTPUT);
   digitalWrite(nextionResetPin, HIGH);
   Serial.begin(115200);  // Serial - LCD RX (after swap), debug TX
@@ -234,6 +235,22 @@ void setup()
 void loop()
 { // Main execution loop
 
+ if (beepEnabled){                                        // Process Beeps
+    if((beepState == true) && (millis() - previousMillis >= OnTime) && ((beepCounter > 0)))
+    {
+      beepState = false;                                   // Turn it off
+      previousMillis = millis();                           // Remember the time
+      analogWrite(beepPin, 254);                           // start beep for OnTime
+      if(beepCounter > 0){beepCounter--;}                  // Update the beep counter.
+    }
+    else if ((beepState == false) && (millis() - previousMillis >= OffTime) && ((beepCounter >= 0)))
+    {
+      beepState = true;                                    // turn it on
+      previousMillis = millis();                           // Remember the time
+      analogWrite(beepPin, 0);                             // stop beep for OffTime
+    }
+  }
+
   if (nextionHandleInput())
   { // Process user input from HMI
     nextionProcessInput();
@@ -314,16 +331,21 @@ void loop()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void beep(unsigned char delayms){
-  analogWrite(4, 254);      // Almost any value can be used except 0 and 255
-                           // experiment to get the best tone
-  delay(delayms);          // wait for a delayms ms
-  analogWrite(4, 0);       // 0 turns it off
-  delay(delayms);          // wait for a delayms ms   
-}  
+String getValue(String data, char separator, int index)
+{
+    int found = 0;
+    int strIndex[] = { 0, -1 };
+    int maxIndex = data.length();
 
-
-
+    for (int i = 0; i <= maxIndex && found <= index; i++) {
+        if (data.charAt(i) == separator || i == maxIndex) {
+            found++;
+            strIndex[0] = strIndex[1] + 1;
+            strIndex[1] = (i == maxIndex) ? i+1 : i;
+        }
+    }
+    return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
+} 
 
 void mqttConnect()
 { // MQTT connection and subscriptions
@@ -543,10 +565,15 @@ void mqttCallback(String &strTopic, String &strPayload)
     configClearSaved();
   }
   else if (strTopic == (mqttCommandTopic + "/beep") || strTopic == (mqttGroupCommandTopic + "/beep"))
-  { // '[...]/device/command/factoryreset' == clear all saved settings)
-    beep(1000);
-    beep(100);
-    beep(100);
+  { // '[...]/device/command/beep')
+    String mqqtvar1 = getValue( strPayload, ',', 0);
+    String mqqtvar2 = getValue( strPayload, ',',1);
+    String mqqtvar3 = getValue( strPayload, ',',2);
+    
+    OnTime = mqqtvar1.toInt();
+    OffTime = mqqtvar2.toInt();
+    beepCounter = mqqtvar3.toInt();
+   
   }
   else if (strTopic.startsWith(mqttCommandTopic) && (strPayload == ""))
   { // '[...]/device/command/p[1].b[4].txt' -m '' == nextionGetAttr("p[1].b[4].txt")
@@ -707,8 +734,9 @@ void nextionProcessInput()
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       if (beepEnabled)
       {
-        pinMode(4, OUTPUT);
-        beep(100);
+      OnTime = 500;                                
+      OffTime = 100;
+      beepCounter = 1;
       }
       
     }
