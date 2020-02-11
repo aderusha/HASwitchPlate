@@ -1,0 +1,31 @@
+  - path: plate01
+    title: plate01
+    badges:
+      - entity: binary_sensor.plate01_connected
+      - entity: sensor.plate01_status
+    cards:
+      - type: entities
+        title: plate01 Page Selection
+        entities:
+          - input_number.hasp_plate01_activepage
+          - input_number.hasp_plate01_pagebutton1page
+          - input_text.hasp_plate01_pagebutton1label
+          - input_number.hasp_plate01_pagebutton2page
+          - input_text.hasp_plate01_pagebutton2label
+          - input_number.hasp_plate01_pagebutton3page
+          - input_text.hasp_plate01_pagebutton3label
+      - type: entities
+        title: plate01 Colors
+        entities:
+          - input_number.hasp_plate01_selectedforegroundcolor
+          - input_number.hasp_plate01_selectedbackgroundcolor
+          - input_number.hasp_plate01_unselectedforegroundcolor
+          - input_number.hasp_plate01_unselectedbackgroundcolor
+      - type: entities
+        title: plate01 automations
+        entities:
+          - automation.hasp_plate01_00_firsttimesetup
+      - type: entities
+        title: Light
+        entities:
+          - light.plate01_backlight
