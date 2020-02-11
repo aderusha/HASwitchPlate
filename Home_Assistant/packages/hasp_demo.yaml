@@ -3,7 +3,9 @@
 # these and/or replace with your own devices
 
 weather:
-  - platform: met
+  - platform: nws
+    api_key: haspuser@haswitchplate.com
+    name: nws
 
 alarm_control_panel:
   - platform: manual

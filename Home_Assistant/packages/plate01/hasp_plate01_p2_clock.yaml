@@ -33,7 +33,7 @@ automation:
     trigger:
       platform: time_pattern
       # Matches every minute
-      seconds: 00
+      seconds: 0
     condition:
     - condition: state
       entity_id: 'binary_sensor.plate01_connected'

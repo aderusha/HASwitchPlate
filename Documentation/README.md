@@ -38,6 +38,16 @@ Utilize the provided Home Assistant automations to control and interact with the
 
 Time to remove the training wheels and learn to send commands to and from the panel via MQTT.
 
+----
+
+## Frequently Asked Questions
+
+* **Can I install HASP outside of North America?** While the various power supply options for the HASP electronics should offer a solution which can handle line voltage in most countries, the physical installation of the device probably won't work outside of North America.  There is no international standard for the size and shape of workboxes, so things like screw hole locations and overall mounting dimensions used for the HASP are unlikely to work in any workbox outside of North America.
+* **Can I use HASP with \<Some Home Automation System\>**?  If your home automation system can send Nextion commands as MQTT payloads, then yes.  Getting it all to work is going to take a lot of work, but it's possible.
+* **Can I run HASP without a neutral wire?** Like most smart devices, a HASP installation will require a neutral wire available in the box you're mounting into.
+
+----
+
 ## HASwitchPlate Architecture
 
 The complete HA SwitchPlate build consists of 4 physical components:

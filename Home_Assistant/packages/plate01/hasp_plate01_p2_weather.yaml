@@ -6,7 +6,7 @@ automation:
   - alias: hasp_plate01_p2_Weather
     trigger:
     - platform: state
-      entity_id: weather.met_no
+      entity_id: weather.nws
     - platform: state
       entity_id: 'binary_sensor.plate01_connected'
     - platform: homeassistant
@@ -23,12 +23,12 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[6].txt'
-        payload_template: '"{{state_attr("weather.met_no","temperature")|int}}°F"'
+        payload_template: '"{{state_attr("weather.nws","temperature")|int}}°F"'
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[7].font'
-        payload_template: '{% if states.weather.met_no.state|length <= 6 -%}3{% elif (states.weather.met_no.state|length > 6) and (states.weather.met_no.state|length <= 10) %}2{% elif (states.weather.met_no.state|length > 10) and (states.weather.met_no.state|length <= 15) %}1{% else %}0{%- endif %}'
+        payload_template: '{% if states.weather.nws.state|length <= 6 -%}3{% elif (states.weather.nws.state|length > 6) and (states.weather.nws.state|length <= 10) %}2{% elif (states.weather.nws.state|length > 10) and (states.weather.nws.state|length <= 15) %}1{% else %}0{%- endif %}'
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[7].txt'
-        payload_template: '"{{states.weather.met_no.state|wordwrap(20, wrapstring="\\r")|title}}"'
+        payload_template: '"{{states.weather.nws.state|wordwrap(20, wrapstring="\\r")|title}}"'
