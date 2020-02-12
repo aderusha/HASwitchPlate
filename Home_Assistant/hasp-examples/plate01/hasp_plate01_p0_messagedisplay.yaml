@@ -23,7 +23,6 @@ input_number:
 group:
   plate01_messagedisplay:
     name: plate01 Message Display
-    view: no
     entities:
       - input_text.hasp_plate01_messagetext
       - input_text.hasp_plate01_messageqr

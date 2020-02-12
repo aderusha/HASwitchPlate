@@ -36,7 +36,6 @@ light:
 group:
   light_toggle_group:
     name: Light Toggle Group
-    view: no
     entities:
       - light.light_1
       - light.light_2

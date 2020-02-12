@@ -36,7 +36,6 @@ input_number:
 group:
   plate01_colors:
     name: plate01 Colors
-    view: no
     entities:
       - input_number.hasp_plate01_selectedforegroundcolor
       - input_number.hasp_plate01_selectedbackgroundcolor

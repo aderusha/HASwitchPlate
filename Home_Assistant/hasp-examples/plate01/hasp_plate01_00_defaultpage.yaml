@@ -24,7 +24,6 @@ input_number:
 group:
   plate01_defaultpage:
     name: plate01 Default Page
-    view: no
     entities:
       - input_number.hasp_plate01_defaultpagenumber
       - input_number.hasp_plate01_defaultpagetimeout
