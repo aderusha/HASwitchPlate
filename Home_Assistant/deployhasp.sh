@@ -89,16 +89,6 @@ fi
 if ! grep "^recorder:" configuration.yaml > /dev/null
 then
   echo "recorder:" >> configuration.yaml
-  echo "  include:" >> configuration.yaml
-  echo "    domains:" >> configuration.yaml
-  echo "    - automation" >> configuration.yaml
-  echo "    - binary_sensor" >> configuration.yaml
-  echo "    - input_boolean" >> configuration.yaml
-  echo "    - input_number" >> configuration.yaml
-  echo "    - input_select" >> configuration.yaml
-  echo "    - input_datetime" >> configuration.yaml
-  echo "    - input_text" >> configuration.yaml
-  echo "    - weather" >> configuration.yaml
 fi
 
 # Warn if MQTT is not enabled
@@ -207,5 +197,5 @@ fi
 echo "==========================================================================="
 echo "SUCCESS! Restart Home Assistant to enable HASP device $hasp_device"
 echo "Check the file packages/hasp_${hasp_device}_lovelace.txt for a set of"
-echo "basic Lovelace UI elements you can include in your configuration to manage"
-echo "the new device."
+echo "basic Lovelace UI elements you can include in your configuration"
+echo "to manage the new device."

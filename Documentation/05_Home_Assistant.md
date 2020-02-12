@@ -20,7 +20,11 @@ You will be prompted for a device name and the script will do the rest.  Once it
 
 ## Hass.io
 
-If you're running [Hass.io](https://www.home-assistant.io/hassio/), you'll need to install and configure the [`Mosquitto broker`](https://www.home-assistant.io/addons/mosquitto/) and [`SSH server`](https://www.home-assistant.io/addons/ssh/) add-ons from the default repository.  Be sure to follow the configuration instructions provided for both add-ons.  Once those are installed, configured, and started, you can ssh to your hass.io installation and execute the following commands:
+If you're running [Hass.io](https://www.home-assistant.io/hassio/), you'll need to install and configure the [`Mosquitto broker`](https://www.home-assistant.io/addons/mosquitto/) and [`SSH server`](https://www.home-assistant.io/addons/ssh/) add-ons from the default repository.  Be sure to follow the configuration instructions provided for both add-ons.
+
+The mosquitto broker package defaults to requiring a username and password.  Be sure to configure the "MQTT User" and "MQTT Password" on the HASP with a valid user from your Home Assistant configuration.
+
+Once those are installed, configured, and started, you can ssh to your hass.io installation and execute the following commands:
 
 ```bash
 cd /config
@@ -28,7 +32,7 @@ apk add tar wget
 bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
 ```
 
-You will be prompted for a device name and the script will do the rest.  Once it completes, restart your Home Assistant service to apply changes (`Configuration` > `General` > `Server Management` > `RESTART`) and then continue to the [First time setup](#first-time-setup) section below to initialize your environment.
+You will be prompted for a device name and the script will do the rest.  Once it completes, restart your Home Assistant service to apply changes (`Configuration` > `Server Controls` > `Server management` > `RESTART`) and then continue to the [First time setup](#first-time-setup) section below to initialize your environment.
 
 ---
 

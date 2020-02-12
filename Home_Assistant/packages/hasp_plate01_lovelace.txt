@@ -14,7 +14,6 @@
           - input_text.hasp_plate01_pagebutton2label
           - input_number.hasp_plate01_pagebutton3page
           - input_text.hasp_plate01_pagebutton3label
-        show_header_toggle: false
       - type: entities
         title: plate01 Colors
         entities:
@@ -22,14 +21,11 @@
           - input_number.hasp_plate01_selectedbackgroundcolor
           - input_number.hasp_plate01_unselectedforegroundcolor
           - input_number.hasp_plate01_unselectedbackgroundcolor
-        show_header_toggle: false
       - type: entities
         title: plate01 automations
         entities:
           - automation.hasp_plate01_00_firsttimesetup
-        show_header_toggle: false
       - type: entities
         title: Light
         entities:
           - light.plate01_backlight
-        show_header_toggle: false
