@@ -6,6 +6,7 @@
     cards:
       - type: entities
         title: plate01 Page Selection
+        show_header_toggle: false
         entities:
           - input_number.hasp_plate01_activepage
           - input_number.hasp_plate01_pagebutton1page
@@ -16,6 +17,7 @@
           - input_text.hasp_plate01_pagebutton3label
       - type: entities
         title: plate01 Colors
+        show_header_toggle: false
         entities:
           - input_number.hasp_plate01_selectedforegroundcolor
           - input_number.hasp_plate01_selectedbackgroundcolor
@@ -23,9 +25,11 @@
           - input_number.hasp_plate01_unselectedbackgroundcolor
       - type: entities
         title: plate01 automations
+        show_header_toggle: false
         entities:
           - automation.hasp_plate01_00_firsttimesetup
       - type: entities
-        title: Light
+        show_header_toggle: false
+        title: plate01 Backlight
         entities:
           - light.plate01_backlight

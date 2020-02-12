@@ -123,7 +123,7 @@ group:
     name: plate01
     entities:
       - binary_sensor.plate01_connected
-      - sensor.plate01_sensor
+      - sensor.plate01_status
       - light.plate01_backlight
       - group.plate01_pageselect
       - group.plate01_colors
