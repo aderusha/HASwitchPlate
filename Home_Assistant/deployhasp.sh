@@ -197,5 +197,5 @@ fi
 echo "==========================================================================="
 echo "SUCCESS! Restart Home Assistant to enable HASP device $hasp_device"
 echo "Check the file packages/hasp_${hasp_device}_lovelace.txt for a set of"
-echo "basic Lovelace UI elements you can include in your configuration to manage"
-echo "the new device."
+echo "basic Lovelace UI elements you can include in your configuration"
+echo "to manage the new device."
