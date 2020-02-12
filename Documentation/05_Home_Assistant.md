@@ -1,6 +1,6 @@
 # Home Assistant integration
 
-Configuring Home Assistant for the HASP requires making some basic changes to your configuration and downloading the packages to your installation.  The procedure will be a little different if you're running Hass.io, so [skip to that section](#hass.io-home-assistant-installation) or continue below for a standard Home Assistant installation (hassbian, venv, whatever).
+Configuring Home Assistant for the HASP requires making some basic changes to your configuration and downloading the packages to your installation.  The procedure will be a little different if you're running Hass.io, so [skip to that section](#hass-io-home-assistant-installation) or continue below for a standard Home Assistant installation (hassbian, venv, whatever).
 
 ## Standard Home Assistant installation
 
