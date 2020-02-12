@@ -30,3 +30,9 @@ then
   # Search through existing packages to see if we have any "view:" statements to remove as they have been deprecated
   find packages -name "hasp_*.yaml" -exec sed -i '/[[:blank:]]view\:/d' {} +
 fi
+
+if [ -d hasp-examples ]
+then
+  # Search through existing examples to see if we have any "view:" statements to remove as they have been deprecated
+  find hasp-examples -name "hasp_*.yaml" -exec sed -i '/[[:blank:]]view\:/d' {} +
+fi
