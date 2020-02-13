@@ -59,7 +59,7 @@ char motionPinConfig[3] = "0";
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 
-const float haspVersion = 0.38;                     // Current HASP software release version
+const float haspVersion = 0.40;                     // Current HASP software release version
 byte nextionReturnBuffer[128];                      // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;                     // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                      // Track active LCD page
@@ -644,7 +644,7 @@ void mqttStatusUpdate()
   mqttStatusPayload += String(F("\"espCore\":\"")) + String(ESP.getCoreVersion()) + String(F("\""));
   mqttStatusPayload += "}";
 
-  mqttClient.publish(mqttSensorTopic, mqttStatusPayload);
+  mqttClient.publish(mqttSensorTopic, mqttStatusPayload, true, 1);
   mqttClient.publish(mqttStatusTopic, "ON", true, 1);
   debugPrintln(String(F("MQTT: status update: ")) + String(mqttStatusPayload));
   debugPrintln(String(F("MQTT: binary_sensor state: [")) + mqttStatusTopic + "] : [ON]");
@@ -960,8 +960,8 @@ void nextionStartOtaDownload(String otaUrl)
       if (mqttClient.connected())
       {
         debugPrintln(F("LCD OTA: LCD firmware upload starting, closing MQTT connection."));
-        mqttClient.publish(mqttStatusTopic, "OFF");
-        mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
+        mqttClient.publish(mqttStatusTopic, "OFF", true, 1);
+        mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}", true, 1);
         mqttClient.disconnect();
       }
 
@@ -1402,8 +1402,8 @@ void espReset()
   debugPrintln(F("RESET: HASP reset"));
   if (mqttClient.connected())
   {
-    mqttClient.publish(mqttStatusTopic, "OFF");
-    mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
+    mqttClient.publish(mqttStatusTopic, "OFF", true, 1);
+    mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}", true, 1);
     mqttClient.disconnect();
   }
   nextionReset();
