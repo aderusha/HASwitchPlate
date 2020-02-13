@@ -82,6 +82,13 @@ bool debugSerialD8Enabled = true;                   // Enable hardware serial de
 const unsigned long telnetInputMax = 128;           // Size of user input buffer for user telnet session
 bool motionEnabled = false;                         // Motion sensor is enabled
 bool mdnsEnabled = true;                            // mDNS enabled
+bool beepEnabled = true;                            // Keypress beep enabled
+unsigned long previousMillis = 0;                   // will store last time beep was updated
+long OnTime = 1000;                                 // milliseconds of on-time
+long OffTime = 1000;                                 // milliseconds of off-time
+boolean beepState;                                  // will store beepState true or false
+unsigned int beepCounter;                           // Count the number of beeps
+byte beepPin;                                       // define beep pin output
 uint8_t motionPin = 0;                              // GPIO input pin for motion sensor if connected and enabled
 bool motionActive = false;                          // Motion is being detected
 const unsigned long motionLatchTimeout = 30000;     // Latch time for motion sensor
@@ -107,6 +114,7 @@ String mqttGroupCommandTopic;                       // MQTT topic for incoming g
 String mqttStatusTopic;                             // MQTT topic for publishing device connectivity state
 String mqttSensorTopic;                             // MQTT topic for publishing device information in JSON format
 String mqttLightCommandTopic;                       // MQTT topic for incoming panel backlight on/off commands
+String mqttBeepCommandTopic;                        // MQTT topic for error beep 
 String mqttLightStateTopic;                         // MQTT topic for outgoing panel backlight on/off state
 String mqttLightBrightCommandTopic;                 // MQTT topic for incoming panel backlight dimmer commands
 String mqttLightBrightStateTopic;                   // MQTT topic for outgoing panel backlight dimmer state
@@ -137,6 +145,12 @@ String lcdFirmwareUrl = "http://haswitchplate.com/update/HASwitchPlate.tft";
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup()
 { // System setup
+  
+  if (beepEnabled)
+  {
+    beepPin = 4;
+    pinMode(beepPin, OUTPUT);
+  }
   pinMode(nextionResetPin, OUTPUT);
   digitalWrite(nextionResetPin, HIGH);
   Serial.begin(115200);  // Serial - LCD RX (after swap), debug TX
@@ -221,6 +235,22 @@ void setup()
 void loop()
 { // Main execution loop
 
+ if (beepEnabled){                                        // Process Beeps
+    if((beepState == true) && (millis() - previousMillis >= OnTime) && ((beepCounter > 0)))
+    {
+      beepState = false;                                   // Turn it off
+      previousMillis = millis();                           // Remember the time
+      analogWrite(beepPin, 254);                           // start beep for OnTime
+      if(beepCounter > 0){beepCounter--;}                  // Update the beep counter.
+    }
+    else if ((beepState == false) && (millis() - previousMillis >= OffTime) && ((beepCounter >= 0)))
+    {
+      beepState = true;                                    // turn it on
+      previousMillis = millis();                           // Remember the time
+      analogWrite(beepPin, 0);                             // stop beep for OffTime
+    }
+  }
+
   if (nextionHandleInput())
   { // Process user input from HMI
     nextionProcessInput();
@@ -300,6 +330,23 @@ void loop()
 // Functions
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+String getValue(String data, char separator, int index)
+{
+    int found = 0;
+    int strIndex[] = { 0, -1 };
+    int maxIndex = data.length();
+
+    for (int i = 0; i <= maxIndex && found <= index; i++) {
+        if (data.charAt(i) == separator || i == maxIndex) {
+            found++;
+            strIndex[0] = strIndex[1] + 1;
+            strIndex[1] = (i == maxIndex) ? i+1 : i;
+        }
+    }
+    return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
+} 
+
 void mqttConnect()
 { // MQTT connection and subscriptions
 
@@ -517,6 +564,17 @@ void mqttCallback(String &strTopic, String &strPayload)
   { // '[...]/device/command/factoryreset' == clear all saved settings)
     configClearSaved();
   }
+  else if (strTopic == (mqttCommandTopic + "/beep") || strTopic == (mqttGroupCommandTopic + "/beep"))
+  { // '[...]/device/command/beep')
+    String mqqtvar1 = getValue( strPayload, ',', 0);
+    String mqqtvar2 = getValue( strPayload, ',',1);
+    String mqqtvar3 = getValue( strPayload, ',',2);
+    
+    OnTime = mqqtvar1.toInt();
+    OffTime = mqqtvar2.toInt();
+    beepCounter = mqqtvar3.toInt();
+   
+  }
   else if (strTopic.startsWith(mqttCommandTopic) && (strPayload == ""))
   { // '[...]/device/command/p[1].b[4].txt' -m '' == nextionGetAttr("p[1].b[4].txt")
     String subTopic = strTopic.substring(mqttCommandTopic.length() + 1);
@@ -674,6 +732,13 @@ void nextionProcessInput()
       mqttClient.publish(mqttButtonTopic, "ON");
       String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + String(nextionPage) + String(F("].b[")) + String(nextionButtonID) + String(F("]\", \"value\":\"ON\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+      if (beepEnabled)
+      {
+      OnTime = 500;                                
+      OffTime = 100;
+      beepCounter = 1;
+      }
+      
     }
     if (nextionButtonAction == 0x00)
     {
@@ -1463,6 +1528,17 @@ void configRead()
               mdnsEnabled = false;
             }
           }
+          if (!configJson["beepEnabled"].isNull())
+          {
+            if (configJson["beepEnabled"])
+            {
+              beepEnabled = true;
+            }
+            else
+            {
+              beepEnabled = false;
+            }
+          }
           String configJsonStr;
           serializeJson(configJson, configJsonStr);
           debugPrintln(String(F("SPIFFS: parsed json:")) + configJsonStr);
@@ -1509,6 +1585,8 @@ void configSave()
   jsonConfigValues["debugSerialEnabled"] = debugSerialEnabled;
   jsonConfigValues["debugTelnetEnabled"] = debugTelnetEnabled;
   jsonConfigValues["mdnsEnabled"] = mdnsEnabled;
+  jsonConfigValues["beepEnabled"] = beepEnabled;
+  
 
   debugPrintln(String(F("SPIFFS: mqttServer = ")) + String(mqttServer));
   debugPrintln(String(F("SPIFFS: mqttPort = ")) + String(mqttPort));
@@ -1522,6 +1600,7 @@ void configSave()
   debugPrintln(String(F("SPIFFS: debugSerialEnabled = ")) + String(debugSerialEnabled));
   debugPrintln(String(F("SPIFFS: debugTelnetEnabled = ")) + String(debugTelnetEnabled));
   debugPrintln(String(F("SPIFFS: mdnsEnabled = ")) + String(mdnsEnabled));
+  debugPrintln(String(F("SPIFFS: beepEnabled = ")) + String(beepEnabled));
 
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile)
@@ -1632,13 +1711,8 @@ void webHandleRoot()
   {
     httpMessage += String(F(" selected"));
   }
-  httpMessage += String(F(">D1</option><option value='D2'"));
-  if (motionPin == D2)
-  {
-    httpMessage += String(F(" selected"));
-  }
-  httpMessage += String(F(">D2</option></select>"));
-
+  httpMessage += String(F(">D1</option></select>"));
+  
   httpMessage += String(F("<br/><b>Serial debug output enabled:</b><input id='debugSerialEnabled' name='debugSerialEnabled' type='checkbox'"));
   if (debugSerialEnabled)
   {
@@ -1654,7 +1728,17 @@ void webHandleRoot()
   {
     httpMessage += String(F(" checked='checked'"));
   }
+
+  httpMessage += String(F("><br/><b>Keypress beep enabled:</b><input id='beepEnabled' name='beepEnabled' type='checkbox'"));
+  if (beepEnabled)
+  {
+    httpMessage += String(F(" checked='checked'"));
+  }
+
+
+
   httpMessage += String(F("><br/><hr><button type='submit'>save settings</button></form>"));
+  
 
   if (updateEspAvailable)
   {
@@ -1808,6 +1892,16 @@ void webHandleSaveConfig()
   { // mdnsEnabled was enabled but should now be disabled
     shouldSaveConfig = true;
     mdnsEnabled = false;
+  }
+  if ((webServer.arg("beepEnabled") == String("on")) && !beepEnabled)
+  { // beepEnabled was disabled but should now be enabled
+    shouldSaveConfig = true;
+    beepEnabled = true;
+  }
+  else if ((webServer.arg("beepEnabled") == String("")) && beepEnabled)
+  { // beepEnabled was enabled but should now be disabled
+    shouldSaveConfig = true;
+    beepEnabled = false;
   }
 
   if (shouldSaveConfig)
