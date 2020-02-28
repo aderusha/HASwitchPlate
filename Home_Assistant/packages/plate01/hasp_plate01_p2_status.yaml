@@ -89,7 +89,7 @@ automation:
           topic: "hasp/plate01/command/p[2].b[4].txt"
           payload_template: '"{{(now().strftime(''%I'')|int)~now().strftime('':%M'')}}"'
 
-  # Send "Month Day" every day, scaling font to fit
+  # Send "Day, Month Date" every day at midnight
   - alias: hasp_plate01_p2_CalendarUpdate
     trigger:
       platform: time
