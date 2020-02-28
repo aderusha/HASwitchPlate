@@ -1,0 +1,71 @@
+##############################################################################
+# Automations to configure button controls on page 6 (two wide, 4 tall)
+# Currently this page is not used in the demo automations
+
+##############################################################################
+# Automations to set colors on HASP Page 6
+
+automation:
+  - alias: hasp_plate01_p6_ColorConfig_selectedforegroundcolor
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedforegroundcolor
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{%- for i in range(4,12) -%}"p[6].b[{{i}}].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+
+  - alias: hasp_plate01_p6_ColorConfig_selectedbackgroundcolor
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{%- for i in range(4,12) -%}"p[6].b[{{i}}].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+
+  - alias: hasp_plate01_p6_ColorConfig_unselectedforegroundcolor
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{%- for i in range(4,12) -%}"p[6].b[{{i}}].pco2={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+
+  - alias: hasp_plate01_p6_ColorConfig_unselectedbackgroundcolor
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{%- for i in range(4,12) -%}"p[6].b[{{i}}].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]

@@ -1,16 +1,97 @@
 ##############################################################################
 # The following devices are used by the demo automations, feel free to remove
-# these and/or replace with your own devices
+# these and/or replace with your own devices, but remember to change
+# any other automations here which reference them.
 
+# Pull weather reports from NWS, probably only useful in North America
 weather:
   - platform: nws
     api_key: haspuser@haswitchplate.com
     name: nws
 
+# create a demo alarm panel with secure code.  also usable on my luggage.
 alarm_control_panel:
   - platform: manual
     code: 1234
 
+input_number:
+  # These input_numbers contain the user code entry for the alarm panel
+  hasp_alarmcode1:
+    name: plate01 AlarmCode1
+    icon: mdi:numeric
+    min: -1
+    max: 9
+    step: 1
+    initial: -1
+  hasp_alarmcode2:
+    name: plate01 AlarmCode2
+    icon: mdi:numeric
+    min: -1
+    max: 9
+    step: 1
+    initial: -1
+  hasp_alarmcode3:
+    name: plate01 AlarmCode3
+    icon: mdi:numeric
+    min: -1
+    max: 9
+    step: 1
+    initial: -1
+  hasp_alarmcode4:
+    name: plate01 AlarmCode4
+    icon: mdi:numeric
+    min: -1
+    max: 9
+    step: 1
+    initial: -1
+
+# Hide the input_numbers created above by default
+homeassistant:
+  customize:
+    input_number.hasp_alarmcode1:
+      hidden: true
+    input_number.hasp_alarmcode2:
+      hidden: true
+    input_number.hasp_alarmcode3:
+      hidden: true
+    input_number.hasp_alarmcode4:
+      hidden: true
+
+# Create a demo HVAC device
+climate:
+  - platform: mqtt
+    mode_command_topic: homeassistant/mqtthvac/mode
+    mode_state_topic: homeassistant/mqtthvac/mode
+    power_command_topic: homeassistant/mqtthvac/power
+    temperature_command_topic: homeassistant/mqtthvac/temperature
+    temperature_state_topic: homeassistant/mqtthvac/temperature
+    temperature_low_command_topic: homeassistant/mqtthvac/temperature_low
+    temperature_low_state_topic: homeassistant/mqtthvac/temperature_low
+    temperature_high_command_topic: homeassistant/mqtthvac/temperature_high
+    temperature_high_state_topic: homeassistant/mqtthvac/temperature_high
+    fan_mode_command_topic: homeassistant/mqtthvac/fan
+    fan_mode_state_topic: homeassistant/mqtthvac/fan
+    away_mode_command_topic: homeassistant/mqtthvac/away
+    away_mode_state_topic: homeassistant/mqtthvac/away
+    hold_command_topic: homeassistant/mqtthvac/hold
+    hold_state_topic: homeassistant/mqtthvac/hold
+    min_temp: 55
+    max_temp: 95
+    retain: true
+
+# Create a demo fan device
+fan:
+  - platform: mqtt
+    name: "MQTT Fan"
+    state_topic: "homeassistant/mqttfan/state"
+    command_topic: "homeassistant/mqttfan/state"
+    oscillation_state_topic: "homeassistant/mqttfan/oscillation"
+    oscillation_command_topic: "homeassistant/mqttfan/oscillation"
+    speed_state_topic: "homeassistant/mqttfan/speed"
+    speed_command_topic: "homeassistant/mqttfan/speed"
+    retain: true
+
+# Create 3 demo lights
 light:
   - platform: mqtt
     name: "Light 1"

@@ -4,30 +4,39 @@
 # the latest HASP automation package and modify for the provided device name
 ###############################################################################
 
-# Confirm that we're working in the .homeassistant folder by checking for configuration.yaml
-if [ ! -f configuration.yaml ]
+# First order of business is to find 'configuration.yaml' in some likely places
+if [ ! -f configuration.yaml ] # check current directory first
 then
-  echo "WARNING: 'configuration.yaml' not found in current directory."
-  echo "Searching for Home Assistant 'configuration.yaml'..."
-  configfile=$(find / -name configuration.yaml 2>/dev/null)
-  count=$(echo "$configfile" | wc -l)
-  if [ $count == 1 ]
+  if [ -f /config/configuration.yaml ] # next check container config dir
   then
-    configdir=$(dirname "${configfile}")
-    cd $configdir
-    echo "INFO: configuration.yaml found under: $configdir"
+    cd /config
+  elif [ -f ~/.homeassistant/configuration.yaml ]
+  then
+    cd ~/.homeassistant
   else
-    echo "ERROR: Failed to locate the active 'configuration.yaml'"
-    echo "       Please run this script from the homeassistant"
-    echo "       configuration folder for your environment."
-    exit 1
+    echo "WARNING: 'configuration.yaml' not found in current directory."
+    echo "         Searching for 'configuration.yaml'..."
+    foundConfigFiles=$(find / -name configuration.yaml 2>/dev/null)
+    foundConfigCount=$(echo "$foundConfigFiles" | wc -l)
+    if [ $foundConfigCount == 1 ]
+    then
+      foundConfigDir=$(dirname "${foundConfigFiles}")
+      cd $foundConfigDir
+      echo "INFO: configuration.yaml found under: $foundConfigDir"
+    else
+      echo "ERROR: Failed to locate the active 'configuration.yaml'"
+      echo "       Please run this script from the homeassistant"
+      echo "       configuration folder for your environment."
+      exit 1
+    fi
   fi
 fi
 
 # Check for write access to configuration.yaml
 if [ ! -w configuration.yaml ]
 then
-  echo "ERROR: Cannot write to 'configuration.yaml'."
+  echo "ERROR: Cannot write to 'configuration.yaml'.  Check that you are"
+  echo "       running as user 'homeassistant'.  Exiting."
   exit 1
 fi
 
@@ -50,7 +59,7 @@ fi
 hasp_device=`echo "$hasp_input_name" | tr '[:upper:]' '[:lower:]' | tr ' [:punct:]' '_'`
 
 # Warn the user if we had rename anything
-if [[ "$hasp_input_name" != "$hasp_device" ]]
+if [ "$hasp_input_name" != "$hasp_device" ]
 then
   echo "WARNING: Sanitized device name to \"$hasp_device\""
 fi
@@ -100,11 +109,13 @@ then
     echo "WARNING: Required MQTT broker configuration not setup in configuration.yaml"
     echo "         or added under Configuration > Integrations."
     echo ""
-    echo "HASP WILL NOT FUNCTION UNTIL THIS HAS BEEN CONFIGURED!  The embedded option"
-    echo "offered my Home Assistant is buggy, so deploying Mosquitto is recommended."
+    echo "HASP WILL NOT FUNCTION UNTIL THIS HAS BEEN CONFIGURED!"
     echo ""
-    echo "Home Assistant MQTT configuration: https://www.home-assistant.io/docs/mqtt/broker/#run-your-own"
-    echo "Install Mosquitto: sudo apt-get install mosquitto mosquitto-clients"
+    echo "Review the following for options on setting up your Home Assistant install"
+    echo "with MQTT: https://www.home-assistant.io/docs/mqtt/broker"
+    echo ""
+    echo "For hassio users, you can deploy the Mosquitto broker add-on here:"
+    echo "https://github.com/home-assistant/hassio-addons/blob/master/mosquitto"
     echo "==========================================================================="
   fi
 fi
@@ -113,7 +124,7 @@ fi
 hasp_temp_dir=`mktemp -d`
 
 # Download latest packages
-wget -q -P $hasp_temp_dir https://github.com/aderusha/HASwitchPlate/raw/master/Home_Assistant/hasppackages.tar.gz
+wget -q -P $hasp_temp_dir https://github.com/aderusha/HASwitchPlate/raw/dev/Home_Assistant/hasppackages.tar.gz
 tar -zxf $hasp_temp_dir/hasppackages.tar.gz -C $hasp_temp_dir
 rm $hasp_temp_dir/hasppackages.tar.gz
 
@@ -176,6 +187,7 @@ then
     echo "Deleting existing device and creating new device"
     rm -rf ./packages/$hasp_device
     rm -rf ./hasp-examples/$hasp_device
+    rm ./packages/hasp_${hasp_device}_lovelace.txt
     cp -rf $hasp_temp_dir/* .
     rm -rf $hasp_temp_dir
   elif [[ "$hasp_overwrite_action" == "u" ]] || [[ "$hasp_overwrite_action" == "U" ]]
@@ -199,3 +211,9 @@ echo "SUCCESS! Restart Home Assistant to enable HASP device $hasp_device"
 echo "Check the file packages/hasp_${hasp_device}_lovelace.txt for a set of"
 echo "basic Lovelace UI elements you can include in your configuration"
 echo "to manage the new device."
+echo ""
+echo "Here are the contents of that file to paste into your Lovelace config."
+echo "Hold 'shift' while selecting this text to copy to your clipboard:"
+echo ""
+
+cat packages/hasp_${hasp_device}_lovelace.txt

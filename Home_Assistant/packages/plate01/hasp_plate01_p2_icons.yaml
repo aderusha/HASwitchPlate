@@ -1,0 +1,165 @@
+##############################################################################
+# Automations to overlay icons on HASP Page 2
+#
+# This is a really goofy approach to doing things.  Page 2 provides 4 buttons
+# which can display text.  A single text field can have a single font size
+# and left/right/center justification.  On this page, I want text of various
+# sizes right aligned, with icons of the same size left-aligned.  There isn't
+# any way to make both of those things work in a single text field in Nextion.
+#
+# So... what we do here is call the Nextion command `xstr` to place text
+# arbitrarily on the screen.  With this command we can use the FontAwesome
+# code points of the included fonts to put icons anywhere we want!
+#
+# However, this approach has a lot of problems which we then need to handle:
+# * Icons placed w/ `xstr` only apply to the current page, so only attempt
+#   this while Page 2 is active.
+# * Any button interaction (press, release, new text, new color, etc) 
+#   overwrites the icon, so we need to catch these events and put the icon
+#   back on top.
+# * The events we capture take time for the Nextion to process, so insert a
+#   1 msec delay command which will allow the Nextion to fully process the
+#   prior event.
+
+# automation:
+#   # Overlay a clock icon on the left side of p[2].b[4]
+#   - alias: hasp_plate01_p2_IconOverlayClock
+#     trigger:
+#     - platform: state
+#       entity_id: 'binary_sensor.plate01_connected'
+#       to: 'on'
+#     - platform: homeassistant
+#       event: start
+#     - platform: mqtt
+#       topic: 'hasp/plate01/command/page'
+#       payload: '2'
+#     - platform: mqtt
+#       topic: 'hasp/plate01/state/p[2].b[4]'
+#     - platform: mqtt
+#       topic: 'hasp/plate01/command/p[2].b[4].txt'
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_selectedforegroundcolor
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+#     condition:
+#       condition: and
+#       conditions:
+#       - condition: template
+#         value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
+#     action:
+#     - service: mqtt.publish
+#       data:
+#         topic: 'hasp/plate01/command/json'
+#         payload_template: '["delay=1","xstr 0,2,50,65,8,{{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }},0,1,1,3,\"\""]'
+
+#   # Overlay a calendar icon on the left side of p[2].b[5]
+#   - alias: hasp_plate01_p2_IconOverlayCalendar
+#     trigger:
+#     - platform: state
+#       entity_id: 'binary_sensor.plate01_connected'
+#       to: 'on'
+#     - platform: homeassistant
+#       event: start
+#     - platform: mqtt
+#       topic: 'hasp/plate01/command/page'
+#       payload: '2'
+#     - platform: mqtt
+#       topic: 'hasp/plate01/state/p[2].b[5]'
+#     - platform: mqtt
+#       topic: 'hasp/plate01/command/p[2].b[5].txt'
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_selectedforegroundcolor
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+#     condition:
+#       condition: and
+#       conditions:
+#       - condition: template
+#         value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
+#     action:
+#     - service: mqtt.publish
+#       data:
+#         topic: 'hasp/plate01/command/json'
+#         payload_template: '["delay=1","xstr 0,69,50,65,8,{{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }},0,1,1,3,\"\""]'
+
+#   # Overlay a thermometer icon on the left side of p[2].b[6] based on the following:
+#   # <= 0 thermometer-empty
+#   # < 32 thermometer-quarter
+#   # < 65 thermometer-half
+#   # < 90 thermometer-three-quarters
+#   # > 90 thermometer-full
+#   - alias: hasp_plate01_p2_IconOverlayThermometer
+#     trigger:
+#     - platform: state
+#       entity_id: 'binary_sensor.plate01_connected'
+#       to: 'on'
+#     - platform: homeassistant
+#       event: start
+#     - platform: mqtt
+#       topic: 'hasp/plate01/command/page'
+#       payload: '2'
+#     - platform: mqtt
+#       topic: 'hasp/plate01/state/p[2].b[6]'
+#     - platform: mqtt
+#       topic: 'hasp/plate01/command/p[2].b[6].txt'
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_selectedforegroundcolor
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+#     condition:
+#       condition: and
+#       conditions:
+#       - condition: template
+#         value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
+#     action:
+#     - service: mqtt.publish
+#       data:
+#         topic: 'hasp/plate01/command/json'
+#         payload_template: '["delay=1","xstr 5,136,40,65,8,{{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }},0,1,1,3,\"{% if state_attr("weather.nws","temperature") <= 0 -%}{% elif state_attr("weather.nws","temperature") < 32 %}{% elif state_attr("weather.nws","temperature") < 65 %}{% elif state_attr("weather.nws","temperature") < 90 %}{% else %}{%- endif %}\""]'
+
+# # Weather icons!  Check the current weather state against this list:  https://www.home-assistant.io/integrations/weather/#condition-mapping
+# # and then map a FontAwesome icon for each of the possible conditions.
+#   - alias: hasp_plate01_p2_IconOverlayWeather
+#     trigger:
+#     - platform: state
+#       entity_id: 'binary_sensor.plate01_connected'
+#       to: 'on'
+#     - platform: homeassistant
+#       event: start
+#     - platform: mqtt
+#       topic: 'hasp/plate01/command/page'
+#       payload: '2'
+#     - platform: mqtt
+#       topic: 'hasp/plate01/state/p[2].b[7]'
+#     - platform: mqtt
+#       topic: 'hasp/plate01/command/p[2].b[7].txt'
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_selectedforegroundcolor
+#     - platform: state
+#       entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+#     condition:
+#       condition: and
+#       conditions:
+#       - condition: template
+#         value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
+#     action:
+#     - service: mqtt.publish
+#       data:
+#         topic: 'hasp/plate01/command/json'
+#         payload_template: '["delay=1","xstr 0,203,65,65,8,{{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }},0,1,1,3,\"{% if states.weather.nws.state == "clear-night" -%}{% elif states.weather.nws.state == "cloudy" %}{% elif states.weather.nws.state == "fog" %}{% elif states.weather.nws.state == "hail" %}{% elif states.weather.nws.state == "lightning" %}{% elif states.weather.nws.state == "lightning-rainy" %}{% elif states.weather.nws.state == "partlycloudy" %}{% elif states.weather.nws.state == "pouring" %}{% elif states.weather.nws.state == "rainy" %}{% elif states.weather.nws.state == "snowy" %}{% elif states.weather.nws.state == "snowy-rainy" %}{% elif states.weather.nws.state == "sunny" %}{% elif states.weather.nws.state == "windy" %}{% elif states.weather.nws.state == "windy-variant" %}{% elif states.weather.nws.state == "exceptional" %}{% else %}{%- endif %}\""]'

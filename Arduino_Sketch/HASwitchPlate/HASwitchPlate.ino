@@ -64,8 +64,8 @@ byte nextionReturnBuffer[128];                      // Byte array to pass around
 uint8_t nextionReturnIndex = 0;                     // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                      // Track active LCD page
 bool lcdConnected = false;                          // Set to true when we've heard something from the LCD
-char wifiConfigPass[9];                             // AP config password, always 8 chars + NUL
-char wifiConfigAP[19];                              // AP config SSID, haspNode + 3 chars
+const char wifiConfigPass[9] = "hasplate";          // First-time config WPA2 password
+const char wifiConfigAP[14] = "HASwitchPlate";      // First-time config SSID
 bool shouldSaveConfig = false;                      // Flag to save json config to SPIFFS
 bool nextionReportPage0 = false;                    // If false, don't report page 0 sendme
 const unsigned long updateCheckInterval = 43200000; // Time in msec between update checks (12 hours)
@@ -145,12 +145,6 @@ String lcdFirmwareUrl = "http://haswitchplate.com/update/HASwitchPlate.tft";
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup()
 { // System setup
-
-  if (beepEnabled)
-  {
-    beepPin = 4;
-    pinMode(beepPin, OUTPUT);
-  }
   pinMode(nextionResetPin, OUTPUT);
   digitalWrite(nextionResetPin, HIGH);
   Serial.begin(115200);  // Serial - LCD RX (after swap), debug TX
@@ -220,6 +214,12 @@ void setup()
   mqttConnect();                                                // Connect to MQTT
 
   motionSetup(); // Setup motion sensor if configured
+
+  if (beepEnabled)
+  { // Setup beep/tactile if configured
+    beepPin = 4;
+    pinMode(beepPin, OUTPUT);
+  }
 
   if (debugTelnetEnabled)
   { // Setup telnet server for remote debug output
@@ -343,9 +343,8 @@ void mqttConnect()
   if (mqttServer[0] == 0)
   {
     nextionSendCmd("page 0");
-    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\rConfigure MQTT:\\r" + WiFi.localIP().toString() + "\\r\\r\\r\\r\\r\\r\\r \"");
-    nextionSetAttr("p[0].b[3].txt", "\"http://" + WiFi.localIP().toString() + "\"");
-    nextionSendCmd("vis 3,1");
+    nextionSetAttr("p[0].b[1].font", "6");
+    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rConfigure MQTT:\\rhttp://" + WiFi.localIP().toString() + "\"");
     while (mqttServer[0] == 0)
     { // Handle HTTP and OTA while we're waiting for MQTT to be configured
       yield();
@@ -384,7 +383,9 @@ void mqttConnect()
     // Generate an MQTT client ID as haspNode + our MAC address
     mqttClientId = String(haspNode) + "-" + String(espMac[0], HEX) + String(espMac[1], HEX) + String(espMac[2], HEX) + String(espMac[3], HEX) + String(espMac[4], HEX) + String(espMac[5], HEX);
     nextionSendCmd("page 0");
-    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\\rMQTT Connecting" + String(mqttServer) + "\"");
+    nextionSetAttr("p[0].b[1].font", "6");
+    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connecting:\\r" + String(mqttServer) + "\"");
+    // nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\rIP: " + WiFi.localIP().toString() + "\\rMQTT Connecting:\\r" + String(mqttServer) + "\"");
     debugPrintln(String(F("MQTT: Attempting connection to broker ")) + String(mqttServer) + " as clientID " + mqttClientId);
 
     // Set keepAlive, cleanSession, timeout
@@ -434,7 +435,7 @@ void mqttConnect()
       mqttReconnectCount = 0;
 
       // Update panel with MQTT status
-      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\\rMQTT Connected:\\r" + String(mqttServer) + "\"");
+      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connected:\\r" + String(mqttServer) + "\"");
       debugPrintln(F("MQTT: connected"));
       if (nextionActivePage)
       {
@@ -450,7 +451,7 @@ void mqttConnect()
         espReset();
       }
       debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Trying again in 30 seconds.")));
-      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\\rMQTT Connect to" + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\rRetry in 30 sec\"");
+      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connect to" + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\rRetry in 30 sec\"");
       unsigned long mqttReconnectTimer = millis(); // record current time for our timeout
       while ((millis() - mqttReconnectTimer) < 30000)
       { // Handle HTTP and OTA while we're waiting 30sec for MQTT to reconnect
@@ -695,7 +696,7 @@ bool nextionHandleInput()
 void nextionProcessInput()
 { // Process incoming serial commands from the Nextion panel
   // Command reference: https://www.itead.cc/wiki/Nextion_Instruction_Set#Format_of_Device_Return_Data
-  // tl;dr, command byte, command data, 0xFF 0xFF 0xFF
+  // tl;dr: command byte, command data, 0xFF 0xFF 0xFF
 
   if (nextionReturnBuffer[0] == 0x65)
   { // Handle incoming touch command
@@ -743,7 +744,8 @@ void nextionProcessInput()
     // Meaning: page 2
     String nextionPage = String(nextionReturnBuffer[1]);
     debugPrintln(String(F("HMI IN: [sendme Page] '")) + nextionPage + "'");
-    if ((nextionActivePage != nextionPage.toInt()) && ((nextionPage != "0") || nextionReportPage0))
+    // if ((nextionActivePage != nextionPage.toInt()) && ((nextionPage != "0") || nextionReportPage0))
+    if ((nextionPage != "0") || nextionReportPage0)
     { // If we have a new page AND ( (it's not "0") OR (we've set the flag to report 0 anyway) )
       nextionActivePage = nextionPage.toInt();
       String mqttPageTopic = mqttStateTopic + "/page";
@@ -875,7 +877,8 @@ void nextionSetAttr(String hmiAttribute, String hmiValue)
 { // Set the value of a Nextion component attribute
   Serial1.print(hmiAttribute);
   Serial1.print("=");
-  Serial1.print(utf8ascii(hmiValue));
+  // Serial1.print(utf8ascii(hmiValue));
+  Serial1.print(hmiValue);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   debugPrintln(String(F("HMI OUT: '")) + hmiAttribute + "=" + hmiValue + "'");
 }
@@ -893,7 +896,8 @@ void nextionGetAttr(String hmiAttribute)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void nextionSendCmd(String nextionCmd)
 { // Send a raw command to the Nextion panel
-  Serial1.print(utf8ascii(nextionCmd));
+  // Serial1.print(utf8ascii(nextionCmd));
+  Serial1.print(nextionCmd);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   debugPrintln(String(F("HMI OUT: ")) + nextionCmd);
 }
@@ -919,7 +923,8 @@ void nextionParseJson(String &strPayload)
     for (uint8_t i = 0; i < nextionCommands.size(); i++)
     {
       nextionSendCmd(nextionCommands[i]);
-    }
+      delayMicroseconds(500); // Larger JSON objects can take a while to run through over serial,
+    }                         // give the ESP and Nextion a moment to deal with life
   }
 }
 
@@ -1090,17 +1095,12 @@ bool nextionOtaResponse()
         otaSuccessVal = true;
         break;
       }
-      else
-      {
-        // debugPrintln(String(inByte, HEX));
-      }
     }
     else
     {
       delay(1);
     }
   }
-  // delay(50);
   return otaSuccessVal;
 }
 
@@ -1189,7 +1189,8 @@ void nextionReset()
 void espWifiSetup()
 { // Connect to WiFi
   nextionSendCmd("page 0");
-  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connecting\"");
+  nextionSetAttr("p[0].b[1].font", "6");
+  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connecting...\\r " + String(WiFi.SSID()) + "\"");
 
   WiFi.macAddress(espMac);            // Read our MAC address and save it to espMac
   WiFi.hostname(haspNode);            // Assign our hostname before connecting to WiFi
@@ -1231,17 +1232,6 @@ void espWifiSetup()
     wifiManager.setTimeout(connectTimeout);
 
     wifiManager.setAPCallback(espWifiConfigCallback);
-
-    // Construct AP name
-    char espMac5[1];
-    sprintf(espMac5, "%02x", espMac[5]);
-    String strWifiConfigAP = String(haspNode).substring(0, 9) + "-" + String(espMac5);
-    strWifiConfigAP.toCharArray(wifiConfigAP, (strWifiConfigAP.length() + 1));
-    // Construct a WiFi SSID password using bytes [3] and [4] of our MAC
-    char espMac34[2];
-    sprintf(espMac34, "%02x%02x", espMac[3], espMac[4]);
-    String strConfigPass = "hasp" + String(espMac34);
-    strConfigPass.toCharArray(wifiConfigPass, 9);
 
     // Fetches SSID and pass from EEPROM and tries to connect
     // If it does not connect it starts an access point with the specified name
@@ -1285,7 +1275,8 @@ void espWifiSetup()
     }
   }
   // If you get here you have connected to WiFi
-  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\"");
+  nextionSetAttr("p[0].b[1].font", "6");
+  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\"");
   debugPrintln(String(F("WIFI: Connected successfully and assigned IP: ")) + WiFi.localIP().toString());
   if (nextionActivePage)
   {
@@ -1321,8 +1312,8 @@ void espWifiConfigCallback(WiFiManager *myWiFiManager)
     delay(10);
   }
   nextionSendCmd("page 0");
-  nextionSetAttr("p[0].b[1].txt", "\"Configure HASP:\\rAP:" + String(wifiConfigAP) + "\\rPass:" + String(wifiConfigPass) + "\\r\\r\\r\\r\\r\\r\\rWeb:192.168.4.1\"");
-  nextionSetAttr("p[0].b[3].txt", "\"WIFI:S:" + String(wifiConfigAP) + ";T:WPA;P:" + String(wifiConfigPass) + ";;\"");
+  nextionSetAttr("p[0].b[1].font", "6");
+  nextionSetAttr("p[0].b[1].txt", "\" HASP WiFi Setup\\r AP: " + String(wifiConfigAP) + "\\rPassword: " + String(wifiConfigPass) + "\\r\\r\\r\\r\\r\\r\\r  http://192.168.4.1\"");
   nextionSendCmd("vis 3,1");
 }
 
@@ -2610,8 +2601,8 @@ void debugPrint(String debugText)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// Submitted by benmprojects to handle "beep" commands.
-// Split incoming String by separator, return selected field as String
+// Submitted by benmprojects to handle "beep" commands. Split
+// incoming String by separator, return selected field as String
 // Original source: https://arduino.stackexchange.com/a/1237
 String getSubtringField(String data, char separator, int index)
 {
@@ -2631,59 +2622,24 @@ String getSubtringField(String data, char separator, int index)
   return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-// UTF8-Decoder: convert UTF8-string to extended ASCII http://playground.arduino.cc/main/Utf8ascii
-// Workaround for issue here: https://github.com/home-assistant/home-assistant/issues/9528
-// Nextion claims that "Unicode and UTF will not be among the supported encodings", so this should
-// be safe to run against all attribute values coming in.
-static byte c1; // Last character buffer
-byte utf8ascii(byte ascii)
-{ // Convert a single Character from UTF8 to Extended ASCII. Return "0" if a byte has to be ignored.
-  if (ascii < 128)
-  { // Standard ASCII-set 0..0x7F handling
-    c1 = 0;
-    return (ascii);
-  }
-  // get previous input
-  byte last = c1; // get last char
-  c1 = ascii;     // remember actual character
-  switch (last)
-  { // conversion depending on first UTF8-character
-  case 0xC2:
-    return (ascii);
-    break;
-  case 0xC3:
-    return (ascii | 0xC0);
-    break;
-  case 0x82:
-    if (ascii == 0xAC)
-      return (0x80); // special case Euro-symbol
-  }
-  return (0); // otherwise: return zero, if character has to be ignored
-}
+////////////////////////////////////////////////////////////////////////////////
+String printHex8(byte *data, uint8_t length)
+{ // returns input bytes as printable hex values in the format 01 23 FF
 
-String utf8ascii(String s)
-{ // convert String object from UTF8 String to Extended ASCII
-  String r = "";
-  char c;
-  for (uint16_t i = 0; i < s.length(); i++)
+  String hex8String;
+  for (int i = 0; i < length; i++)
   {
-    c = utf8ascii(s.charAt(i));
-    if (c != 0)
-      r += c;
+    // hex8String += "0x";
+    if (data[i] < 0x10)
+    {
+      hex8String += "0";
+    }
+    hex8String += String(data[i], HEX);
+    if (i != (length - 1))
+    {
+      hex8String += " ";
+    }
   }
-  return r;
-}
-
-void utf8ascii(char *s)
-{ // In Place conversion UTF8-string to Extended ASCII (ASCII is shorter!)
-  uint16_t k = 0;
-  char c;
-  for (uint16_t i = 0; i < strlen(s); i++)
-  {
-    c = utf8ascii(s[i]);
-    if (c != 0)
-      s[k++] = c;
-  }
-  s[k] = 0;
+  hex8String.toUpperCase();
+  return hex8String;
 }

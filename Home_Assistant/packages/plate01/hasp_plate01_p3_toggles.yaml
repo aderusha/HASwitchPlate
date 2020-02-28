@@ -4,243 +4,319 @@ automation:
   # Set font and text for toggle buttons on device connection
   - alias: hasp_plate01_p3_ToggleInit
     trigger:
-    - platform: state
-      entity_id: 'binary_sensor.plate01_connected'
-      to: 'on'
-    - platform: homeassistant
-      event: start
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
     action:
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[4].font'
-        payload: '2'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[4].txt'
-        payload: '"Light 1"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[5].font'
-        payload: '2'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[5].txt'
-        payload: '"Light 2"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[6].font'
-        payload: '2'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[6].txt'
-        payload: '"Light 3"'
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[7].font'
-        payload: '2'
+      # Set font and justification for the 4 buttons (b4-b7)
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload: '["p[3].b[4].font=8","p[3].b[5].font=8","p[3].b[6].font=8","p[3].b[7].font=7","p[3].b[4].xcen=2","p[3].b[5].xcen=2","p[3].b[6].xcen=2","p[3].b[7].xcen=1"]'
+      # Set text labels for the top 3 buttons (b4-b6)
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload: '["p[3].b[4].txt=\"Light 1 \"","p[3].b[5].txt=\"Light 2 \"","p[3].b[6].txt=\"Light 3 \""]'
 
   # Toggle light1 when p[3].b[4] pressed
   - alias: hasp_plate01_p3_ToggleLight1
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/state/p[3].b[4]'
-      payload: 'ON'
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[3].b[4]"
+        payload: "ON"
     action:
-    - service: homeassistant.toggle
-      entity_id: light.light_1
-      
+      - service: homeassistant.toggle
+        entity_id: light.light_1
+
   # Toggle light2 when p[3].b[5] pressed
   - alias: hasp_plate01_p3_ToggleLight2
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/state/p[3].b[5]'
-      payload: 'ON'
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[3].b[5]"
+        payload: "ON"
     action:
-    - service: homeassistant.toggle
-      entity_id: light.light_2
+      - service: homeassistant.toggle
+        entity_id: light.light_2
 
   # Toggle light3 when p[3].b[6] pressed
   - alias: hasp_plate01_p3_ToggleLight3
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/state/p[3].b[6]'
-      payload: 'ON'
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[3].b[6]"
+        payload: "ON"
     action:
-    - service: homeassistant.toggle
-      entity_id: light.light_3
+      - service: homeassistant.toggle
+        entity_id: light.light_3
 
   # Toggle all light_toggle_group when p[3].b[7] pressed
   - alias: hasp_plate01_p3_ToggleAll
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/state/p[3].b[7]'
-      payload: 'ON'
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[3].b[7]"
+        payload: "ON"
     action:
-    - service_template: >
+      - service_template: >
           {% if states.group.light_toggle_group.state == "on" -%}
             homeassistant.turn_off
           {%- else -%}
             homeassistant.turn_on
           {%- endif %}
-      entity_id: group.light_toggle_group
-      
+        entity_id: group.light_toggle_group
+
   # Toggle colors on p[3].b[4] when light1 changes
   - alias: hasp_plate01_p3_ToggleColor1
     trigger:
-    - platform: state
-      entity_id: light.light_1
-    - platform: state
-      entity_id: 'binary_sensor.plate01_connected'
-      to: 'on'
-    - platform: homeassistant
-      event: start
-    - platform: state
-      entity_id: input_number.hasp_plate01_selectedbackgroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_selectedforegroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+      - platform: state
+        entity_id: light.light_1
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedforegroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedforegroundcolor
     action:
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[4].bco'
-        payload_template: >-
-          {% if states.light.light_1.state == "on" -%}
-            {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state | int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state | int }}
-          {%- endif %}
-    - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[3].b[4].pco'
-        payload_template: >-
-          {% if states.light.light_1.state == "on" -%}
-            {{ states.input_number.hasp_plate01_selectedforegroundcolor.state | int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_unselectedforegroundcolor.state | int }}
-          {%- endif %}
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{% if states.light.light_1.state == "on" -%}
+              "p[3].b[4].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state | int }}","p[3].b[4].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state | int }}"
+            {%- else -%}
+              "p[3].b[4].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state | int }}","p[3].b[4].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state | int }}"
+            {%- endif %}]
 
-  # Toggle colors on p[3].b[5] when light1 changes
+  # Toggle colors on p[3].b[5] when light2 changes
   - alias: hasp_plate01_p3_ToggleColor2
     trigger:
-    - platform: state
-      entity_id: light.light_2
-    - platform: state
-      entity_id: 'binary_sensor.plate01_connected'
-      to: 'on'
-    - platform: homeassistant
-      event: start
-    - platform: state
-      entity_id: input_number.hasp_plate01_selectedbackgroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_selectedforegroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+      - platform: state
+        entity_id: light.light_2
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedforegroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedforegroundcolor
     action:
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[5].bco'
-        payload_template: >-
-          {% if states.light.light_2.state == "on" -%}
-            {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state | int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state | int }}
-          {%- endif %}
-    - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[3].b[5].pco'
-        payload_template: >-
-          {% if states.light.light_2.state == "on" -%}
-            {{ states.input_number.hasp_plate01_selectedforegroundcolor.state | int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_unselectedforegroundcolor.state | int }}
-          {%- endif %}
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{% if states.light.light_2.state == "on" -%}
+              "p[3].b[5].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state | int }}","p[3].b[5].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state | int }}"
+            {%- else -%}
+              "p[3].b[5].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state | int }}","p[3].b[5].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state | int }}"
+            {%- endif %}]
 
-  # Toggle colors on p[3].b[6] when light1 changes
+  # Toggle colors on p[3].b[6] when light3 changes
   - alias: hasp_plate01_p3_ToggleColor3
     trigger:
-    - platform: state
-      entity_id: light.light_3
-    - platform: state
-      entity_id: 'binary_sensor.plate01_connected'
-      to: 'on'
-    - platform: homeassistant
-      event: start
-    - platform: state
-      entity_id: input_number.hasp_plate01_selectedbackgroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_selectedforegroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+      - platform: state
+        entity_id: light.light_3
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedforegroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedforegroundcolor
     action:
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[6].bco'
-        payload_template: >-
-          {% if states.light.light_3.state == "on" -%}
-            {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state | int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state | int }}
-          {%- endif %}
-    - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[3].b[6].pco'
-        payload_template: >-
-          {% if states.light.light_3.state == "on" -%}
-            {{ states.input_number.hasp_plate01_selectedforegroundcolor.state | int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_unselectedforegroundcolor.state | int }}
-          {%- endif %}
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{% if states.light.light_3.state == "on" -%}
+              "p[3].b[6].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state | int }}","p[3].b[6].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state | int }}"
+            {%- else -%}
+              "p[3].b[6].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state | int }}","p[3].b[6].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state | int }}"
+            {%- endif %}]
 
-  # Set button 4 to "All Off" if any lights are on, otherwise set to "All On"
+  # Set button 4 to "All Lights Off" if any lights are on, otherwise set to "All Lights On"
   - alias: hasp_plate01_p3_ToggleColorAll
     trigger:
-    - platform: state
-      entity_id: group.light_toggle_group
-    - platform: state
-      entity_id: 'binary_sensor.plate01_connected'
-      to: 'on'
-    - platform: homeassistant
-      event: start
-    - platform: state
-      entity_id: input_number.hasp_plate01_selectedbackgroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_selectedforegroundcolor
-    - platform: state
-      entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+      - platform: state
+        entity_id: group.light_toggle_group
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedforegroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedforegroundcolor
     action:
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[3].b[7].bco'
-        payload_template: >-
-          {% if states.group.light_toggle_group.state == "on" -%}
-            {{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state | int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_selectedbackgroundcolor.state | int }}
-          {%- endif %}
-    - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[3].b[7].pco'
-        payload_template: >-
-          {% if states.group.light_toggle_group.state == "on" -%}
-            {{ states.input_number.hasp_plate01_unselectedforegroundcolor.state | int }}
-          {%- else -%}
-            {{ states.input_number.hasp_plate01_selectedforegroundcolor.state | int }}
-          {%- endif %}
-    - service: mqtt.publish
-      data_template:
-        topic: 'hasp/plate01/command/p[3].b[7].txt'
-        payload_template: >-
-          {% if states.group.light_toggle_group.state == "on" -%}
-           "Lights Off"
-          {%- else -%}
-           "Lights On"
-          {%- endif %}
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{% if states.group.light_toggle_group.state == "on" -%}
+              "p[3].b[7].txt=\"All Lights Off\"","p[3].b[7].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state | int }}","p[3].b[7].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state | int }}"
+            {%- else -%}
+              "p[3].b[7].txt=\"All Lights On\"","p[3].b[7].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state | int }}","p[3].b[7].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state | int }}"
+            {%- endif %}]
+
+##############################################################################
+# Automations to overlay icons on HASP Page 3
+#
+# See notes on hasp_plate01_p2_status for details here.  To recap:
+# * Icons placed w/ `xstr` only apply to the current page, so only attempt
+#   this while Page 3 is active.
+# * Any button interaction (press, release, new text, new color, etc)
+#   overwrites the icon, so we need to catch these events and put the icon
+#   back on top.
+# * The events we capture take time for the Nextion to process, so insert a
+#   1 msec delay command which will allow the Nextion to fully process the
+#   prior event.
+
+  # Overlay a light icon on the left side of p[3].b[4]
+  - alias: hasp_plate01_p3_Light1Icon
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: mqtt
+        topic: "hasp/plate01/command/page"
+        payload: "3"
+      - platform: state
+        entity_id: light.light_1
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[3].b[4]"
+        payload: "OFF"
+      - platform: mqtt
+        topic: "hasp/plate01/command/p[3].b[4].txt"
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedforegroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 3 }}"
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{% if states.light.light_1.state == "on" -%}
+              "delay=1","xstr 0,2,50,65,8,65280,65535,1,1,3,\"\""
+            {%- else -%}
+              "delay=1","xstr 0,2,50,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""
+            {%- endif %}]
+
+  # Overlay a light icon on the left side of p[3].b[5]
+  - alias: hasp_plate01_p3_Light2Icon
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: mqtt
+        topic: "hasp/plate01/command/page"
+        payload: "3"
+      - platform: state
+        entity_id: light.light_2
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[3].b[5]"
+        payload: "OFF"
+      - platform: mqtt
+        topic: "hasp/plate01/command/p[3].b[5].txt"
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedforegroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 3 }}"
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{% if states.light.light_2.state == "on" -%}
+              "delay=1","xstr 0,69,50,65,8,65280,0,1,1,3,\"\""
+            {%- else -%}
+              "delay=1","xstr 0,69,50,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""
+            {%- endif %}]
+
+  # Overlay a light icon on the left side of p[3].b[6]
+  - alias: hasp_plate01_p3_Light3Icon
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: mqtt
+        topic: "hasp/plate01/command/page"
+        payload: "3"
+      - platform: state
+        entity_id: light.light_3
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[3].b[6]"
+        payload: "OFF"
+      - platform: mqtt
+        topic: "hasp/plate01/command/p[3].b[6].txt"
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedforegroundcolor
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    condition:
+      condition: and
+      conditions:
+        - condition: template
+          value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 3 }}"
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{% if states.light.light_3.state == "on" -%}
+              "delay=1","xstr 0,136,50,65,8,65280,0,1,1,3,\"\""
+            {%- else -%}
+              "delay=1","xstr 0,136,50,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""
+            {%- endif %}]

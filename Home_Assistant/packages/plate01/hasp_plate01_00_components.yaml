@@ -1,21 +1,9 @@
 ##############################################################################
-# The devices created below are essential to the page control automations
-# and you'll probably want to carry them over to your own configuration
-homeassistant:
-  customize:
-    input_number.hasp_plate01_alarmcode1:
-      hidden: true
-    input_number.hasp_plate01_alarmcode2:
-      hidden: true
-    input_number.hasp_plate01_alarmcode3:
-      hidden: true
-    input_number.hasp_plate01_alarmcode4:
-      hidden: true
+# Components used for the operation of various elements of each HASP device
 
 # Enable this iframe to integrate the HASP web admin panel in Hass.
 # This will not work if you have SSL enabled, see details here:
 # https://www.home-assistant.io/components/panel_iframe/
-#
 panel_iframe:
   plate01:
     title: "plate01"
@@ -23,6 +11,7 @@ panel_iframe:
     icon: "mdi:cellphone-text"
 
 light:
+  # Create a light device to control the backlight on the HASP device
   - platform: mqtt
     name: plate01 Backlight
     command_topic: "hasp/plate01/light/switch"
@@ -32,6 +21,38 @@ light:
     availability_topic: "hasp/plate01/status"
     payload_available: "ON"
     payload_not_available: "OFF"
+  # These MQTT lights allow the user to select from a color wheel. Bitwise
+  # math is done on the RGB-888 value selected by the user to convert to
+  # RGB-565 and publish that value to MQTT to be picked up by the automations
+  # below.
+  - platform: mqtt
+    name: HASP plate01 Selected Foreground Color
+    command_topic: "hasp/plate01/homeassistant/selectedforegroundcolor"
+    state_topic: "hasp/plate01/homeassistant/selectedforegroundcolor"
+    payload_off: "ON"
+    rgb_command_topic: "hasp/plate01/homeassistant/selectedforegroundcolor/rgb"
+    rgb_command_template: "{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}"
+  - platform: mqtt
+    name: HASP plate01 Selected Background Color
+    command_topic: "hasp/plate01/homeassistant/selectedbackgroundcolor"
+    state_topic: "hasp/plate01/homeassistant/selectedbackgroundcolor"
+    payload_off: "ON"
+    rgb_command_topic: "hasp/plate01/homeassistant/selectedbackgroundcolor/rgb"
+    rgb_command_template: "{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}"
+  - platform: mqtt
+    name: HASP plate01 Unselected Foreground Color
+    command_topic: "hasp/plate01/homeassistant/unselectedforegroundcolor"
+    state_topic: "hasp/plate01/homeassistant/unselectedforegroundcolor"
+    payload_off: "ON"
+    rgb_command_topic: "hasp/plate01/homeassistant/unselectedforegroundcolor/rgb"
+    rgb_command_template: "{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}"
+  - platform: mqtt
+    name: HASP plate01 Unselected Background Color
+    command_topic: "hasp/plate01/homeassistant/unselectedbackgroundcolor"
+    state_topic: "hasp/plate01/homeassistant/unselectedbackgroundcolor"
+    payload_off: "ON"
+    rgb_command_topic: "hasp/plate01/homeassistant/unselectedbackgroundcolor/rgb"
+    rgb_command_template: "{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}"
 
 binary_sensor:
   - platform: mqtt
@@ -51,7 +72,7 @@ sensor:
     availability_topic: "hasp/plate01/status"
     payload_available: "ON"
     payload_not_available: "OFF"
-    json_attributes_topic:  "hasp/plate01/sensor"
+    json_attributes_topic: "hasp/plate01/sensor"
 
 input_text:
   hasp_plate01_pagebutton1label:
@@ -64,59 +85,121 @@ input_text:
     name: plate01 Page 3 Label
     icon: mdi:book-open-page-variant
 
+input_select:
+  hasp_plate01_pagebutton1font:
+    name: plate01 Page 1 Font
+    icon: mdi:format-font
+    options:
+      - 0 Consolas 24
+      - 1 Consolas 32
+      - 2 Consolas 48
+      - 3 Consolas Bold 80
+      - 4 Webdings 56
+      - 5 Noto Sans 24
+      - 6 Noto Sans 32
+      - 7 Noto Sans 48
+      - 8 Noto Sans 64
+      - 9 Noto Sans 80
+      - 10 Noto Sans Bold 80
+
+  hasp_plate01_pagebutton2font:
+    name: plate01 Page 2 Font
+    icon: mdi:format-font
+    options:
+      - 0 Consolas 24
+      - 1 Consolas 32
+      - 2 Consolas 48
+      - 3 Consolas Bold 80
+      - 4 Webdings 56
+      - 5 Noto Sans 24
+      - 6 Noto Sans 32
+      - 7 Noto Sans 48
+      - 8 Noto Sans 64
+      - 9 Noto Sans 80
+      - 10 Noto Sans Bold 80
+
+  hasp_plate01_pagebutton3font:
+    name: plate01 Page 3 Font
+    icon: mdi:format-font
+    options:
+      - 0 Consolas 24
+      - 1 Consolas 32
+      - 2 Consolas 48
+      - 3 Consolas Bold 80
+      - 4 Webdings 56
+      - 5 Noto Sans 24
+      - 6 Noto Sans 32
+      - 7 Noto Sans 48
+      - 8 Noto Sans 64
+      - 9 Noto Sans 80
+      - 10 Noto Sans Bold 80
+
+  hasp_plate01_theme:
+    name: plate01 Theme
+    icon: mdi:palette
+    options:
+      - Light on Dark
+      - Dark on Light
+      - Dark on Warm Light
+      - Midnight Blue
+      - Hot Dog Stand
+
 input_number:
   hasp_plate01_pagebutton1page:
     name: plate01 Page 1 Page
     icon: mdi:numeric
     min: 0
-    max: 9
+    max: 11
     step: 1
   hasp_plate01_pagebutton2page:
     name: plate01 Page 2 Page
     icon: mdi:numeric
     min: 0
-    max: 9
+    max: 11
     step: 1
   hasp_plate01_pagebutton3page:
     name: plate01 Page 3 Page
     icon: mdi:numeric
     min: 0
-    max: 9
+    max: 11
     step: 1
   hasp_plate01_activepage:
     name: plate01 Active Page
     icon: mdi:numeric
     min: 0
-    max: 9
+    max: 11
     step: 1
-  hasp_plate01_alarmcode1:
-    name: plate01 AlarmCode1
-    icon: mdi:numeric
-    min: -1
-    max: 9
+
+  # These input_numbers contain the Nextion RGB-565 color values for each of the
+  # 4 theme elements.
+  hasp_plate01_selectedforegroundcolor:
+    name: plate01 Selected Foreground Color
+    icon: mdi:palette
+    min: 0
+    max: 65535
     step: 1
-    initial: -1
-  hasp_plate01_alarmcode2:
-    name: plate01 AlarmCode2
-    icon: mdi:numeric
-    min: -1
-    max: 9
+    mode: box
+  hasp_plate01_selectedbackgroundcolor:
+    name: plate01 Selected Background Color
+    icon: mdi:palette
+    min: 0
+    max: 65535
     step: 1
-    initial: -1
-  hasp_plate01_alarmcode3:
-    name: plate01 AlarmCode3
-    icon: mdi:numeric
-    min: -1
-    max: 9
+    mode: box
+  hasp_plate01_unselectedforegroundcolor:
+    name: plate01 Unselected Foreground Color
+    icon: mdi:palette
+    min: 0
+    max: 65535
     step: 1
-    initial: -1
-  hasp_plate01_alarmcode4:
-    name: plate01 AlarmCode4
-    icon: mdi:numeric
-    min: -1
-    max: 9
+    mode: box
+  hasp_plate01_unselectedbackgroundcolor:
+    name: plate01 Unselected Background Color
+    icon: mdi:palette
+    min: 0
+    max: 65535
     step: 1
-    initial: -1
+    mode: box
 
 group:
   plate01:
@@ -134,84 +217,304 @@ group:
       - input_number.hasp_plate01_activepage
       - input_number.hasp_plate01_pagebutton1page
       - input_text.hasp_plate01_pagebutton1label
+      - input_select.hasp_plate01_pagebutton1font
       - input_number.hasp_plate01_pagebutton2page
       - input_text.hasp_plate01_pagebutton2label
+      - input_select.hasp_plate01_pagebutton2font
       - input_number.hasp_plate01_pagebutton3page
       - input_text.hasp_plate01_pagebutton3label
+      - input_select.hasp_plate01_pagebutton3font
   plate01_automations:
     name: plate01 automations
     entities:
       - automation.hasp_plate01_00_firsttimesetup
+  plate01_colors:
+    name: plate01 colors
+    entities:
+      - input_select.hasp_plate01_theme
+      - light.hasp_plate01_selected_foreground_color
+      - light.hasp_plate01_selected_background_color
+      - light.hasp_plate01_unselected_foreground_color
+      - light.hasp_plate01_unselected_background_color
 
 automation:
-##############################################################################
-# Run first time setup commands
+  ##############################################################################
+  # Run first time setup commands
   - alias: hasp_plate01_00_FirstTimeSetup
     trigger: []
     action:
       - service: automation.trigger
         data:
-          entity_id: 'automation.hasp_plate01_00_automationgroupupdate'
+          entity_id: "automation.hasp_plate01_00_automationgroupupdate"
       - service: homeassistant.turn_on
         data:
-          entity_id: 'group.plate01_automations'
-      - service: input_text.set_value
-        data:
-          entity_id: 'input_text.hasp_plate01_pagebutton1label'
-          value: 'scenes'
-      - service: input_text.set_value
-        data:
-          entity_id: 'input_text.hasp_plate01_pagebutton2label'
-          value: 'status'
-      - service: input_text.set_value
-        data:
-          entity_id: 'input_text.hasp_plate01_pagebutton3label'
-          value: 'lights'
-      - service: input_number.set_value
-        data:
-          entity_id: 'input_number.hasp_plate01_pagebutton1page'
-          value: 1
-      - service: input_number.set_value
-        data:
-          entity_id: 'input_number.hasp_plate01_pagebutton2page'
-          value: 2
-      - service: input_number.set_value
-        data:
-          entity_id: 'input_number.hasp_plate01_pagebutton3page'
-          value: 3
-      - service: input_number.set_value
-        data:
-          entity_id: 'input_number.hasp_plate01_activepage'
-          value: 1
-      - service: input_number.set_value
-        data:
-          entity_id: 'input_number.hasp_plate01_selectedforegroundcolor'
-          value: 0
-      - service: input_number.set_value
-        data:
-          entity_id: 'input_number.hasp_plate01_selectedbackgroundcolor'
-          value: 65535
-      - service: input_number.set_value
-        data:
-          entity_id: 'input_number.hasp_plate01_unselectedforegroundcolor'
-          value: 65535
-      - service: input_number.set_value
-        data:
-          entity_id: 'input_number.hasp_plate01_unselectedbackgroundcolor'
-          value: 25388
+          entity_id: "group.plate01_automations"
 
-##############################################################################
-# Set automation group members on start - Thanks @Nightcat!
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.hasp_plate01_pagebutton1page"
+          value: 1
+      - service: input_text.set_value
+        data:
+          entity_id: "input_text.hasp_plate01_pagebutton1label"
+          value: "scenes"
+      - service: input_select.select_option
+        data:
+          entity_id: "input_select.hasp_plate01_pagebutton1font"
+          option: "6 Noto Sans 32"
+
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.hasp_plate01_pagebutton2page"
+          value: 2
+      - service: input_text.set_value
+        data:
+          entity_id: "input_text.hasp_plate01_pagebutton2label"
+          value: "status"
+      - service: input_select.select_option
+        data:
+          entity_id: "input_select.hasp_plate01_pagebutton2font"
+          option: "6 Noto Sans 32"
+
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.hasp_plate01_pagebutton3page"
+          value: 3
+      - service: input_text.set_value
+        data:
+          entity_id: "input_text.hasp_plate01_pagebutton3label"
+          value: "lights"
+      - service: input_select.select_option
+        data:
+          entity_id: "input_select.hasp_plate01_pagebutton3font"
+          option: "6 Noto Sans 32"
+
+      - service: input_number.set_value
+        data:
+          entity_id: "input_number.hasp_plate01_activepage"
+          value: 1
+
+      - service: light.turn_on
+        entity_id:
+          - "light.hasp_plate01_selected_foreground_color"
+          - "light.hasp_plate01_selected_background_color"
+          - "light.hasp_plate01_unselected_foreground_color"
+          - "light.hasp_plate01_unselected_background_color"
+
+      - service: input_select.select_option
+        data:
+          entity_id: "input_select.hasp_plate01_theme"
+          option: "Dark on Light"
+
+      - service: climate.set_temperature
+        data:
+          entity_id: climate.mqtt_hvac
+          temperature: 72
+          target_temp_high: 78
+          target_temp_low: 68
+          hvac_mode: auto
+
+  ##############################################################################
+  # Set automation group members on start - Thanks @Nightcat!
   - alias: hasp_plate01_00_AutomationGroupUpdate
     trigger:
-    - platform: homeassistant
-      event: start
+      - platform: homeassistant
+        event: start
     action:
-    - service: group.set
-      data_template:
-        object_id: "plate01_automations"
-        entities: >-
-          {%- for item in states.automation if ((item.entity_id | lower).startswith('automation.hasp_plate01_')) -%}
-          {{ item.entity_id }}
-          {% if not loop.last %}, {% endif %}
-          {%- endfor -%}
+      - service: group.set
+        data_template:
+          object_id: "plate01_automations"
+          entities: >-
+            {%- for item in states.automation if ((item.entity_id | lower).startswith('automation.hasp_plate01_')) -%}
+            {{ item.entity_id }}
+            {% if not loop.last %}, {% endif %}
+            {%- endfor -%}
+
+  ##############################################################################
+  # Automations to copy the value published by MQTT lights to the input_sliders
+  # holding the color values
+  - alias: hasp_plate01_00_Update_selectedforegroundcolor
+    trigger:
+      - platform: mqtt
+        topic: "hasp/plate01/homeassistant/selectedforegroundcolor/rgb"
+    action:
+      - service: input_number.set_value
+        data_template:
+          entity_id: "input_number.hasp_plate01_selectedforegroundcolor"
+          value: "{{trigger.payload}}"
+  - alias: hasp_plate01_00_Update_selectedbackgroundcolor
+    trigger:
+      - platform: mqtt
+        topic: "hasp/plate01/homeassistant/selectedbackgroundcolor/rgb"
+    action:
+      - service: input_number.set_value
+        data_template:
+          entity_id: "input_number.hasp_plate01_selectedbackgroundcolor"
+          value: "{{trigger.payload}}"
+  - alias: hasp_plate01_00_Update_unselectedforegroundcolor
+    trigger:
+      - platform: mqtt
+        topic: "hasp/plate01/homeassistant/unselectedforegroundcolor/rgb"
+    action:
+      - service: input_number.set_value
+        data_template:
+          entity_id: "input_number.hasp_plate01_unselectedforegroundcolor"
+          value: "{{trigger.payload}}"
+  - alias: hasp_plate01_00_Update_unselectedbackgroundcolor
+    trigger:
+      - platform: mqtt
+        topic: "hasp/plate01/homeassistant/unselectedbackgroundcolor/rgb"
+    action:
+      - service: input_number.set_value
+        data_template:
+          entity_id: "input_number.hasp_plate01_unselectedbackgroundcolor"
+          value: "{{trigger.payload}}"
+
+  - alias: hasp_plate01_00_TurnOnMQTTLights
+    trigger:
+      - platform: homeassistant
+        event: start
+    action:
+      - service: light.turn_on
+        entity_id:
+          - "light.hasp_plate01_selected_foreground_color"
+          - "light.hasp_plate01_selected_background_color"
+          - "light.hasp_plate01_unselected_foreground_color"
+          - "light.hasp_plate01_unselected_background_color"
+
+  ##############################################################################
+  # Themes!
+  - alias: hasp_plate01_00_ApplyTheme_LightOnDark
+    trigger:
+      - platform: state
+        entity_id: input_select.hasp_plate01_theme
+        to: "Light on Dark"
+    action:
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_selected_foreground_color"
+        data:
+          brightness: 255
+          rgb_color: [255, 255, 255]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_selected_background_color"
+        data:
+          brightness: 1
+          rgb_color: [0, 0, 0]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_unselected_foreground_color"
+        data:
+          brightness: 224
+          rgb_color: [255, 255, 255]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_unselected_background_color"
+        data:
+          brightness: 64
+          rgb_color: [255, 255, 255]
+
+  - alias: hasp_plate01_00_ApplyTheme_DarkOnLight
+    trigger:
+      - platform: state
+        entity_id: input_select.hasp_plate01_theme
+        to: "Dark on Light"
+    action:
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_selected_foreground_color"
+        data:
+          brightness: 1
+          rgb_color: [0, 0, 0]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_selected_background_color"
+        data:
+          brightness: 255
+          rgb_color: [255, 255, 255]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_unselected_foreground_color"
+        data:
+          brightness: 224
+          rgb_color: [255, 255, 255]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_unselected_background_color"
+        data:
+          brightness: 96
+          rgb_color: [255, 255, 255]
+
+  - alias: hasp_plate01_00_ApplyTheme_DarkOnWarmLight
+    trigger:
+      - platform: state
+        entity_id: input_select.hasp_plate01_theme
+        to: "Dark on Warm Light"
+    action:
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_selected_foreground_color"
+        data:
+          brightness: 1
+          rgb_color: [0, 0, 0]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_selected_background_color"
+        data:
+          brightness: 255
+          rgb_color: [255, 255, 198]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_unselected_foreground_color"
+        data:
+          brightness: 255
+          rgb_color: [255, 255, 198]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_unselected_background_color"
+        data:
+          brightness: 96
+          rgb_color: [255, 255, 255]
+
+  - alias: hasp_plate01_00_ApplyTheme_MidnightBlue
+    trigger:
+      - platform: state
+        entity_id: input_select.hasp_plate01_theme
+        to: "Midnight Blue"
+    action:
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_selected_foreground_color"
+        data:
+          brightness: 255
+          rgb_color: [224, 224, 255]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_selected_background_color"
+        data:
+          brightness: 64
+          rgb_color: [0, 0, 255]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_unselected_foreground_color"
+        data:
+          brightness: 224
+          rgb_color: [224, 224, 255]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_unselected_background_color"
+        data:
+          brightness: 96
+          rgb_color: [127, 127, 255]
+
+  - alias: hasp_plate01_00_ApplyTheme_HotDogStand
+    trigger:
+      - platform: state
+        entity_id: input_select.hasp_plate01_theme
+        to: "Hot Dog Stand"
+    action:
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_selected_foreground_color"
+        data:
+          brightness: 255
+          rgb_color: [255, 255, 0]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_selected_background_color"
+        data:
+          brightness: 255
+          rgb_color: [255, 0, 0]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_unselected_foreground_color"
+        data:
+          brightness: 255
+          rgb_color: [255, 0, 0]
+      - service: light.turn_on
+        entity_id: "light.hasp_plate01_unselected_background_color"
+        data:
+          brightness: 255
+          rgb_color: [255, 255, 0]

@@ -4,23 +4,31 @@
 # with HASP deployed to accomodate breaking changes in v107
 ###############################################################################
 
-# Confirm that we're working in the .homeassistant folder by checking for configuration.yaml
-if [ ! -f configuration.yaml ]
+# First order of business is to find 'configuration.yaml' in some likely places
+if [ ! -f configuration.yaml ] # check current directory first
 then
-  echo "WARNING: 'configuration.yaml' not found in current directory."
-  echo "Searching for Home Assistant 'configuration.yaml'..."
-  configfile=$(find / -name configuration.yaml 2>/dev/null)
-  count=$(echo "$configfile" | wc -l)
-  if [ $count == 1 ]
+  if [ -f /config/configuration.yaml ] # next check container config dir
   then
-    configdir=$(dirname "${configfile}")
-    cd $configdir
-    echo "INFO: configuration.yaml found under: $configdir"
+    cd /config
+  elif [ -f ~/.homeassistant/configuration.yaml ]
+  then
+    cd ~/.homeassistant
   else
-    echo "ERROR: Failed to locate the active 'configuration.yaml'"
-    echo "       Please run this script from the homeassistant"
-    echo "       configuration folder for your environment."
-    exit 1
+    echo "WARNING: 'configuration.yaml' not found in current directory."
+    echo "         Searching for 'configuration.yaml'..."
+    foundConfigFiles=$(find / -name configuration.yaml 2>/dev/null)
+    foundConfigCount=$(echo "$foundConfigFiles" | wc -l)
+    if [ $foundConfigCount == 1 ]
+    then
+      foundConfigDir=$(dirname "${foundConfigFiles}")
+      cd $foundConfigDir
+      echo "INFO: configuration.yaml found under: $foundConfigDir"
+    else
+      echo "ERROR: Failed to locate the active 'configuration.yaml'"
+      echo "       Please run this script from the homeassistant"
+      echo "       configuration folder for your environment."
+      exit 1
+    fi
   fi
 fi
 

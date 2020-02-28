@@ -4,32 +4,51 @@
       - entity: binary_sensor.plate01_connected
       - entity: sensor.plate01_status
     cards:
-      - type: entities
-        title: plate01 Page Selection
-        show_header_toggle: false
-        entities:
-          - input_number.hasp_plate01_activepage
-          - input_number.hasp_plate01_pagebutton1page
-          - input_text.hasp_plate01_pagebutton1label
-          - input_number.hasp_plate01_pagebutton2page
-          - input_text.hasp_plate01_pagebutton2label
-          - input_number.hasp_plate01_pagebutton3page
-          - input_text.hasp_plate01_pagebutton3label
+      - type: entity-button
+        name: Click here for HASP plate01 First-Time Setup
+        entity: automation.hasp_plate01_00_firsttimesetup
+        show_icon: false
+        show_name: true
+        hold_action:
+          action: more-info
+        tap_action:
+          action: call-service
+          service: automation.trigger
+          service_data:
+            entity_id: automation.hasp_plate01_00_firsttimesetup
       - type: entities
         title: plate01 Colors
         show_header_toggle: false
         entities:
-          - input_number.hasp_plate01_selectedforegroundcolor
-          - input_number.hasp_plate01_selectedbackgroundcolor
-          - input_number.hasp_plate01_unselectedforegroundcolor
-          - input_number.hasp_plate01_unselectedbackgroundcolor
+          - entity: input_select.hasp_plate01_theme
+          - entity: light.hasp_plate01_selected_foreground_color
+            icon: 'mdi:palette'
+            name: plate01 Selected Foreground Color
+          - entity: light.hasp_plate01_selected_background_color
+            icon: 'mdi:palette'
+            name: plate01 Selected Background Color
+          - entity: light.hasp_plate01_unselected_foreground_color
+            icon: 'mdi:palette'
+            name: plate01 Unselected Foreground Color
+          - entity: light.hasp_plate01_unselected_background_color
+            icon: 'mdi:palette'
+            name: plate01 Unselected Background Color
       - type: entities
-        title: plate01 automations
+        title: plate01 Page Selection
         show_header_toggle: false
         entities:
-          - automation.hasp_plate01_00_firsttimesetup
+          - entity: input_number.hasp_plate01_activepage
+          - entity: input_number.hasp_plate01_pagebutton1page
+          - entity: input_text.hasp_plate01_pagebutton1label
+          - entity: input_select.hasp_plate01_pagebutton1font
+          - entity: input_number.hasp_plate01_pagebutton2page
+          - entity: input_text.hasp_plate01_pagebutton2label
+          - entity: input_select.hasp_plate01_pagebutton2font
+          - entity: input_number.hasp_plate01_pagebutton3page
+          - entity: input_text.hasp_plate01_pagebutton3label
+          - entity: input_select.hasp_plate01_pagebutton3font
       - type: entities
-        show_header_toggle: false
         title: plate01 Backlight
+        show_header_toggle: false
         entities:
           - light.plate01_backlight
