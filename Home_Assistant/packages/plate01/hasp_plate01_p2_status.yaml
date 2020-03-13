@@ -15,7 +15,7 @@ automation:
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[4].font"
-          payload: "9"
+          payload: "10"
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[4].xcen"
@@ -23,11 +23,11 @@ automation:
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[4].txt"
-          payload_template: '"{{(now().strftime(''%I'')|int)~now().strftime('':%M'')}}"'
+          payload_template: '"{{(now().strftime(''%I'')|int)~now().strftime('':%M'')}} "'
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[5].font"
-          payload: "6"
+          payload: "8"
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[5].xcen"
@@ -35,7 +35,7 @@ automation:
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[5].txt"
-          payload_template: "\"{{now().strftime('%A')}},\\r{{now().strftime('%B ') ~ now().day}}\""
+          payload_template: "\"{{now().strftime('%b ') ~ now().day}} \""
 
   - alias: hasp_plate01_p2_WeatherInit
     trigger:
@@ -51,7 +51,7 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[6].font'
-        payload: '9'
+        payload: '10'
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[6].xcen'
@@ -71,7 +71,7 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[7].txt'
-        payload_template: '"{{states.weather.nws.state|replace("-"," ")|replace("partlycloudy","partly cloudy")|title}}"'
+        payload_template: '"{{states.weather.nws.state|replace("-"," ")|replace("partlycloudy","partly cloudy")|title}} "'
 
   # Send the current time every minute
   - alias: hasp_plate01_p2_ClockUpdate
@@ -87,7 +87,7 @@ automation:
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[4].txt"
-          payload_template: '"{{(now().strftime(''%I'')|int)~now().strftime('':%M'')}}"'
+          payload_template: '"{{(now().strftime(''%I'')|int)~now().strftime('':%M'')}} "'
 
   # Send "Day, Month Date" every day at midnight
   - alias: hasp_plate01_p2_CalendarUpdate
@@ -102,7 +102,7 @@ automation:
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[5].txt"
-          payload_template: "\"{{now().strftime('%A')}},\\r{{now().strftime('%B ') ~ now().day}}\""
+          payload_template: "\"{{now().strftime('%b ') ~ now().day}} \""
 
   # Display weather details on page 2 when weather updates
   # Conditions are manually handled based on the list here:
@@ -127,7 +127,7 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/p[2].b[7].txt'
-        payload_template: '"{{states.weather.nws.state|replace("-"," ")|replace("partlycloudy","partly cloudy")|title}}"'
+        payload_template: '"{{states.weather.nws.state|replace("-"," ")|replace("partlycloudy","partly cloudy")|title}} "'
 
 ##############################################################################
 # Automations to set colors on HASP Page 2
@@ -149,7 +149,7 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(4,8) -%}"p[2].b[{{i}}].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+          [{%- for i in range(4,8) -%}"p[2].b[{{i}}].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p2_ColorConfig_selectedbackgroundcolor
     trigger:
@@ -165,7 +165,7 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(4,8) -%}"p[2].b[{{i}}].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+          [{%- for i in range(4,8) -%}"p[2].b[{{i}}].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p2_ColorConfig_unselectedforegroundcolor
     trigger:
@@ -181,7 +181,7 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(4,8) -%}"p[2].b[{{i}}].pco2={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+          [{%- for i in range(4,8) -%}"p[2].b[{{i}}].pco2={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p2_ColorConfig_unselectedbackgroundcolor
     trigger:
@@ -197,7 +197,7 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(4,8) -%}"p[2].b[{{i}}].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+          [{%- for i in range(4,8) -%}"p[2].b[{{i}}].bco2={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
 ##############################################################################
 # Automations to overlay icons on HASP Page 2
@@ -254,7 +254,7 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/json'
-        payload_template: '["delay=1","xstr 0,2,50,65,8,{{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }},0,1,1,3,\"\""]'
+        payload_template: '["delay=1","xstr 0,2,50,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"\""]'
 
   # Overlay a calendar icon on the left side of p[2].b[5]
   - alias: hasp_plate01_p2_IconOverlayCalendar
@@ -288,7 +288,7 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/json'
-        payload_template: '["delay=1","xstr 0,69,50,65,8,{{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }},0,1,1,3,\"\""]'
+        payload_template: '["delay=1","xstr 0,69,50,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"\""]'
 
   # Overlay a thermometer icon on the left side of p[2].b[6] based on the following:
   # <= 0 thermometer-empty
@@ -327,7 +327,7 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/json'
-        payload_template: '["delay=1","xstr 5,136,40,65,8,{{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }},0,1,1,3,\"{% if state_attr("weather.nws","temperature") <= 0 -%}{% elif state_attr("weather.nws","temperature") < 32 %}{% elif state_attr("weather.nws","temperature") < 65 %}{% elif state_attr("weather.nws","temperature") < 90 %}{% else %}{%- endif %}\""]'
+        payload_template: '["delay=1","xstr 5,136,40,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"{% if state_attr("weather.nws","temperature") <= 0 -%}{% elif state_attr("weather.nws","temperature") < 32 %}{% elif state_attr("weather.nws","temperature") < 65 %}{% elif state_attr("weather.nws","temperature") < 90 %}{% else %}{%- endif %}\""]'
 
 # Weather icons!  Check the current weather state against this list:  https://www.home-assistant.io/integrations/weather/#condition-mapping
 # and then map a FontAwesome icon for each of the possible conditions.
@@ -362,4 +362,4 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/json'
-        payload_template: '["delay=1","xstr 0,203,65,65,8,{{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }},0,1,1,3,\"{% if states.weather.nws.state == "clear-night" -%}{% elif states.weather.nws.state == "cloudy" %}{% elif states.weather.nws.state == "fog" %}{% elif states.weather.nws.state == "hail" %}{% elif states.weather.nws.state == "lightning" %}{% elif states.weather.nws.state == "lightning-rainy" %}{% elif states.weather.nws.state == "partlycloudy" %}{% elif states.weather.nws.state == "pouring" %}{% elif states.weather.nws.state == "rainy" %}{% elif states.weather.nws.state == "snowy" %}{% elif states.weather.nws.state == "snowy-rainy" %}{% elif states.weather.nws.state == "sunny" %}{% elif states.weather.nws.state == "windy" %}{% elif states.weather.nws.state == "windy-variant" %}{% elif states.weather.nws.state == "exceptional" %}{% else %}{%- endif %}\""]'
+        payload_template: '["delay=1","xstr 0,203,65,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"{% if states.weather.nws.state == "clear-night" -%}{% elif states.weather.nws.state == "cloudy" %}{% elif states.weather.nws.state == "fog" %}{% elif states.weather.nws.state == "hail" %}{% elif states.weather.nws.state == "lightning" %}{% elif states.weather.nws.state == "lightning-rainy" %}{% elif states.weather.nws.state == "partlycloudy" %}{% elif states.weather.nws.state == "pouring" %}{% elif states.weather.nws.state == "rainy" %}{% elif states.weather.nws.state == "snowy" %}{% elif states.weather.nws.state == "snowy-rainy" %}{% elif states.weather.nws.state == "sunny" %}{% elif states.weather.nws.state == "windy" %}{% elif states.weather.nws.state == "windy-variant" %}{% elif states.weather.nws.state == "exceptional" %}{% else %}{%- endif %}\""]'

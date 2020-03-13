@@ -43,7 +43,7 @@ automation:
     - service: timer.start
       data_template:
         entity_id: timer.hasp_plate01_defaultpagetimer
-        duration: '00:00:{{ states.input_number.hasp_plate01_defaultpagetimeout.state | int }}'
+        duration: '00:00:{{ states("input_number.hasp_plate01_defaultpagetimeout") | int }}'
 
 ##############################################################################
 # Set page at timer expiration
@@ -57,7 +57,7 @@ automation:
     - service: mqtt.publish
       data_template:
         topic: 'hasp/plate01/command/page'
-        payload_template: '{{states.input_number.hasp_plate01_defaultpagenumber.state|int}}'
+        payload_template: '{{states("input_number.hasp_plate01_defaultpagenumber")|int}}'
 
 ##############################################################################
 # Add the default page group to the main view

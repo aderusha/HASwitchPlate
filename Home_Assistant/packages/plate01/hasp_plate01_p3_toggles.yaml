@@ -59,7 +59,7 @@ automation:
         payload: "ON"
     action:
       - service_template: >
-          {% if states.group.light_toggle_group.state == "on" -%}
+          {% if states('group.light_toggle_group') == "on" -%}
             homeassistant.turn_off
           {%- else -%}
             homeassistant.turn_on
@@ -89,10 +89,10 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{% if states.light.light_1.state == "on" -%}
-              "p[3].b[4].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state | int }}","p[3].b[4].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state | int }}"
+            [{% if states('light.light_1') == "on" -%}
+              "p[3].b[4].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor') | int }}","p[3].b[4].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor') | int }}"
             {%- else -%}
-              "p[3].b[4].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state | int }}","p[3].b[4].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state | int }}"
+              "p[3].b[4].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor') | int }}","p[3].b[4].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor') | int }}"
             {%- endif %}]
 
   # Toggle colors on p[3].b[5] when light2 changes
@@ -118,10 +118,10 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{% if states.light.light_2.state == "on" -%}
-              "p[3].b[5].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state | int }}","p[3].b[5].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state | int }}"
+            [{% if states('light.light_2') == "on" -%}
+              "p[3].b[5].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor') | int }}","p[3].b[5].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor') | int }}"
             {%- else -%}
-              "p[3].b[5].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state | int }}","p[3].b[5].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state | int }}"
+              "p[3].b[5].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor') | int }}","p[3].b[5].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor') | int }}"
             {%- endif %}]
 
   # Toggle colors on p[3].b[6] when light3 changes
@@ -147,10 +147,10 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{% if states.light.light_3.state == "on" -%}
-              "p[3].b[6].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state | int }}","p[3].b[6].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state | int }}"
+            [{% if states('light.light_3') == "on" -%}
+              "p[3].b[6].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor') | int }}","p[3].b[6].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor') | int }}"
             {%- else -%}
-              "p[3].b[6].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state | int }}","p[3].b[6].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state | int }}"
+              "p[3].b[6].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor') | int }}","p[3].b[6].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor') | int }}"
             {%- endif %}]
 
   # Set button 4 to "All Lights Off" if any lights are on, otherwise set to "All Lights On"
@@ -176,10 +176,10 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{% if states.group.light_toggle_group.state == "on" -%}
-              "p[3].b[7].txt=\"All Lights Off\"","p[3].b[7].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state | int }}","p[3].b[7].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state | int }}"
+            [{% if states('group.light_toggle_group') == "on" -%}
+              "p[3].b[7].txt=\"All Lights Off\"","p[3].b[7].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor') | int }}","p[3].b[7].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor') | int }}"
             {%- else -%}
-              "p[3].b[7].txt=\"All Lights On\"","p[3].b[7].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state | int }}","p[3].b[7].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state | int }}"
+              "p[3].b[7].txt=\"All Lights On\"","p[3].b[7].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor') | int }}","p[3].b[7].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor') | int }}"
             {%- endif %}]
 
 ##############################################################################
@@ -231,7 +231,7 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{% if states.light.light_1.state == "on" -%}
+            [{% if states('light.light_1') == "on" -%}
               "delay=1","xstr 0,2,50,65,8,65280,65535,1,1,3,\"\""
             {%- else -%}
               "delay=1","xstr 0,2,50,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""
@@ -273,7 +273,7 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{% if states.light.light_2.state == "on" -%}
+            [{% if states('light.light_2') == "on" -%}
               "delay=1","xstr 0,69,50,65,8,65280,0,1,1,3,\"\""
             {%- else -%}
               "delay=1","xstr 0,69,50,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""
@@ -315,7 +315,7 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{% if states.light.light_3.state == "on" -%}
+            [{% if states('light.light_3') == "on" -%}
               "delay=1","xstr 0,136,50,65,8,65280,0,1,1,3,\"\""
             {%- else -%}
               "delay=1","xstr 0,136,50,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""

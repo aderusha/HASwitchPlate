@@ -16,7 +16,7 @@ automation:
       - service: mqtt.publish
         data_template:
           topic: "hasp/plate01/command/page"
-          payload_template: "{{states.input_number.hasp_plate01_activepage.state|int}}"
+          payload_template: "{{states('input_number.hasp_plate01_activepage')|int}}"
 
   ##############################################################################
   # select hasp_plate01_pagebutton1page in response to page button 1
@@ -59,7 +59,7 @@ automation:
       - service: input_number.set_value
         data_template:
           entity_id: "input_number.hasp_plate01_activepage"
-          value: "{{states.input_number.hasp_plate01_pagebutton1page.state|int}}"
+          value: "{{states('input_number.hasp_plate01_pagebutton1page')|int}}"
 
   ##############################################################################
   # select hasp_plate01_pagebutton2page in response to page button 2
@@ -102,7 +102,7 @@ automation:
       - service: input_number.set_value
         data_template:
           entity_id: "input_number.hasp_plate01_activepage"
-          value: "{{states.input_number.hasp_plate01_pagebutton2page.state|int}}"
+          value: "{{states('input_number.hasp_plate01_pagebutton2page')|int}}"
 
   ##############################################################################
   # select hasp_plate01_pagebutton3page in response to page button 3
@@ -145,7 +145,7 @@ automation:
       - service: input_number.set_value
         data_template:
           entity_id: "input_number.hasp_plate01_activepage"
-          value: "{{states.input_number.hasp_plate01_pagebutton3page.state|int}}"
+          value: "{{states('input_number.hasp_plate01_pagebutton3page')|int}}"
 
   ##############################################################################
   # Update hasp_plate01_00_active_page when changed at the panel
@@ -173,7 +173,7 @@ automation:
       - service: mqtt.publish
         data_template:
           topic: "hasp/plate01/command/page"
-          payload: "{{ states.input_number.hasp_plate01_activepage.state|int }}"
+          payload: "{{ states('input_number.hasp_plate01_activepage')|int }}"
 
   ##############################################################################
   # Set page button text across all pages to the value selected in the interface
@@ -195,8 +195,8 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{%- for i in range(1,12) -%}"p[{{i}}].b[1].txt=\"{{states.input_text.hasp_plate01_pagebutton1label.state}}\"",{%- endfor -%}"delay=1",
-            {%- for i in range(1,12) -%}"p[{{i}}].b[1].font={{states.input_select.hasp_plate01_pagebutton1font.state.split(" ")[0]|int}}",{%- endfor -%}"delay=1"]
+            [{%- for i in range(1,12) -%}"p[{{i}}].b[1].txt=\"{{states('input_text.hasp_plate01_pagebutton1label')}}\"",{%- endfor -%}"delay=1",
+            {%- for i in range(1,12) -%}"p[{{i}}].b[1].font={{states('input_select.hasp_plate01_pagebutton1font').split(" ")[0]|int}}",{%- endfor -%}"delay=1"]
 
   # set page button text on each page to hasp-plate01-PageButton2Label
   - alias: hasp_plate01_00_PageButton2_Text
@@ -215,8 +215,8 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{%- for i in range(1,12) -%}"p[{{i}}].b[2].txt=\"{{states.input_text.hasp_plate01_pagebutton2label.state}}\"",{%- endfor -%}"delay=1",
-            {%- for i in range(1,12) -%}"p[{{i}}].b[2].font={{states.input_select.hasp_plate01_pagebutton2font.state.split(" ")[0]|int}}",{%- endfor -%}"delay=1"]
+            [{%- for i in range(1,12) -%}"p[{{i}}].b[2].txt=\"{{states('input_text.hasp_plate01_pagebutton2label')}}\"",{%- endfor -%}"delay=1",
+            {%- for i in range(1,12) -%}"p[{{i}}].b[2].font={{states('input_select.hasp_plate01_pagebutton2font').split(" ")[0]|int}}",{%- endfor -%}"delay=1"]
 
   # set page button text on each page to hasp-plate01-PageButton3Label
   - alias: hasp_plate01_00_PageButton3_Text
@@ -235,8 +235,8 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{%- for i in range(1,12) -%}"p[{{i}}].b[3].txt=\"{{states.input_text.hasp_plate01_pagebutton3label.state}}\"",{%- endfor -%}"delay=1",
-            {%- for i in range(1,12) -%}"p[{{i}}].b[3].font={{states.input_select.hasp_plate01_pagebutton3font.state.split(" ")[0]|int}}",{%- endfor -%}"delay=1"]
+            [{%- for i in range(1,12) -%}"p[{{i}}].b[3].txt=\"{{states('input_text.hasp_plate01_pagebutton3label')}}\"",{%- endfor -%}"delay=1",
+            {%- for i in range(1,12) -%}"p[{{i}}].b[3].font={{states('input_select.hasp_plate01_pagebutton3font').split(" ")[0]|int}}",{%- endfor -%}"delay=1"]
 
   ##############################################################################
   # Set page button colors across selected pages to show active page button
@@ -261,18 +261,18 @@ automation:
           topic: "hasp/plate01/command/json"
           payload_template: >-
             [{%- for i in range(1,12) -%}
-              {% if i == states.input_number.hasp_plate01_pagebutton1page.state|int -%}
-                "p[{{i}}].b[1].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}","p[{{i}}].b[1].pco2={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",
+              {% if i == states('input_number.hasp_plate01_pagebutton1page')|int -%}
+                "p[{{i}}].b[1].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}","p[{{i}}].b[1].pco2={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}",
               {%- endif %}
             {%- endfor -%}
             {%- for i in range(1,12) -%}
-              {% if i == states.input_number.hasp_plate01_pagebutton2page.state|int -%}
-                "p[{{i}}].b[2].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}","p[{{i}}].b[2].pco2={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",
+              {% if i == states('input_number.hasp_plate01_pagebutton2page')|int -%}
+                "p[{{i}}].b[2].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}","p[{{i}}].b[2].pco2={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}",
               {%- endif %}
             {%- endfor -%}
             {%- for i in range(1,12) -%}
-              {% if i == states.input_number.hasp_plate01_pagebutton3page.state|int -%}
-                "p[{{i}}].b[3].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}","p[{{i}}].b[3].pco2={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",
+              {% if i == states('input_number.hasp_plate01_pagebutton3page')|int -%}
+                "p[{{i}}].b[3].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}","p[{{i}}].b[3].pco2={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}",
               {%- endif %}
             {%- endfor -%}"delay=1"]
 
@@ -297,18 +297,18 @@ automation:
           topic: "hasp/plate01/command/json"
           payload_template: >-
             [{%- for i in range(1,12) -%}
-              {% if i == states.input_number.hasp_plate01_pagebutton1page.state|int -%}
-                "p[{{i}}].b[1].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}","p[{{i}}].b[1].bco2={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}",
+              {% if i == states('input_number.hasp_plate01_pagebutton1page')|int -%}
+                "p[{{i}}].b[1].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}","p[{{i}}].b[1].bco2={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}",
               {%- endif %}
             {%- endfor -%}
             {%- for i in range(1,12) -%}
-              {% if i == states.input_number.hasp_plate01_pagebutton2page.state|int -%}
-                "p[{{i}}].b[2].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}","p[{{i}}].b[2].bco2={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}",
+              {% if i == states('input_number.hasp_plate01_pagebutton2page')|int -%}
+                "p[{{i}}].b[2].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}","p[{{i}}].b[2].bco2={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}",
               {%- endif %}
             {%- endfor -%}
             {%- for i in range(1,12) -%}
-              {% if i == states.input_number.hasp_plate01_pagebutton3page.state|int -%}
-                "p[{{i}}].b[3].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}","p[{{i}}].b[3].bco2={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}",
+              {% if i == states('input_number.hasp_plate01_pagebutton3page')|int -%}
+                "p[{{i}}].b[3].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}","p[{{i}}].b[3].bco2={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}",
               {%- endif %}
             {%- endfor -%}"delay=1"]
 
@@ -333,18 +333,18 @@ automation:
           topic: "hasp/plate01/command/json"
           payload_template: >-
             [{%- for i in range(1,12) -%}
-              {% if i != states.input_number.hasp_plate01_pagebutton1page.state|int -%}
-                "p[{{i}}].b[1].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}","p[{{i}}].b[1].pco2={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
+              {% if i != states('input_number.hasp_plate01_pagebutton1page')|int -%}
+                "p[{{i}}].b[1].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}","p[{{i}}].b[1].pco2={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
               {%- endif %}
             {%- endfor -%}"delay=1",
             {%- for i in range(1,12) -%}
-              {% if i != states.input_number.hasp_plate01_pagebutton2page.state|int -%}
-                "p[{{i}}].b[2].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}","p[{{i}}].b[2].pco2={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
+              {% if i != states('input_number.hasp_plate01_pagebutton2page')|int -%}
+                "p[{{i}}].b[2].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}","p[{{i}}].b[2].pco2={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
               {%- endif %}
             {%- endfor -%}"delay=1",
             {%- for i in range(1,12) -%}
-              {% if i != states.input_number.hasp_plate01_pagebutton3page.state|int -%}
-                "p[{{i}}].b[3].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}","p[{{i}}].b[3].pco2={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
+              {% if i != states('input_number.hasp_plate01_pagebutton3page')|int -%}
+                "p[{{i}}].b[3].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}","p[{{i}}].b[3].pco2={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
               {%- endif %}
             {%- endfor -%}"delay=1"]
 
@@ -369,17 +369,17 @@ automation:
           topic: "hasp/plate01/command/json"
           payload_template: >-
             [{%- for i in range(1,12) -%}
-              {% if i != states.input_number.hasp_plate01_pagebutton1page.state|int -%}
-                "p[{{i}}].b[1].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}","p[{{i}}].b[1].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",
+              {% if i != states('input_number.hasp_plate01_pagebutton1page')|int -%}
+                "p[{{i}}].b[1].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}","p[{{i}}].b[1].bco2={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",
               {%- endif %}
             {%- endfor -%}"delay=1",
             {%- for i in range(1,12) -%}
-              {% if i != states.input_number.hasp_plate01_pagebutton2page.state|int -%}
-                "p[{{i}}].b[2].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}","p[{{i}}].b[2].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",
+              {% if i != states('input_number.hasp_plate01_pagebutton2page')|int -%}
+                "p[{{i}}].b[2].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}","p[{{i}}].b[2].bco2={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",
               {%- endif %}
             {%- endfor -%}"delay=1",
             {%- for i in range(1,12) -%}
-              {% if i != states.input_number.hasp_plate01_pagebutton3page.state|int -%}
-                "p[{{i}}].b[3].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}","p[{{i}}].b[3].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",
+              {% if i != states('input_number.hasp_plate01_pagebutton3page')|int -%}
+                "p[{{i}}].b[3].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}","p[{{i}}].b[3].bco2={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",
               {%- endif %}
             {%- endfor -%}"delay=1"]

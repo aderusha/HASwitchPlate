@@ -99,14 +99,14 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            ["p[10].b[5].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",
-            "p[10].b[5].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}",
-            "p[10].b[6].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
-            "p[10].b[6].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",
-            "p[10].b[7].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
-            "p[10].b[7].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",
-            "p[10].b[8].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
-            "p[10].b[8].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}"]
+            ["p[10].b[5].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}",
+            "p[10].b[5].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}",
+            "p[10].b[6].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
+            "p[10].b[6].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",
+            "p[10].b[7].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
+            "p[10].b[7].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",
+            "p[10].b[8].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
+            "p[10].b[8].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}"]
 
   - alias: hasp_plate01_p10_UpdateFanModeLow
     trigger:
@@ -128,14 +128,14 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            ["p[10].b[5].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
-            "p[10].b[5].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",
-            "p[10].b[6].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",
-            "p[10].b[6].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}",
-            "p[10].b[7].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
-            "p[10].b[7].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",
-            "p[10].b[8].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
-            "p[10].b[8].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}"]
+            ["p[10].b[5].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
+            "p[10].b[5].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",
+            "p[10].b[6].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}",
+            "p[10].b[6].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}",
+            "p[10].b[7].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
+            "p[10].b[7].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",
+            "p[10].b[8].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
+            "p[10].b[8].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}"]
 
   - alias: hasp_plate01_p10_UpdateFanModeMedium
     trigger:
@@ -157,14 +157,14 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            ["p[10].b[5].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
-            "p[10].b[5].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",
-            "p[10].b[6].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
-            "p[10].b[6].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",
-            "p[10].b[7].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",
-            "p[10].b[7].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}",
-            "p[10].b[8].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
-            "p[10].b[8].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}"]
+            ["p[10].b[5].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
+            "p[10].b[5].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",
+            "p[10].b[6].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
+            "p[10].b[6].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",
+            "p[10].b[7].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}",
+            "p[10].b[7].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}",
+            "p[10].b[8].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
+            "p[10].b[8].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}"]
 
   - alias: hasp_plate01_p10_UpdateFanModeHigh
     trigger:
@@ -186,14 +186,14 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            ["p[10].b[5].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
-            "p[10].b[5].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",
-            "p[10].b[6].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
-            "p[10].b[6].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",
-            "p[10].b[7].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
-            "p[10].b[7].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",
-            "p[10].b[8].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",
-            "p[10].b[8].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}"]
+            ["p[10].b[5].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
+            "p[10].b[5].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",
+            "p[10].b[6].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
+            "p[10].b[6].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",
+            "p[10].b[7].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
+            "p[10].b[7].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",
+            "p[10].b[8].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}",
+            "p[10].b[8].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}"]
 
   - alias: hasp_plate01_p10_FanLightOnColor
     trigger:
@@ -214,8 +214,8 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            ["p[10].b[4].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}",
-            "p[10].b[4].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}"]
+            ["p[10].b[4].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}",
+            "p[10].b[4].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}"]
 
   - alias: hasp_plate01_p10_FanLightOffColor
     trigger:
@@ -236,8 +236,8 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            ["p[10].b[4].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",
-            "p[10].b[4].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}"]
+            ["p[10].b[4].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",
+            "p[10].b[4].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}"]
 
   - alias: hasp_plate01_p10_FanLightOnIcon
     trigger:
@@ -313,7 +313,8 @@ automation:
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/json"
-          payload_template: '["delay 1","xstr 5,15,50,65,8,{{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }},0,1,1,3,\"\""]'
+          payload_template: >-
+            ["delay 1","xstr 5,15,50,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""]
 
 ##############################################################################
 # Automations to set colors on HASP Page 10
@@ -332,7 +333,7 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{%- for i in range(4,9) -%}"p[10].b[{{i}}].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+            [{%- for i in range(4,9) -%}"p[10].b[{{i}}].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p10_ColorConfig_selectedbackgroundcolor
     trigger:
@@ -348,7 +349,7 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{%- for i in range(4,9) -%}"p[10].b[{{i}}].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+            [{%- for i in range(4,9) -%}"p[10].b[{{i}}].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p10_ColorConfig_unselectedforegroundcolor
     trigger:
@@ -364,7 +365,7 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{%- for i in range(4,9) -%}"p[10].b[{{i}}].pco2={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+            [{%- for i in range(4,9) -%}"p[10].b[{{i}}].pco2={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p10_ColorConfig_unselectedbackgroundcolor
     trigger:
@@ -380,4 +381,4 @@ automation:
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            [{%- for i in range(4,9) -%}"p[10].b[{{i}}].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+            [{%- for i in range(4,9) -%}"p[10].b[{{i}}].bco2={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]

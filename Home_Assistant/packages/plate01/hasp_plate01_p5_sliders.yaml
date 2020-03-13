@@ -23,7 +23,7 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(4,7) -%}"p[5].b[{{i}}].pco={{ states.input_number.hasp_plate01_selectedforegroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+          [{%- for i in range(4,7) -%}"p[5].b[{{i}}].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p5_ColorConfig_selectedbackgroundcolor
     trigger:
@@ -39,7 +39,7 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(4,7) -%}"p[5].b[{{i}}].bco={{ states.input_number.hasp_plate01_selectedbackgroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+          [{%- for i in range(4,7) -%}"p[5].b[{{i}}].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p5_ColorConfig_unselectedforegroundcolor
     trigger:
@@ -55,8 +55,8 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(4,7) -%}"p[5].b[{{i}}].pco2={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}",{%- endfor -%}
-          {%- for i in range(7,10) -%}"p[5].b[{{i}}].pco={{ states.input_number.hasp_plate01_unselectedforegroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+          [{%- for i in range(4,7) -%}"p[5].b[{{i}}].pco2={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",{%- endfor -%}
+          {%- for i in range(7,10) -%}"p[5].b[{{i}}].pco={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p5_ColorConfig_unselectedbackgroundcolor
     trigger:
@@ -72,5 +72,5 @@ automation:
       data:
         topic: 'hasp/plate01/command/json'
         payload_template: >-
-          [{%- for i in range(4,7) -%}"p[5].b[{{i}}].bco2={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}",{%- endfor -%}
-          {%- for i in range(7,10) -%}"p[5].b[{{i}}].bco={{ states.input_number.hasp_plate01_unselectedbackgroundcolor.state|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+          [{%- for i in range(4,7) -%}"p[5].b[{{i}}].bco2={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",{%- endfor -%}
+          {%- for i in range(7,10) -%}"p[5].b[{{i}}].bco={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
