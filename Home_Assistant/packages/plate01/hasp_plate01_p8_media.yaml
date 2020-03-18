@@ -149,7 +149,7 @@ automation:
         data:
           topic: "hasp/plate01/command/p[8].b[7].txt"
           payload_template: >-
-            "{%- if is_state(''media_player.media_player'', ''playing'') %};{% elif is_state(''media_player.media_player'', ''paused'') %}4{% endif -%}"
+            "{%- if is_state('media_player.media_player', 'playing') %};{% elif is_state('media_player.media_player', 'paused') %}4{% endif -%}"
 
   # Volume slider value published, apply published state
   - alias: hasp_plate01_p8_MediaVolSliderUpdateHass
