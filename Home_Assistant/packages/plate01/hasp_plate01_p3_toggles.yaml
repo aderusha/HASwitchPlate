@@ -232,9 +232,9 @@ automation:
           topic: "hasp/plate01/command/json"
           payload_template: >-
             [{% if states('light.light_1') == "on" -%}
-              "delay=1","xstr 0,2,50,65,8,65280,65535,1,1,3,\"\""
+              "delay=1","xstr 0,2,55,65,8,65280,65535,1,1,3,\"\""
             {%- else -%}
-              "delay=1","xstr 0,2,50,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""
+              "delay=1","xstr 0,2,55,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""
             {%- endif %}]
 
   # Overlay a light icon on the left side of p[3].b[5]
@@ -274,9 +274,9 @@ automation:
           topic: "hasp/plate01/command/json"
           payload_template: >-
             [{% if states('light.light_2') == "on" -%}
-              "delay=1","xstr 0,69,50,65,8,65280,0,1,1,3,\"\""
+              "delay=1","xstr 0,69,55,65,8,65280,0,1,1,3,\"\""
             {%- else -%}
-              "delay=1","xstr 0,69,50,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""
+              "delay=1","xstr 0,69,55,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""
             {%- endif %}]
 
   # Overlay a light icon on the left side of p[3].b[6]
@@ -316,7 +316,7 @@ automation:
           topic: "hasp/plate01/command/json"
           payload_template: >-
             [{% if states('light.light_3') == "on" -%}
-              "delay=1","xstr 0,136,50,65,8,65280,0,1,1,3,\"\""
+              "delay=1","xstr 0,136,55,65,8,65280,0,1,1,3,\"\""
             {%- else -%}
-              "delay=1","xstr 0,136,50,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""
+              "delay=1","xstr 0,136,55,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""
             {%- endif %}]

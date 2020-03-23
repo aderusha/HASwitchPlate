@@ -209,7 +209,7 @@ automation:
 # any way to make both of those things work in a single text field in Nextion.
 #
 # So... what we do here is call the Nextion command `xstr` to place text
-# arbitrarily on the screen.  With this command we can use the FontAwesome
+# arbitrarily on the screen.  With this command we can use the MaterialDesign
 # code points of the included fonts to put icons anywhere we want!
 #
 # However, this approach has a lot of problems which we then need to handle:
@@ -254,7 +254,7 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/json'
-        payload_template: '["delay=1","xstr 0,2,50,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"\""]'
+        payload_template: '["delay=1","xstr 0,2,55,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"\""]'
 
   # Overlay a calendar icon on the left side of p[2].b[5]
   - alias: hasp_plate01_p2_IconOverlayCalendar
@@ -288,14 +288,12 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/json'
-        payload_template: '["delay=1","xstr 0,69,50,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"\""]'
+        payload_template: '["delay=1","xstr 0,69,55,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"\""]'
 
   # Overlay a thermometer icon on the left side of p[2].b[6] based on the following:
-  # <= 0 thermometer-empty
-  # < 32 thermometer-quarter
-  # < 65 thermometer-half
-  # < 90 thermometer-three-quarters
-  # > 90 thermometer-full
+  # <= 32 thermometer-low
+  # <= 80 thermometer
+  # > 80 thermometer-high
   - alias: hasp_plate01_p2_IconOverlayThermometer
     trigger:
     - platform: state
@@ -327,7 +325,7 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/json'
-        payload_template: '["delay=1","xstr 5,136,40,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"{% if state_attr("weather.nws","temperature") <= 0 -%}{% elif state_attr("weather.nws","temperature") < 32 %}{% elif state_attr("weather.nws","temperature") < 65 %}{% elif state_attr("weather.nws","temperature") < 90 %}{% else %}{%- endif %}\""]'
+        payload_template: '["delay=1","xstr 0,136,55,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"{% if state_attr("weather.nws","temperature") <= 32 -%}{% elif state_attr("weather.nws","temperature") <= 80 %}{% else %}{%- endif %}\""]'
 
 # Weather icons!  Check the current weather state against this list:  https://www.home-assistant.io/integrations/weather/#condition-mapping
 # and then map a FontAwesome icon for each of the possible conditions.
@@ -362,4 +360,4 @@ automation:
     - service: mqtt.publish
       data:
         topic: 'hasp/plate01/command/json'
-        payload_template: '["delay=1","xstr 0,203,65,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"{% if states.weather.nws.state == "clear-night" -%}{% elif states.weather.nws.state == "cloudy" %}{% elif states.weather.nws.state == "fog" %}{% elif states.weather.nws.state == "hail" %}{% elif states.weather.nws.state == "lightning" %}{% elif states.weather.nws.state == "lightning-rainy" %}{% elif states.weather.nws.state == "partlycloudy" %}{% elif states.weather.nws.state == "pouring" %}{% elif states.weather.nws.state == "rainy" %}{% elif states.weather.nws.state == "snowy" %}{% elif states.weather.nws.state == "snowy-rainy" %}{% elif states.weather.nws.state == "sunny" %}{% elif states.weather.nws.state == "windy" %}{% elif states.weather.nws.state == "windy-variant" %}{% elif states.weather.nws.state == "exceptional" %}{% else %}{%- endif %}\""]'
+        payload_template: '["delay=1","xstr 0,203,60,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"{% if states.weather.nws.state == "clear-night" -%}{% elif states.weather.nws.state == "cloudy" %}{% elif states.weather.nws.state == "fog" %}{% elif states.weather.nws.state == "hail" %}{% elif states.weather.nws.state == "lightning" %}{% elif states.weather.nws.state == "lightning-rainy" %}{% elif states.weather.nws.state == "partlycloudy" %}{% elif states.weather.nws.state == "pouring" %}{% elif states.weather.nws.state == "rainy" %}{% elif states.weather.nws.state == "snowy" %}{% elif states.weather.nws.state == "snowy-rainy" %}{% elif states.weather.nws.state == "sunny" %}{% elif states.weather.nws.state == "windy" %}{% elif states.weather.nws.state == "windy-variant" %}{% elif states.weather.nws.state == "exceptional" %}{% else %}{%- endif %}\""]'

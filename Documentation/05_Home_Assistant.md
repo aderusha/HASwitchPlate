@@ -2,7 +2,7 @@
 
 Configuring Home Assistant for the HASP requires making some basic changes to your configuration and downloading the packages to your installation.  [Continue below]((#standard-home-assistant-installation) for a standard Home Assistant installation in a container (HassOS, HassIO, Docker, etc).
 
-The procedure will be a little different if you're running an "alternative" Home Assistant installation ("venv", hassbian, or similar), so [skip to that section](#alternative-home-assistant-installation).
+The procedure will be a little different if you're running Home Assistant Core (venv, hassbian, or similar), so [skip to that section](#home-assistant-core-installation).
 
 Finally, if you'd rather make all the changes yourself, jump to the [Manual Home Assistant installation section](#manual-home-assistant-installation).
 
@@ -24,7 +24,7 @@ You will be prompted for a device name and the script will do the rest.  Once it
 
 ---
 
-## Alternative Home Assistant installation
+## Home Assistant Core installation
 
 Before deploying your first HASP device, you'll need to install and configure an [MQTT broker](https://www.home-assistant.io/docs/mqtt/broker) for Home Assistant.
 
