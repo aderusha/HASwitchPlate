@@ -4,6 +4,7 @@
 
 ##############################################################################
 # Automations to set colors on HASP Page 6
+
 automation:
   - alias: hasp_plate01_p6_ColorConfig_selectedforegroundcolor
     trigger:

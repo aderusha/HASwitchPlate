@@ -344,7 +344,7 @@ void mqttConnect()
   {
     nextionSendCmd("page 0");
     nextionSetAttr("p[0].b[1].font", "6");
-    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rConfigure MQTT:\\rhttp://" + WiFi.localIP().toString() + "\"");
+    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rConfigure MQTT:\\rhttp://" + WiFi.localIP().toString() + "\"");
     while (mqttServer[0] == 0)
     { // Handle HTTP and OTA while we're waiting for MQTT to be configured
       yield();
@@ -384,7 +384,7 @@ void mqttConnect()
     mqttClientId = String(haspNode) + "-" + String(espMac[0], HEX) + String(espMac[1], HEX) + String(espMac[2], HEX) + String(espMac[3], HEX) + String(espMac[4], HEX) + String(espMac[5], HEX);
     nextionSendCmd("page 0");
     nextionSetAttr("p[0].b[1].font", "6");
-    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connecting:\\r: " + String(mqttServer) + "\"");
+    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connecting:\\r" + String(mqttServer) + "\"");
     // nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\rIP: " + WiFi.localIP().toString() + "\\rMQTT Connecting:\\r" + String(mqttServer) + "\"");
     debugPrintln(String(F("MQTT: Attempting connection to broker ")) + String(mqttServer) + " as clientID " + mqttClientId);
 
@@ -435,7 +435,7 @@ void mqttConnect()
       mqttReconnectCount = 0;
 
       // Update panel with MQTT status
-      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connected:\\r: " + String(mqttServer) + "\"");
+      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connected:\\r" + String(mqttServer) + "\"");
       debugPrintln(F("MQTT: connected"));
       if (nextionActivePage)
       {
@@ -451,7 +451,7 @@ void mqttConnect()
         espReset();
       }
       debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Trying again in 30 seconds.")));
-      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connect to:\\r: " + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\r\\rRetry in 30 sec\"");
+      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connect to:\\r" + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\r\\rRetry in 30 sec\"");
       unsigned long mqttReconnectTimer = millis(); // record current time for our timeout
       while ((millis() - mqttReconnectTimer) < 30000)
       { // Handle HTTP and OTA while we're waiting 30sec for MQTT to reconnect
@@ -1190,7 +1190,7 @@ void espWifiSetup()
 { // Connect to WiFi
   nextionSendCmd("page 0");
   nextionSetAttr("p[0].b[1].font", "6");
-  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connecting...\\r " + String(WiFi.SSID()) + "\"");
+  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connecting...\\r " + String(WiFi.SSID()) + "\"");
 
   WiFi.macAddress(espMac);            // Read our MAC address and save it to espMac
   WiFi.hostname(haspNode);            // Assign our hostname before connecting to WiFi
@@ -1276,7 +1276,7 @@ void espWifiSetup()
   }
   // If you get here you have connected to WiFi
   nextionSetAttr("p[0].b[1].font", "6");
-  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\"");
+  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\"");
   debugPrintln(String(F("WIFI: Connected successfully and assigned IP: ")) + WiFi.localIP().toString());
   if (nextionActivePage)
   {
@@ -1313,7 +1313,7 @@ void espWifiConfigCallback(WiFiManager *myWiFiManager)
   }
   nextionSendCmd("page 0");
   nextionSetAttr("p[0].b[1].font", "6");
-  nextionSetAttr("p[0].b[1].txt", "\" HASP WiFi Setup\\r AP: " + String(wifiConfigAP) + "\\rPassword: " + String(wifiConfigPass) + "\\r\\r\\r\\r\\r\\r\\r  http://192.168.4.1\"");
+  nextionSetAttr("p[0].b[1].txt", "\" HASP WiFi Setup\\r AP: " + String(wifiConfigAP) + "\\rPassword: " + String(wifiConfigPass) + "\\r\\r\\r\\r\\r\\r\\r  http://192.168.4.1\"");
   nextionSendCmd("vis 3,1");
 }
 

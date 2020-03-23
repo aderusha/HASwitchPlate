@@ -17,7 +17,7 @@ automation:
             ["p[10].b[4].font=7","p[10].b[4].xcen=2","p[10].b[5].font=7","p[10].b[6].font=7","p[10].b[7].font=7","p[10].b[8].font=7",
             "p[10].b[4].txt=\"Fan Light \"","p[10].b[5].txt=\"Off\"","p[10].b[6].txt=\"Low\"","p[10].b[7].txt=\"Med\"","p[10].b[8].txt=\"High\""]
 
-  # Toggle light1 when p[10].b[4] pressed
+    # Toggle light1 when p[10].b[4] pressed
   - alias: hasp_plate01_p10_ToggleLight1
     trigger:
       - platform: mqtt
@@ -250,11 +250,11 @@ automation:
         entity_id: "light.light_1"
         to: "on"
       - platform: mqtt
-        topic: "hasp/plate01/command/page"
-        payload: "10"
+        topic: 'hasp/plate01/command/page'
+        payload: '10'
       - platform: mqtt
-        topic: "hasp/plate01/state/p[10].b[4]"
-        payload: "OFF"
+        topic: 'hasp/plate01/state/p[10].b[4]'
+        payload: 'OFF'
       - platform: state
         entity_id: input_number.hasp_plate01_selectedbackgroundcolor
       - platform: state
@@ -266,16 +266,16 @@ automation:
     condition:
       condition: and
       conditions:
-        - condition: template
-          value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 10 }}"
-        - condition: state
-          entity_id: "light.light_1"
-          state: "on"
+      - condition: template
+        value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 10 }}"
+      - condition: state
+        entity_id: "light.light_1"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/json"
-          payload: '["delay 1","xstr 5,15,55,65,8,65280,0,1,1,3,\"\""]'
+          payload: '["delay 1","xstr 5,15,50,65,8,65280,0,1,1,3,\"\""]'
 
   - alias: hasp_plate01_p10_FanLightOffIcon
     trigger:
@@ -288,11 +288,11 @@ automation:
         entity_id: "light.light_1"
         to: "off"
       - platform: mqtt
-        topic: "hasp/plate01/command/page"
-        payload: "10"
+        topic: 'hasp/plate01/command/page'
+        payload: '10'
       - platform: mqtt
-        topic: "hasp/plate01/state/p[10].b[4]"
-        payload: "OFF"
+        topic: 'hasp/plate01/state/p[10].b[4]'
+        payload: 'OFF'
       - platform: state
         entity_id: input_number.hasp_plate01_selectedbackgroundcolor
       - platform: state
@@ -304,21 +304,21 @@ automation:
     condition:
       condition: and
       conditions:
-        - condition: template
-          value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 10 }}"
-        - condition: state
-          entity_id: "light.light_1"
-          state: "off"
+      - condition: template
+        value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 10 }}"
+      - condition: state
+        entity_id: "light.light_1"
+        state: "off"
     action:
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/json"
           payload_template: >-
-            ["delay 1","xstr 5,15,55,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""]
+            ["delay 1","xstr 5,15,50,65,8,{{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }},0,1,1,3,\"\""]
 
-  ##############################################################################
-  # Automations to set colors on HASP Page 10
-  #
+##############################################################################
+# Automations to set colors on HASP Page 10
+#
   - alias: hasp_plate01_p10_ColorConfig_selectedforegroundcolor
     trigger:
       - platform: state
