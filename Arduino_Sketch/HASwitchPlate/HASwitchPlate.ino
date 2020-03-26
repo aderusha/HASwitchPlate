@@ -195,6 +195,7 @@ void setup()
   webServer.on("/", webHandleRoot);
   webServer.on("/saveConfig", webHandleSaveConfig);
   webServer.on("/resetConfig", webHandleResetConfig);
+  webServer.on("/resetBacklight", webHandleResetBacklight);
   webServer.on("/firmware", webHandleFirmware);
   webServer.on("/espfirmware", webHandleEspFirmware);
   webServer.on("/lcdupload", HTTP_POST, []() { webServer.send(200); }, webHandleLcdUpload);
@@ -384,8 +385,7 @@ void mqttConnect()
     mqttClientId = String(haspNode) + "-" + String(espMac[0], HEX) + String(espMac[1], HEX) + String(espMac[2], HEX) + String(espMac[3], HEX) + String(espMac[4], HEX) + String(espMac[5], HEX);
     nextionSendCmd("page 0");
     nextionSetAttr("p[0].b[1].font", "6");
-    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connecting:\\r" + String(mqttServer) + "\"");
-    // nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\rIP: " + WiFi.localIP().toString() + "\\rMQTT Connecting:\\r" + String(mqttServer) + "\"");
+    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connecting:\\r " + String(mqttServer) + "\"");
     debugPrintln(String(F("MQTT: Attempting connection to broker ")) + String(mqttServer) + " as clientID " + mqttClientId);
 
     // Set keepAlive, cleanSession, timeout
@@ -435,7 +435,7 @@ void mqttConnect()
       mqttReconnectCount = 0;
 
       // Update panel with MQTT status
-      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connected:\\r" + String(mqttServer) + "\"");
+      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connected:\\r " + String(mqttServer) + "\"");
       debugPrintln(F("MQTT: connected"));
       if (nextionActivePage)
       {
@@ -451,7 +451,7 @@ void mqttConnect()
         espReset();
       }
       debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Trying again in 30 seconds.")));
-      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connect to:\\r" + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\r\\rRetry in 30 sec\"");
+      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connect to:\\r " + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\r\\rRetry in 30 sec\"");
       unsigned long mqttReconnectTimer = millis(); // record current time for our timeout
       while ((millis() - mqttReconnectTimer) < 30000)
       { // Handle HTTP and OTA while we're waiting 30sec for MQTT to reconnect
@@ -877,7 +877,6 @@ void nextionSetAttr(String hmiAttribute, String hmiValue)
 { // Set the value of a Nextion component attribute
   Serial1.print(hmiAttribute);
   Serial1.print("=");
-  // Serial1.print(utf8ascii(hmiValue));
   Serial1.print(hmiValue);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   debugPrintln(String(F("HMI OUT: '")) + hmiAttribute + "=" + hmiValue + "'");
@@ -896,7 +895,6 @@ void nextionGetAttr(String hmiAttribute)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void nextionSendCmd(String nextionCmd)
 { // Send a raw command to the Nextion panel
-  // Serial1.print(utf8ascii(nextionCmd));
   Serial1.print(nextionCmd);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   debugPrintln(String(F("HMI OUT: ")) + nextionCmd);
@@ -1584,6 +1582,7 @@ void configSave()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void configClearSaved()
 { // Clear out all local storage
+  nextionSetAttr("dims", "100");
   nextionSendCmd("page 0");
   nextionSetAttr("p[0].b[1].txt", "\"Resetting\\rsystem...\"");
   debugPrintln(F("RESET: Formatting SPIFFS"));
@@ -1716,6 +1715,9 @@ void webHandleRoot()
 
   httpMessage += String(F("<hr><form method='get' action='reboot'>"));
   httpMessage += String(F("<button type='submit'>reboot device</button></form>"));
+
+  httpMessage += String(F("<hr><form method='get' action='resetBacklight'>"));
+  httpMessage += String(F("<button type='submit'>reset lcd backlight</button></form>"));
 
   httpMessage += String(F("<hr><form method='get' action='resetConfig'>"));
   httpMessage += String(F("<button type='submit'>factory reset settings</button></form>"));
@@ -1933,6 +1935,33 @@ void webHandleResetConfig()
     httpMessage += FPSTR(HTTP_END);
     webServer.send(200, "text/html", httpMessage);
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void webHandleResetBacklight()
+{ // http://plate01/resetBacklight
+  if (configPassword[0] != '\0')
+  { //Request HTTP auth if configPassword is set
+    if (!webServer.authenticate(configUser, configPassword))
+    {
+      return webServer.requestAuthentication();
+    }
+  }
+
+  debugPrintln(String(F("HTTP: Sending /resetBacklight page to client connected from: ")) + webServer.client().remoteIP().toString());
+  String httpMessage = FPSTR(HTTP_HEADER);
+  httpMessage.replace("{v}", (String(haspNode) + " HASP backlight reset"));
+  httpMessage += FPSTR(HTTP_SCRIPT);
+  httpMessage += FPSTR(HTTP_STYLE);
+  httpMessage += String(HASP_STYLE);
+  httpMessage += String(F("<meta http-equiv='refresh' content='3;url=/' />"));
+  httpMessage += FPSTR(HTTP_HEADER_END);
+  httpMessage += String(F("<h1>")) + String(haspNode) + String(F("</h1>"));
+  httpMessage += String(F("<br/>Resetting backlight to 100%"));
+  httpMessage += FPSTR(HTTP_END);
+  webServer.send(200, "text/html", httpMessage);
+  debugPrintln(F("HTTP: Resetting backlight to 100%"));
+  nextionSetAttr("dims", "100");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
