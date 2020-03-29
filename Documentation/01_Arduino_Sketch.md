@@ -31,9 +31,9 @@ Now proceed to [First-time Setup](#first-time-setup) to connect to your wireless
 
 Next you will need to add several libraries to your Arduino environment.  [Follow this guide for the general process](https://www.arduino.cc/en/Guide/Libraries) and add the following libraries to your IDE:
 
-* [ArduinoJson](https://arduinojson.org/?utm_source=meta&utm_medium=library.properties) by Benoit Blanchon version 6.11 or higher
-* [MQTT](https://github.com/256dpi/arduino-mqtt) by Joel Gaehwiler version 2.4.3
-* [WiFiManager](https://github.com/tzapu/WiFiManager) by tzapu version 0.14.0
+* [ArduinoJson](https://github.com/bblanchon/ArduinoJson) by Benoit Blanchon version 6.15
+* [MQTT](https://github.com/256dpi/arduino-mqtt) by Joel Gaehwiler version 2.4.7
+* [WiFiManager](https://github.com/tzapu/WiFiManager) by tzapu version 0.15.0
 
 To enable future firmware updates you'll need to modify settings in the Arudino IDE for 1M SPIFFs, leaving 3M free for code and updates.  In the Arduino IDE select `Tools` > `Flash Size:` > `4M (1M SPIFFS)`.  If you're using [PlatformIO](https://platformio.org/) instead of Arduino, [modify the build flags](http://docs.platformio.org/en/latest/platforms/espressif8266.html#flash-size) to include `-Wl,-Teagle.flash.4m1m.ld`
 ![Arduino Erase All Flash Contents](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Arduino_1M_SPIFFS.png?raw=true)

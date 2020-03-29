@@ -50,7 +50,7 @@ Time to remove the training wheels and learn to send commands to and from the pa
 
 ## HASwitchPlate Architecture
 
-The complete HA SwitchPlate build consists of 4 physical components:
+The complete HA SwitchPlate ("HASP") build consists of 4 physical components:
 
 * Nextion LCD Touchscreen
 * ESP8266 WiFi microcontroller
@@ -63,40 +63,78 @@ In addition, there are three different programming environments involved:
 * Arduino for ESP8266
 * Home Assistant automations (or automation platform of your choice)
 
-### The basics
+## The basics
 
-At its core this project is an MQTT-to-Nextion gateway, allowing the user to send commands to and receive data from the Nextion LCD panel over a WiFi connection.  Example code for each of the three components above is provided as a starting point for your own development.  Each of these three components are capable of being extended to handle your own use case and each environment comes with it's own considerations so we'll take a moment to review some specifics.
+A home automation system such as Home Assistant can interact with the HASP by sending and receiving MQTT messages to control what appears on the HASP and to respond to user interactions at the HASP.  At its core this project is an Nextion-over-MQTT gateway.  [Nextion Instruction Set](https://nextion.tech/instruction-set/) commands are sent to the HASP via an MQTT message and delivered to the Nextion LCD.  User interactions triggered from the LCD (such as button presses) are sent back out from HASP via MQTT messages to be acted upon by your home automation system.
 
-### Nextion Instruction Set
+### Example: one screen button
 
-The Nextion panels mate an LCD touchscreen with an embedded microcontroller which is controlled over a standard serial interface.  The panel needs to be flashed with a firmware image generated in a Windows GUI designer application. The GUI designer can embed control instructions into the firmware image allowing the panel to run basic interaction tasks on its own.  The panel accepts instructions over the serial interface to change visual elements and will send serial data in response to user interactions.  Finally, graphical resources (pictures and fonts) can be flashed into the device to create a custom user interface.
+To illustrate, let's discuss the case of a single button shown on the screen.  Below we see  "page 1", showing a set of 4 buttons arranged vertically and a set of 3 page select buttons at the bottom.
 
-The Nextion environment is centered around "pages", each of which have their own graphical elements and controls.  The provided Nextion firmware creates a very basic user interface with few hard-coded instructions.  Several pages have been created in various layouts, each of which can be customized by sending commands to the panel over MQTT.  This approach allows for external control over the panel interface and interactions in a generic way.
+![Scene Controls](Images/HASwitchPlate_Demo_SceneController.png?raw=true)
 
-### Nextion Considerations
+Referring to the [Nextion Object Reference](02_Nextion_HMI.md#hasp-nextion-object-reference) (more on this later), we find that the top-most button above is an object named `p[1].b[4]`.  When the HASP device shown here powered on, the home automation controller sent an MQTT message that looked like this:
 
-* Nextion instructions executed locally on the panel are fast and always available, even if the other components are offline for whichever reason.  User interaction code happening on the panel will create the most responsive experience from a user perspective.
-* Updating firmware on the panel over the air carries some risk of failure.  Recovery requires rebooting the panel, which may involve a trip to the circuit break panel.
-* The Nextion command set is very basic and memory is limited.  Don't expect to be accomplish much of your automation logic at this layer.
-* The provided pages utilize no bitmap graphical resources, resulting in a very "flat" UI which is general-purpose and easy to modify over the wire.  Feel free to add your own images and customize the panel for your specific use case!
+| topic                                | message              |
+|--------------------------------------|----------------------|
+| `hasp/plate01/command/p[1].b[4].txt` | `"     Lights On "` |
 
-## Arduino IDE
+Let's take a look at this `command` message:
 
-The ESP8266 microcontroller physically attaches to the Nextion LCD via serial, connects to your network via WiFi, and connects to an MQTT broker to gateway Nextion control messages.  For the most part the provided code has been designed to gateway messages back and forth without a lot of automation logic happening at this layer.
+`hasp` All messages to and from the HASP appear under the `hasp/` namespace in MQTT
 
-### Arduino Considerations
+`plate01` This device is named `plate01`.  You can have several HASP devices in your home and each gets their own name.
 
-* The provided Arduino sketch supports OTA programming allowing for remote code updates without involving a screwdriver and circuit breaker.  This process is reasonably reliable, but if you flash an update that leaves the device unresponsive you'll need to unplug the device from AC and re-flash via USB.
-* The Arduino platform and the C++ programming language is a powerful and flexible environment allowing for nearly any degree of automation you might dream up.
-* The ESP8266 does not include a realtime clock, so any logic dependent upon time-of-day will be problematic to implement at this layer.
-* The ESP8266 provides a watchdog process which will reset the device if anything hangs up.  This makes the device reliable in the face of network outages, but also means that the system may restart (and thus lose state) unexpectedly.  Clever use of local EEPROM or retained MQTT messages may help with this.
+`command` This message is a `command` being sent *to* the HASP device.
 
-## Home Assistant (or other HA platforms)
+`p[1].b[4]` is the name of a Nextion "object".  A full discussion of these names and a map to the objects included in the HASP project can be found [here](02_Nextion_HMI.md#hasp-nextion-object-reference).
 
-The ultimate goal of this project is to allow your home automation platform to control the LCD panel by way of MQTT messages.  Home Assistant provides a powerful option for device communication and automation, but any platform capable of sending/receiving MQTT messages could be substituted in its place.
+`.txt` is a property of the object named above.  In this case, `.txt` is a reference to the text which appears on this object.
 
-### Home Assistant Considerations
+`"     Lights On "` Is the text we wish to appear on the screen.  The `` part of this text is a [FontAwesome icon codepoint](https://fontawesome.com/cheatsheet), which here happens to be a lightbulb.  We've mixed the icon and the text to be displayed in this message.
 
-* For purposes of this project I've elected to utilize Home Assistant automations as they are reasonably accessible to new users.  While flexible, they also can be functionally limiting and hard to manage at scale.
-* More advanced users may chose to utilize Python scripts or any other available external scripting/programming language that can be executed on your home automation platform of choice.
-* User interactions controlled at this layer will have the highest latency, and any broken link in the command chain (MQTT, WiFi, etc) will prevent the panel from being able to respond to commands happening here.
+Put together, we've told the HASP named `plate01` to send a Nextion instruction `p[1].b[4].txt="     Lights On "`.  The HASP sent this command to the Nextion LCD, and the result is the text you see on the screenshot above.
+
+### User Interaction
+
+Now that we have some nice text appearing on the screen, let's see what happens when the user interacts with our button.  When the `Lights On` button is pressed, the Nextion LCD sends a command to the HASP device, which publishes the following MQTT message:
+
+| topic                          | message |
+|--------------------------------|---------|
+| `hasp/plate01/state/p[1].b[4]` | `ON`    |
+
+Let's take a look at this `state` message:
+
+`hasp` Just as before, all messages to and from the HASP appear under the `hasp/` namespace
+
+`plate01` This message came from a device named `plate01`.
+
+`state` This message is a `state` update sent *from* the HASP device.
+
+`p[1].b[4]` is the Nextion object which triggered the new `state`
+
+`ON` This messages tells us that the object above has entered the `ON` state.  In the case of a button object, this means somebody has pressed the button.  An `OFF` message will be sent later when the user releases the button.
+
+### Responding to User Interaction
+
+Now it is up to your home automation system to pick up this message and doing something meaningful in response, like turning on the lights.  In this project, a set of [Home Assistant automations](https://www.home-assistant.io/docs/automation/) has been provided to demonstrate various interactions which you can use as a starting point for customizing your own environment.
+
+[This is an example Home Assistant automation which will listen for HASP button presses](../Home_Assistant/packages/plate01/hasp_plate01_p1_scenes.yaml#L45-L53):
+
+```yaml
+# Trigger scene.lights_on when p[1].b[4] pressed
+- alias: hasp_plate01_p1_SceneButton4
+  trigger:
+    - platform: mqtt
+      topic: "hasp/plate01/state/p[1].b[4]"
+      payload: "ON"
+  action:
+    - service: scene.turn_on
+      entity_id: scene.lights_on
+```
+
+This automation tells Home Assistant to listen to the MQTT topic `hasp/plate01/state/p[1].b[4]` for a message with the payload `ON`.  As we learned above, this is the message that will be sent out when a user presses the button which we've applied the text label "Lights on" (with a nice icon).  When Home Assistant receives this button press, we trigger a [Home Assistant scene](https://www.home-assistant.io/docs/scene/) called `lights_on`.
+
+And that's it!  All of the HASP interactions follow some version of this basic workflow.  The device is configured to display things by receiving MQTT messages.  When the user does things at the HASP device, MQTT messages are sent back for your home automation platform to respond to.
+
+Of course, things can get complicated.  The included automations make extensive use of [templates](https://www.home-assistant.io/docs/automation/templating/) and other advanced features of Home Assistant.  Don't be worried though, underneath it all it's always going to be some version of the simple interaction shown above.

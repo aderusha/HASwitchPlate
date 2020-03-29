@@ -59,13 +59,13 @@ char motionPinConfig[3] = "0";
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 
-const float haspVersion = 0.38;                     // Current HASP software release version
+const float haspVersion = 0.40;                     // Current HASP software release version
 byte nextionReturnBuffer[128];                      // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;                     // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                      // Track active LCD page
 bool lcdConnected = false;                          // Set to true when we've heard something from the LCD
-char wifiConfigPass[9];                             // AP config password, always 8 chars + NUL
-char wifiConfigAP[19];                              // AP config SSID, haspNode + 3 chars
+const char wifiConfigPass[9] = "hasplate";          // First-time config WPA2 password
+const char wifiConfigAP[14] = "HASwitchPlate";      // First-time config SSID
 bool shouldSaveConfig = false;                      // Flag to save json config to SPIFFS
 bool nextionReportPage0 = false;                    // If false, don't report page 0 sendme
 const unsigned long updateCheckInterval = 43200000; // Time in msec between update checks (12 hours)
@@ -82,6 +82,13 @@ bool debugSerialD8Enabled = true;                   // Enable hardware serial de
 const unsigned long telnetInputMax = 128;           // Size of user input buffer for user telnet session
 bool motionEnabled = false;                         // Motion sensor is enabled
 bool mdnsEnabled = true;                            // mDNS enabled
+bool beepEnabled = false;                           // Keypress beep enabled
+unsigned long beepPrevMillis = 0;                   // will store last time beep was updated
+unsigned long beepOnTime = 1000;                    // milliseconds of on-time for beep
+unsigned long beepOffTime = 1000;                   // milliseconds of off-time for beep
+boolean beepState;                                  // beep currently engaged
+unsigned int beepCounter;                           // Count the number of beeps
+byte beepPin;                                       // define beep pin output
 uint8_t motionPin = 0;                              // GPIO input pin for motion sensor if connected and enabled
 bool motionActive = false;                          // Motion is being detected
 const unsigned long motionLatchTimeout = 30000;     // Latch time for motion sensor
@@ -107,6 +114,7 @@ String mqttGroupCommandTopic;                       // MQTT topic for incoming g
 String mqttStatusTopic;                             // MQTT topic for publishing device connectivity state
 String mqttSensorTopic;                             // MQTT topic for publishing device information in JSON format
 String mqttLightCommandTopic;                       // MQTT topic for incoming panel backlight on/off commands
+String mqttBeepCommandTopic;                        // MQTT topic for error beep
 String mqttLightStateTopic;                         // MQTT topic for outgoing panel backlight on/off state
 String mqttLightBrightCommandTopic;                 // MQTT topic for incoming panel backlight dimmer commands
 String mqttLightBrightStateTopic;                   // MQTT topic for outgoing panel backlight dimmer state
@@ -187,6 +195,7 @@ void setup()
   webServer.on("/", webHandleRoot);
   webServer.on("/saveConfig", webHandleSaveConfig);
   webServer.on("/resetConfig", webHandleResetConfig);
+  webServer.on("/resetBacklight", webHandleResetBacklight);
   webServer.on("/firmware", webHandleFirmware);
   webServer.on("/espfirmware", webHandleEspFirmware);
   webServer.on("/lcdupload", HTTP_POST, []() { webServer.send(200); }, webHandleLcdUpload);
@@ -206,6 +215,12 @@ void setup()
   mqttConnect();                                                // Connect to MQTT
 
   motionSetup(); // Setup motion sensor if configured
+
+  if (beepEnabled)
+  { // Setup beep/tactile if configured
+    beepPin = 4;
+    pinMode(beepPin, OUTPUT);
+  }
 
   if (debugTelnetEnabled)
   { // Setup telnet server for remote debug output
@@ -293,7 +308,25 @@ void loop()
     handleTelnetClient(); // telnetClient loop
   }
 
-  delay(10); // Spooky voodoo which claims to improve WiFi stability.
+  if (beepEnabled)
+  { // Process Beeps
+    if ((beepState == true) && (millis() - beepPrevMillis >= beepOnTime) && ((beepCounter > 0)))
+    {
+      beepState = false;         // Turn it off
+      beepPrevMillis = millis(); // Remember the time
+      analogWrite(beepPin, 254); // start beep for beepOnTime
+      if (beepCounter > 0)
+      { // Update the beep counter.
+        beepCounter--;
+      }
+    }
+    else if ((beepState == false) && (millis() - beepPrevMillis >= beepOffTime) && ((beepCounter >= 0)))
+    {
+      beepState = true;          // turn it on
+      beepPrevMillis = millis(); // Remember the time
+      analogWrite(beepPin, 0);   // stop beep for beepOffTime
+    }
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -311,9 +344,8 @@ void mqttConnect()
   if (mqttServer[0] == 0)
   {
     nextionSendCmd("page 0");
-    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\rConfigure MQTT:\\r" + WiFi.localIP().toString() + "\\r\\r\\r\\r\\r\\r\\r \"");
-    nextionSetAttr("p[0].b[3].txt", "\"http://" + WiFi.localIP().toString() + "\"");
-    nextionSendCmd("vis 3,1");
+    nextionSetAttr("p[0].b[1].font", "6");
+    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rConfigure MQTT:\\rhttp://" + WiFi.localIP().toString() + "\"");
     while (mqttServer[0] == 0)
     { // Handle HTTP and OTA while we're waiting for MQTT to be configured
       yield();
@@ -352,7 +384,8 @@ void mqttConnect()
     // Generate an MQTT client ID as haspNode + our MAC address
     mqttClientId = String(haspNode) + "-" + String(espMac[0], HEX) + String(espMac[1], HEX) + String(espMac[2], HEX) + String(espMac[3], HEX) + String(espMac[4], HEX) + String(espMac[5], HEX);
     nextionSendCmd("page 0");
-    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\\rMQTT Connecting" + String(mqttServer) + "\"");
+    nextionSetAttr("p[0].b[1].font", "6");
+    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connecting:\\r " + String(mqttServer) + "\"");
     debugPrintln(String(F("MQTT: Attempting connection to broker ")) + String(mqttServer) + " as clientID " + mqttClientId);
 
     // Set keepAlive, cleanSession, timeout
@@ -402,7 +435,7 @@ void mqttConnect()
       mqttReconnectCount = 0;
 
       // Update panel with MQTT status
-      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\\rMQTT Connected:\\r" + String(mqttServer) + "\"");
+      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connected:\\r " + String(mqttServer) + "\"");
       debugPrintln(F("MQTT: connected"));
       if (nextionActivePage)
       {
@@ -418,7 +451,7 @@ void mqttConnect()
         espReset();
       }
       debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Trying again in 30 seconds.")));
-      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\\rMQTT Connect to" + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\rRetry in 30 sec\"");
+      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connect to:\\r " + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\r\\rRetry in 30 sec\"");
       unsigned long mqttReconnectTimer = millis(); // record current time for our timeout
       while ((millis() - mqttReconnectTimer) < 30000)
       { // Handle HTTP and OTA while we're waiting 30sec for MQTT to reconnect
@@ -517,6 +550,16 @@ void mqttCallback(String &strTopic, String &strPayload)
   { // '[...]/device/command/factoryreset' == clear all saved settings)
     configClearSaved();
   }
+  else if (strTopic == (mqttCommandTopic + "/beep") || strTopic == (mqttGroupCommandTopic + "/beep"))
+  { // '[...]/device/command/beep')
+    String mqqtvar1 = getSubtringField(strPayload, ',', 0);
+    String mqqtvar2 = getSubtringField(strPayload, ',', 1);
+    String mqqtvar3 = getSubtringField(strPayload, ',', 2);
+
+    beepOnTime = mqqtvar1.toInt();
+    beepOffTime = mqqtvar2.toInt();
+    beepCounter = mqqtvar3.toInt();
+  }
   else if (strTopic.startsWith(mqttCommandTopic) && (strPayload == ""))
   { // '[...]/device/command/p[1].b[4].txt' -m '' == nextionGetAttr("p[1].b[4].txt")
     String subTopic = strTopic.substring(mqttCommandTopic.length() + 1);
@@ -602,7 +645,7 @@ void mqttStatusUpdate()
   mqttStatusPayload += String(F("\"espCore\":\"")) + String(ESP.getCoreVersion()) + String(F("\""));
   mqttStatusPayload += "}";
 
-  mqttClient.publish(mqttSensorTopic, mqttStatusPayload);
+  mqttClient.publish(mqttSensorTopic, mqttStatusPayload, true, 1);
   mqttClient.publish(mqttStatusTopic, "ON", true, 1);
   debugPrintln(String(F("MQTT: status update: ")) + String(mqttStatusPayload));
   debugPrintln(String(F("MQTT: binary_sensor state: [")) + mqttStatusTopic + "] : [ON]");
@@ -653,7 +696,7 @@ bool nextionHandleInput()
 void nextionProcessInput()
 { // Process incoming serial commands from the Nextion panel
   // Command reference: https://www.itead.cc/wiki/Nextion_Instruction_Set#Format_of_Device_Return_Data
-  // tl;dr, command byte, command data, 0xFF 0xFF 0xFF
+  // tl;dr: command byte, command data, 0xFF 0xFF 0xFF
 
   if (nextionReturnBuffer[0] == 0x65)
   { // Handle incoming touch command
@@ -674,6 +717,12 @@ void nextionProcessInput()
       mqttClient.publish(mqttButtonTopic, "ON");
       String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + String(nextionPage) + String(F("].b[")) + String(nextionButtonID) + String(F("]\", \"value\":\"ON\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+      if (beepEnabled)
+      {
+        beepOnTime = 500;
+        beepOffTime = 100;
+        beepCounter = 1;
+      }
     }
     if (nextionButtonAction == 0x00)
     {
@@ -695,7 +744,8 @@ void nextionProcessInput()
     // Meaning: page 2
     String nextionPage = String(nextionReturnBuffer[1]);
     debugPrintln(String(F("HMI IN: [sendme Page] '")) + nextionPage + "'");
-    if ((nextionActivePage != nextionPage.toInt()) && ((nextionPage != "0") || nextionReportPage0))
+    // if ((nextionActivePage != nextionPage.toInt()) && ((nextionPage != "0") || nextionReportPage0))
+    if ((nextionPage != "0") || nextionReportPage0)
     { // If we have a new page AND ( (it's not "0") OR (we've set the flag to report 0 anyway) )
       nextionActivePage = nextionPage.toInt();
       String mqttPageTopic = mqttStateTopic + "/page";
@@ -827,7 +877,7 @@ void nextionSetAttr(String hmiAttribute, String hmiValue)
 { // Set the value of a Nextion component attribute
   Serial1.print(hmiAttribute);
   Serial1.print("=");
-  Serial1.print(utf8ascii(hmiValue));
+  Serial1.print(hmiValue);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   debugPrintln(String(F("HMI OUT: '")) + hmiAttribute + "=" + hmiValue + "'");
 }
@@ -845,7 +895,7 @@ void nextionGetAttr(String hmiAttribute)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void nextionSendCmd(String nextionCmd)
 { // Send a raw command to the Nextion panel
-  Serial1.print(utf8ascii(nextionCmd));
+  Serial1.print(nextionCmd);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   debugPrintln(String(F("HMI OUT: ")) + nextionCmd);
 }
@@ -871,7 +921,8 @@ void nextionParseJson(String &strPayload)
     for (uint8_t i = 0; i < nextionCommands.size(); i++)
     {
       nextionSendCmd(nextionCommands[i]);
-    }
+      delayMicroseconds(500); // Larger JSON objects can take a while to run through over serial,
+    }                         // give the ESP and Nextion a moment to deal with life
   }
 }
 
@@ -912,8 +963,8 @@ void nextionStartOtaDownload(String otaUrl)
       if (mqttClient.connected())
       {
         debugPrintln(F("LCD OTA: LCD firmware upload starting, closing MQTT connection."));
-        mqttClient.publish(mqttStatusTopic, "OFF");
-        mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
+        mqttClient.publish(mqttStatusTopic, "OFF", true, 1);
+        mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}", true, 1);
         mqttClient.disconnect();
       }
 
@@ -1042,17 +1093,12 @@ bool nextionOtaResponse()
         otaSuccessVal = true;
         break;
       }
-      else
-      {
-        // debugPrintln(String(inByte, HEX));
-      }
     }
     else
     {
       delay(1);
     }
   }
-  // delay(50);
   return otaSuccessVal;
 }
 
@@ -1141,18 +1187,16 @@ void nextionReset()
 void espWifiSetup()
 { // Connect to WiFi
   nextionSendCmd("page 0");
-  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connecting\"");
+  nextionSetAttr("p[0].b[1].font", "6");
+  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connecting...\\r " + String(WiFi.SSID()) + "\"");
 
-  // Read our MAC address and save it to espMac
-  WiFi.macAddress(espMac);
-  // Assign our hostname before connecting to WiFi
-  WiFi.hostname(haspNode);
-  // Tell WiFi to autoreconnect if connection has dropped
-  WiFi.setAutoReconnect(true);
+  WiFi.macAddress(espMac);            // Read our MAC address and save it to espMac
+  WiFi.hostname(haspNode);            // Assign our hostname before connecting to WiFi
+  WiFi.setAutoReconnect(true);        // Tell WiFi to autoreconnect if connection has dropped
+  WiFi.setSleepMode(WIFI_NONE_SLEEP); // Disable WiFi sleep modes to prevent occasional disconnects
 
   if (String(wifiSSID) == "")
-  { // If the sketch has no defined a static wifiSSID to connect to,
-    // use WiFiManager to collect required information from the user.
+  { // If the sketch has not defined a static wifiSSID use WiFiManager to collect required information from the user.
 
     // id/name, placeholder/prompt, default value, length, extra tags
     WiFiManagerParameter custom_haspNodeHeader("<br/><br/><b>HASP Node Name</b>");
@@ -1167,13 +1211,9 @@ void espWifiSetup()
     WiFiManagerParameter custom_configUser("configUser", "Config User", configUser, 15, " maxlength=31'");
     WiFiManagerParameter custom_configPassword("configPassword", "Config Password", configPassword, 31, " maxlength=31 type='password'");
 
-    // WiFiManager local initialization. Once its business is done, there is no need to keep it around
     WiFiManager wifiManager;
-
     wifiManager.setSaveConfigCallback(configSaveCallback); // set config save notify callback
     wifiManager.setCustomHeadElement(HASP_STYLE);          // add custom style
-
-    // Add all your parameters here
     wifiManager.addParameter(&custom_haspNodeHeader);
     wifiManager.addParameter(&custom_haspNode);
     wifiManager.addParameter(&custom_groupName);
@@ -1190,17 +1230,6 @@ void espWifiSetup()
     wifiManager.setTimeout(connectTimeout);
 
     wifiManager.setAPCallback(espWifiConfigCallback);
-
-    // Construct AP name
-    char espMac5[1];
-    sprintf(espMac5, "%02x", espMac[5]);
-    String strWifiConfigAP = String(haspNode).substring(0, 9) + "-" + String(espMac5);
-    strWifiConfigAP.toCharArray(wifiConfigAP, (strWifiConfigAP.length() + 1));
-    // Construct a WiFi SSID password using bytes [3] and [4] of our MAC
-    char espMac34[2];
-    sprintf(espMac34, "%02x%02x", espMac[3], espMac[4]);
-    String strConfigPass = "hasp" + String(espMac34);
-    strConfigPass.toCharArray(wifiConfigPass, 9);
 
     // Fetches SSID and pass from EEPROM and tries to connect
     // If it does not connect it starts an access point with the specified name
@@ -1244,7 +1273,8 @@ void espWifiSetup()
     }
   }
   // If you get here you have connected to WiFi
-  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r" + WiFi.localIP().toString() + "\"");
+  nextionSetAttr("p[0].b[1].font", "6");
+  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\"");
   debugPrintln(String(F("WIFI: Connected successfully and assigned IP: ")) + WiFi.localIP().toString());
   if (nextionActivePage)
   {
@@ -1280,8 +1310,8 @@ void espWifiConfigCallback(WiFiManager *myWiFiManager)
     delay(10);
   }
   nextionSendCmd("page 0");
-  nextionSetAttr("p[0].b[1].txt", "\"Configure HASP:\\rAP:" + String(wifiConfigAP) + "\\rPass:" + String(wifiConfigPass) + "\\r\\r\\r\\r\\r\\r\\rWeb:192.168.4.1\"");
-  nextionSetAttr("p[0].b[3].txt", "\"WIFI:S:" + String(wifiConfigAP) + ";T:WPA;P:" + String(wifiConfigPass) + ";;\"");
+  nextionSetAttr("p[0].b[1].font", "6");
+  nextionSetAttr("p[0].b[1].txt", "\" HASP WiFi Setup\\r AP: " + String(wifiConfigAP) + "\\rPassword: " + String(wifiConfigPass) + "\\r\\r\\r\\r\\r\\r\\r  http://192.168.4.1\"");
   nextionSendCmd("vis 3,1");
 }
 
@@ -1361,8 +1391,8 @@ void espReset()
   debugPrintln(F("RESET: HASP reset"));
   if (mqttClient.connected())
   {
-    mqttClient.publish(mqttStatusTopic, "OFF");
-    mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}");
+    mqttClient.publish(mqttStatusTopic, "OFF", true, 1);
+    mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}", true, 1);
     mqttClient.disconnect();
   }
   nextionReset();
@@ -1463,6 +1493,17 @@ void configRead()
               mdnsEnabled = false;
             }
           }
+          if (!configJson["beepEnabled"].isNull())
+          {
+            if (configJson["beepEnabled"])
+            {
+              beepEnabled = true;
+            }
+            else
+            {
+              beepEnabled = false;
+            }
+          }
           String configJsonStr;
           serializeJson(configJson, configJsonStr);
           debugPrintln(String(F("SPIFFS: parsed json:")) + configJsonStr);
@@ -1509,6 +1550,7 @@ void configSave()
   jsonConfigValues["debugSerialEnabled"] = debugSerialEnabled;
   jsonConfigValues["debugTelnetEnabled"] = debugTelnetEnabled;
   jsonConfigValues["mdnsEnabled"] = mdnsEnabled;
+  jsonConfigValues["beepEnabled"] = beepEnabled;
 
   debugPrintln(String(F("SPIFFS: mqttServer = ")) + String(mqttServer));
   debugPrintln(String(F("SPIFFS: mqttPort = ")) + String(mqttPort));
@@ -1522,6 +1564,7 @@ void configSave()
   debugPrintln(String(F("SPIFFS: debugSerialEnabled = ")) + String(debugSerialEnabled));
   debugPrintln(String(F("SPIFFS: debugTelnetEnabled = ")) + String(debugTelnetEnabled));
   debugPrintln(String(F("SPIFFS: mdnsEnabled = ")) + String(mdnsEnabled));
+  debugPrintln(String(F("SPIFFS: beepEnabled = ")) + String(beepEnabled));
 
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile)
@@ -1539,6 +1582,7 @@ void configSave()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void configClearSaved()
 { // Clear out all local storage
+  nextionSetAttr("dims", "100");
   nextionSendCmd("page 0");
   nextionSetAttr("p[0].b[1].txt", "\"Resetting\\rsystem...\"");
   debugPrintln(F("RESET: Formatting SPIFFS"));
@@ -1587,12 +1631,12 @@ void webHandleRoot()
     }
   }
   debugPrintln(String(F("HTTP: Sending root page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEAD);
+  String httpMessage = FPSTR(HTTP_HEADER);
   httpMessage.replace("{v}", String(haspNode));
   httpMessage += FPSTR(HTTP_SCRIPT);
   httpMessage += FPSTR(HTTP_STYLE);
   httpMessage += String(HASP_STYLE);
-  httpMessage += FPSTR(HTTP_HEAD_END);
+  httpMessage += FPSTR(HTTP_HEADER_END);
   httpMessage += String(F("<h1>"));
   httpMessage += String(haspNode);
   httpMessage += String(F("</h1>"));
@@ -1632,12 +1676,7 @@ void webHandleRoot()
   {
     httpMessage += String(F(" selected"));
   }
-  httpMessage += String(F(">D1</option><option value='D2'"));
-  if (motionPin == D2)
-  {
-    httpMessage += String(F(" selected"));
-  }
-  httpMessage += String(F(">D2</option></select>"));
+  httpMessage += String(F(">D1</option></select>"));
 
   httpMessage += String(F("<br/><b>Serial debug output enabled:</b><input id='debugSerialEnabled' name='debugSerialEnabled' type='checkbox'"));
   if (debugSerialEnabled)
@@ -1654,6 +1693,13 @@ void webHandleRoot()
   {
     httpMessage += String(F(" checked='checked'"));
   }
+
+  httpMessage += String(F("><br/><b>Keypress beep enabled:</b><input id='beepEnabled' name='beepEnabled' type='checkbox'"));
+  if (beepEnabled)
+  {
+    httpMessage += String(F(" checked='checked'"));
+  }
+
   httpMessage += String(F("><br/><hr><button type='submit'>save settings</button></form>"));
 
   if (updateEspAvailable)
@@ -1669,6 +1715,9 @@ void webHandleRoot()
 
   httpMessage += String(F("<hr><form method='get' action='reboot'>"));
   httpMessage += String(F("<button type='submit'>reboot device</button></form>"));
+
+  httpMessage += String(F("<hr><form method='get' action='resetBacklight'>"));
+  httpMessage += String(F("<button type='submit'>reset lcd backlight</button></form>"));
 
   httpMessage += String(F("<hr><form method='get' action='resetConfig'>"));
   httpMessage += String(F("<button type='submit'>factory reset settings</button></form>"));
@@ -1713,7 +1762,7 @@ void webHandleSaveConfig()
     }
   }
   debugPrintln(String(F("HTTP: Sending /saveConfig page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEAD);
+  String httpMessage = FPSTR(HTTP_HEADER);
   httpMessage.replace("{v}", String(haspNode));
   httpMessage += FPSTR(HTTP_SCRIPT);
   httpMessage += FPSTR(HTTP_STYLE);
@@ -1809,11 +1858,21 @@ void webHandleSaveConfig()
     shouldSaveConfig = true;
     mdnsEnabled = false;
   }
+  if ((webServer.arg("beepEnabled") == String("on")) && !beepEnabled)
+  { // beepEnabled was disabled but should now be enabled
+    shouldSaveConfig = true;
+    beepEnabled = true;
+  }
+  else if ((webServer.arg("beepEnabled") == String("")) && beepEnabled)
+  { // beepEnabled was enabled but should now be disabled
+    shouldSaveConfig = true;
+    beepEnabled = false;
+  }
 
   if (shouldSaveConfig)
   { // Config updated, notify user and trigger write to SPIFFS
     httpMessage += String(F("<meta http-equiv='refresh' content='15;url=/' />"));
-    httpMessage += FPSTR(HTTP_HEAD_END);
+    httpMessage += FPSTR(HTTP_HEADER_END);
     httpMessage += String(F("<h1>")) + String(haspNode) + String(F("</h1>"));
     httpMessage += String(F("<br/>Saving updated configuration values and restarting device"));
     httpMessage += FPSTR(HTTP_END);
@@ -1830,7 +1889,7 @@ void webHandleSaveConfig()
   else
   { // No change found, notify user and link back to config page
     httpMessage += String(F("<meta http-equiv='refresh' content='3;url=/' />"));
-    httpMessage += FPSTR(HTTP_HEAD_END);
+    httpMessage += FPSTR(HTTP_HEADER_END);
     httpMessage += String(F("<h1>")) + String(haspNode) + String(F("</h1>"));
     httpMessage += String(F("<br/>No changes found, returning to <a href='/'>home page</a>"));
     httpMessage += FPSTR(HTTP_END);
@@ -1849,12 +1908,12 @@ void webHandleResetConfig()
     }
   }
   debugPrintln(String(F("HTTP: Sending /resetConfig page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEAD);
+  String httpMessage = FPSTR(HTTP_HEADER);
   httpMessage.replace("{v}", String(haspNode));
   httpMessage += FPSTR(HTTP_SCRIPT);
   httpMessage += FPSTR(HTTP_STYLE);
   httpMessage += String(HASP_STYLE);
-  httpMessage += FPSTR(HTTP_HEAD_END);
+  httpMessage += FPSTR(HTTP_HEADER_END);
 
   if (webServer.arg("confirm") == "yes")
   { // User has confirmed, so reset everything
@@ -1879,6 +1938,33 @@ void webHandleResetConfig()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+void webHandleResetBacklight()
+{ // http://plate01/resetBacklight
+  if (configPassword[0] != '\0')
+  { //Request HTTP auth if configPassword is set
+    if (!webServer.authenticate(configUser, configPassword))
+    {
+      return webServer.requestAuthentication();
+    }
+  }
+
+  debugPrintln(String(F("HTTP: Sending /resetBacklight page to client connected from: ")) + webServer.client().remoteIP().toString());
+  String httpMessage = FPSTR(HTTP_HEADER);
+  httpMessage.replace("{v}", (String(haspNode) + " HASP backlight reset"));
+  httpMessage += FPSTR(HTTP_SCRIPT);
+  httpMessage += FPSTR(HTTP_STYLE);
+  httpMessage += String(HASP_STYLE);
+  httpMessage += String(F("<meta http-equiv='refresh' content='3;url=/' />"));
+  httpMessage += FPSTR(HTTP_HEADER_END);
+  httpMessage += String(F("<h1>")) + String(haspNode) + String(F("</h1>"));
+  httpMessage += String(F("<br/>Resetting backlight to 100%"));
+  httpMessage += FPSTR(HTTP_END);
+  webServer.send(200, "text/html", httpMessage);
+  debugPrintln(F("HTTP: Resetting backlight to 100%"));
+  nextionSetAttr("dims", "100");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 void webHandleFirmware()
 { // http://plate01/firmware
   if (configPassword[0] != '\0')
@@ -1889,12 +1975,12 @@ void webHandleFirmware()
     }
   }
   debugPrintln(String(F("HTTP: Sending /firmware page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEAD);
+  String httpMessage = FPSTR(HTTP_HEADER);
   httpMessage.replace("{v}", (String(haspNode) + " update"));
   httpMessage += FPSTR(HTTP_SCRIPT);
   httpMessage += FPSTR(HTTP_STYLE);
   httpMessage += String(HASP_STYLE);
-  httpMessage += FPSTR(HTTP_HEAD_END);
+  httpMessage += FPSTR(HTTP_HEADER_END);
   httpMessage += String(F("<h1>")) + String(haspNode) + String(F(" firmware</h1>"));
 
   // Display main firmware page
@@ -1958,13 +2044,13 @@ void webHandleEspFirmware()
   }
 
   debugPrintln(String(F("HTTP: Sending /espfirmware page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEAD);
+  String httpMessage = FPSTR(HTTP_HEADER);
   httpMessage.replace("{v}", (String(haspNode) + " ESP update"));
   httpMessage += FPSTR(HTTP_SCRIPT);
   httpMessage += FPSTR(HTTP_STYLE);
   httpMessage += String(HASP_STYLE);
   httpMessage += String(F("<meta http-equiv='refresh' content='60;url=/' />"));
-  httpMessage += FPSTR(HTTP_HEAD_END);
+  httpMessage += FPSTR(HTTP_HEADER_END);
   httpMessage += String(F("<h1>"));
   httpMessage += String(haspNode) + " ESP update";
   httpMessage += String(F("</h1>"));
@@ -2000,13 +2086,13 @@ void webHandleLcdUpload()
   if (tftFileSize == 0)
   {
     debugPrintln(String(F("LCD OTA: FAILED, no filesize sent.")));
-    String httpMessage = FPSTR(HTTP_HEAD);
+    String httpMessage = FPSTR(HTTP_HEADER);
     httpMessage.replace("{v}", (String(haspNode) + " LCD update"));
     httpMessage += FPSTR(HTTP_SCRIPT);
     httpMessage += FPSTR(HTTP_STYLE);
     httpMessage += String(HASP_STYLE);
     httpMessage += String(F("<meta http-equiv='refresh' content='5;url=/' />"));
-    httpMessage += FPSTR(HTTP_HEAD_END);
+    httpMessage += FPSTR(HTTP_HEADER_END);
     httpMessage += String(F("<h1>")) + String(haspNode) + " LCD update FAILED</h1>";
     httpMessage += String(F("No update file size reported.  You must use a modern browser with Javascript enabled."));
     httpMessage += FPSTR(HTTP_END);
@@ -2219,13 +2305,13 @@ void webHandleLcdUpdateSuccess()
     }
   }
   debugPrintln(String(F("HTTP: Sending /lcdOtaSuccess page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEAD);
+  String httpMessage = FPSTR(HTTP_HEADER);
   httpMessage.replace("{v}", (String(haspNode) + " LCD update success"));
   httpMessage += FPSTR(HTTP_SCRIPT);
   httpMessage += FPSTR(HTTP_STYLE);
   httpMessage += String(HASP_STYLE);
   httpMessage += String(F("<meta http-equiv='refresh' content='15;url=/' />"));
-  httpMessage += FPSTR(HTTP_HEAD_END);
+  httpMessage += FPSTR(HTTP_HEADER_END);
   httpMessage += String(F("<h1>")) + String(haspNode) + String(F(" LCD update success</h1>"));
   httpMessage += String(F("Restarting HASwitchPlate to apply changes..."));
   httpMessage += FPSTR(HTTP_END);
@@ -2243,13 +2329,13 @@ void webHandleLcdUpdateFailure()
     }
   }
   debugPrintln(String(F("HTTP: Sending /lcdOtaFailure page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEAD);
+  String httpMessage = FPSTR(HTTP_HEADER);
   httpMessage.replace("{v}", (String(haspNode) + " LCD update failed"));
   httpMessage += FPSTR(HTTP_SCRIPT);
   httpMessage += FPSTR(HTTP_STYLE);
   httpMessage += String(HASP_STYLE);
   httpMessage += String(F("<meta http-equiv='refresh' content='15;url=/' />"));
-  httpMessage += FPSTR(HTTP_HEAD_END);
+  httpMessage += FPSTR(HTTP_HEADER_END);
   httpMessage += String(F("<h1>")) + String(haspNode) + String(F(" LCD update failed :(</h1>"));
   httpMessage += String(F("Restarting HASwitchPlate to reset device..."));
   httpMessage += FPSTR(HTTP_END);
@@ -2267,12 +2353,12 @@ void webHandleLcdDownload()
     }
   }
   debugPrintln(String(F("HTTP: Sending /lcddownload page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEAD);
+  String httpMessage = FPSTR(HTTP_HEADER);
   httpMessage.replace("{v}", (String(haspNode) + " LCD update"));
   httpMessage += FPSTR(HTTP_SCRIPT);
   httpMessage += FPSTR(HTTP_STYLE);
   httpMessage += String(HASP_STYLE);
-  httpMessage += FPSTR(HTTP_HEAD_END);
+  httpMessage += FPSTR(HTTP_HEADER_END);
   httpMessage += String(F("<h1>"));
   httpMessage += String(haspNode) + " LCD update";
   httpMessage += String(F("</h1>"));
@@ -2294,9 +2380,9 @@ void webHandleTftFileSize()
     }
   }
   debugPrintln(String(F("HTTP: Sending /tftFileSize page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEAD);
+  String httpMessage = FPSTR(HTTP_HEADER);
   httpMessage.replace("{v}", (String(haspNode) + " TFT Filesize"));
-  httpMessage += FPSTR(HTTP_HEAD_END);
+  httpMessage += FPSTR(HTTP_HEADER_END);
   httpMessage += FPSTR(HTTP_END);
   webServer.send(200, "text/html", httpMessage);
   tftFileSize = webServer.arg("tftFileSize").toInt();
@@ -2314,13 +2400,13 @@ void webHandleReboot()
     }
   }
   debugPrintln(String(F("HTTP: Sending /reboot page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEAD);
+  String httpMessage = FPSTR(HTTP_HEADER);
   httpMessage.replace("{v}", (String(haspNode) + " HASP reboot"));
   httpMessage += FPSTR(HTTP_SCRIPT);
   httpMessage += FPSTR(HTTP_STYLE);
   httpMessage += String(HASP_STYLE);
   httpMessage += String(F("<meta http-equiv='refresh' content='10;url=/' />"));
-  httpMessage += FPSTR(HTTP_HEAD_END);
+  httpMessage += FPSTR(HTTP_HEADER_END);
   httpMessage += String(F("<h1>")) + String(haspNode) + String(F("</h1>"));
   httpMessage += String(F("<br/>Rebooting device"));
   httpMessage += FPSTR(HTTP_END);
@@ -2505,7 +2591,7 @@ void debugPrintln(String debugText)
   Serial.println(debugTimeText);
   if (debugSerialEnabled)
   {
-    SoftwareSerial debugSerial(SW_SERIAL_UNUSED_PIN, 1); // 17==nc for RX, 1==TX pin
+    SoftwareSerial debugSerial(-1, 1); // -1==nc for RX, 1==TX pin
     debugSerial.begin(115200);
     debugSerial.println(debugTimeText);
     debugSerial.flush();
@@ -2529,7 +2615,7 @@ void debugPrint(String debugText)
   if (debugSerialEnabled)
     Serial.print(debugText);
   {
-    SoftwareSerial debugSerial(SW_SERIAL_UNUSED_PIN, 1); // 17==nc for RX, 1==TX pin
+    SoftwareSerial debugSerial(-1, 1); // -1==nc for RX, 1==TX pin
     debugSerial.begin(115200);
     debugSerial.print(debugText);
     debugSerial.flush();
@@ -2544,58 +2630,45 @@ void debugPrint(String debugText)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// UTF8-Decoder: convert UTF8-string to extended ASCII http://playground.arduino.cc/main/Utf8ascii
-// Workaround for issue here: https://github.com/home-assistant/home-assistant/issues/9528
-// Nextion claims that "Unicode and UTF will not be among the supported encodings", so this should
-// be safe to run against all attribute values coming in.
-static byte c1; // Last character buffer
-byte utf8ascii(byte ascii)
-{ // Convert a single Character from UTF8 to Extended ASCII. Return "0" if a byte has to be ignored.
-  if (ascii < 128)
-  { // Standard ASCII-set 0..0x7F handling
-    c1 = 0;
-    return (ascii);
+// Submitted by benmprojects to handle "beep" commands. Split
+// incoming String by separator, return selected field as String
+// Original source: https://arduino.stackexchange.com/a/1237
+String getSubtringField(String data, char separator, int index)
+{
+  int found = 0;
+  int strIndex[] = {0, -1};
+  int maxIndex = data.length();
+
+  for (int i = 0; i <= maxIndex && found <= index; i++)
+  {
+    if (data.charAt(i) == separator || i == maxIndex)
+    {
+      found++;
+      strIndex[0] = strIndex[1] + 1;
+      strIndex[1] = (i == maxIndex) ? i + 1 : i;
+    }
   }
-  // get previous input
-  byte last = c1; // get last char
-  c1 = ascii;     // remember actual character
-  switch (last)
-  { // conversion depending on first UTF8-character
-  case 0xC2:
-    return (ascii);
-    break;
-  case 0xC3:
-    return (ascii | 0xC0);
-    break;
-  case 0x82:
-    if (ascii == 0xAC)
-      return (0x80); // special case Euro-symbol
-  }
-  return (0); // otherwise: return zero, if character has to be ignored
+  return found > index ? data.substring(strIndex[0], strIndex[1]) : "";
 }
 
-String utf8ascii(String s)
-{ // convert String object from UTF8 String to Extended ASCII
-  String r = "";
-  char c;
-  for (uint16_t i = 0; i < s.length(); i++)
-  {
-    c = utf8ascii(s.charAt(i));
-    if (c != 0)
-      r += c;
-  }
-  return r;
-}
+////////////////////////////////////////////////////////////////////////////////
+String printHex8(byte *data, uint8_t length)
+{ // returns input bytes as printable hex values in the format 01 23 FF
 
-void utf8ascii(char *s)
-{ // In Place conversion UTF8-string to Extended ASCII (ASCII is shorter!)
-  uint16_t k = 0;
-  char c;
-  for (uint16_t i = 0; i < strlen(s); i++)
+  String hex8String;
+  for (int i = 0; i < length; i++)
   {
-    c = utf8ascii(s[i]);
-    if (c != 0)
-      s[k++] = c;
+    // hex8String += "0x";
+    if (data[i] < 0x10)
+    {
+      hex8String += "0";
+    }
+    hex8String += String(data[i], HEX);
+    if (i != (length - 1))
+    {
+      hex8String += " ";
+    }
   }
-  s[k] = 0;
+  hex8String.toUpperCase();
+  return hex8String;
 }
