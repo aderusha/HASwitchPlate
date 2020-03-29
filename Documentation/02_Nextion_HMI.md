@@ -54,11 +54,19 @@ The Nextion environment utilizes RGB 565 encoding.  [Use this handy convertor](h
 
 ### Page 9
 
-![Page 9](Images/NextionUI_p9_2buttons+graph.png?raw=true)
+![Page 9](Images/NextionUI_p9_9buttons.png?raw=true)
+
+### Page 10
+
+![Page 10](Images/NextionUI_p10_5buttons.png?raw=true)
+
+### Page 11
+
+![Page 11](Images/NextionUI_p11_1button.png?raw=true)
 
 ## HASP Default Fonts
 
-The Nextion display natively supports monospaced fonts.  The HASP HMI includes the Consolas font in 4 sizes and the [Webdings font](https://en.wikipedia.org/wiki/Webdings#Character_set) in 1 size.
+The Nextion display supports monospaced and proportional fonts.  For proportional fonts, the HASP project includes [Consolas](https://docs.microsoft.com/en-us/typography/font-list/consolas) in 4 sizes and [Webdings](https://en.wikipedia.org/wiki/Webdings#Character_set) in 1 size.
 
 | Number | Font              | Max characters per line | Max lines per button |
 |--------|-------------------|-------------------------|----------------------|
@@ -67,6 +75,17 @@ The Nextion display natively supports monospaced fonts.  The HASP HMI includes t
 | 2      | Consolas 48 point | 10 characters           | 1 lines              |
 | 3      | Consolas 80 point | 6 characters            | 1 lines              |
 | 4      | Webdings 56 point | 8 characters            | 1 lines              |
+
+The HASP also includes [Google's "Noto Sans"](https://github.com/googlefonts/noto-fonts) proportional font in 5 sizes.  These fonts also have the "[FontAwesome](https://fontawesome.com/cheatsheet)" icon set which can be mixed with normal ASCII text.
+
+| Number | Font                       |
+|--------|----------------------------|
+| 5      | Noto Sans Regular 24 point |
+| 6      | Noto Sans Regular 32 point |
+| 7      | Noto Sans Regular 48 point |
+| 8      | Noto Sans Regular 64 point |
+| 9      | Noto Sans Regular 80 point |
+| 10     | Noto Sans Bold 80 point    |
 
 ## HOW TO: Run this software with an ESP8266 only
 

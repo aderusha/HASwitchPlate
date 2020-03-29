@@ -9,10 +9,10 @@ For most users, you'll want to print [HASwitchPlate_front_single.stl](HASwitchPl
 ### Front plate models
 
 * **[HASwitchPlate_front_single.stl](HASwitchPlate_front_single.stl)** Standard single-wide plate. `[HASP]`
-* **[HASwitchPlate_front_double_decora_right.stl](HASwitchPlate_front_double_decora_right.stl)** Double-wide plate with Decora switch to the right `[HASP|Decora]`
-* **[HASwitchPlate_front_double_toggle_right.stl](HASwitchPlate_front_double_toggle_right.stl)** Double-wide plate with toggle switch to the right `[HASP|toggle]`
-* **[HASwitchPlate_front_triple_hasp_decora_decora.stl](HASwitchPlate_front_triple_hasp_decora_decora.stl)** Triple-wide plate with Decora switches to the right `[HASP|Decora|Decora]`
-* **[HASwitchPlate_front_triple_hasp_toggle_toggle.stl](HASwitchPlate_front_triple_hasp_toggle_toggle.stl)** Triple-wide plate with toggle switches to the right `[HASP|toggle|toggle]`
+* **[HASwitchPlate_front_2x_hasp_decora.stl](HASwitchPlate_front_2x_hasp_decora.stl)** Double-wide plate with Decora switch to the right `[HASP|Decora]`
+* **[HASwitchPlate_front_2x_hasp_toggle.stl](HASwitchPlate_front_2x_hasp_toggle.stl)** Double-wide plate with toggle switch to the right `[HASP|toggle]`
+* **[HASwitchPlate_front_3x_hasp_decora_decora.stl](HASwitchPlate_front_3x_hasp_decora_decora.stl)** Triple-wide plate with Decora switches to the right `[HASP|Decora|Decora]`
+* **[HASwitchPlate_front_3x_hasp_toggle_toggle.stl](HASwitchPlate_front_3x_hasp_toggle_toggle.stl)** Triple-wide plate with toggle switches to the right `[HASP|toggle|toggle]`
 * **[HASwitchPlate_front_5x_decora_decora_hasp_decora_decora.stl](HASwitchPlate_front_5x_decora_decora_hasp_decora_decora.stl)** 5-wide plate with 4x Decora switches and HASP in center `[Decora|Decora|HASP|Decora|Decora]`
 * **[HASwitchPlate_front_single_dev.stl](HASwitchPlate_front_single_dev.stl)** Standard single-wide plate with SD card exposed for development use (unsafe!) `[HASP]`
 
@@ -39,7 +39,7 @@ The careful observer might note that the dimensions of the model vary just sligh
 
 ### Filament
 
-I printed these two parts with [AmazonBasics White PETG](https://amzn.to/2UUYwb2) on a [Prusa i3 MK3](https://shop.prusa3d.com/en/3d-printers/180-original-prusa-i3-mk3-kit.html) with 20% infill, .15mm layers, no supports, and 6 bottom layers.  PETG provides good flexibility when mounting the device into your wall, as sometimes the drywall, workbox, etc require a little bit of flex.  PLA might work, but may crack in some installations.  If you have both on hand, print the front in PETG and the back in PLA.
+I printed these two parts with [AmazonBasics White PETG](https://amzn.to/2I6ctPd) on a [Prusa i3 MK3](https://shop.prusa3d.com/en/3d-printers/180-original-prusa-i3-mk3-kit.html) with 20% infill, .15mm layers, no supports, and 6 bottom layers.  PETG provides good flexibility when mounting the device into your wall, as sometimes the drywall, workbox, etc require a little bit of flex.  PLA might work, but may crack in some installations.  If you have both on hand, print the front in PETG and the back in PLA.
 
 ### Inserts
 

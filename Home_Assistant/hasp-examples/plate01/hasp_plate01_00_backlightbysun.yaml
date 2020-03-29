@@ -8,7 +8,7 @@ automation:
     trigger:
     - platform: time_pattern
       # Matches every minute
-      seconds: 00
+      seconds: 0
     condition:
     - condition: template
       value_template: '{{ states.sun.sun.attributes.elevation <= 10 }}'

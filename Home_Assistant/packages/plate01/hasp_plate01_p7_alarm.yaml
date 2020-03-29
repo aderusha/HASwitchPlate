@@ -5,61 +5,61 @@ automation:
   # set key labels at system start
   - alias: hasp_plate01_p7_AlarmInit
     trigger:
-    - platform: state
-      entity_id: 'binary_sensor.plate01_connected'
-      to: 'on'
-    - platform: homeassistant
-      event: start
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
     action:
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/json'
-        payload_template: >-
-          [{%- for i in range(4,13) -%}"p[7].b[{{i}}].txt=\"{{i-3}}\"",{%- endfor -%}"p[7].b[14].txt=\"0\"",
-          {%- for i in range(4,13) -%}"p[7].b[{{i}}].font=3",{%- endfor -%}"p[7].b[14].font=3"]
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{%- for i in range(4,13) -%}"p[7].b[{{i}}].txt=\"{{i-3}}\"",{%- endfor -%}"p[7].b[14].txt=\"0\"",
+            {%- for i in range(4,13) -%}"p[7].b[{{i}}].font=3",{%- endfor -%}"p[7].b[14].font=3"]
 
   # set key labels at system start when system is disarmed, or when switching to disarmed
   - alias: hasp_plate01_p7_AlarmDisarmed
     trigger:
-    - platform: state
-      entity_id: alarm_control_panel.ha_alarm
-      to: 'disarmed'
-    - platform: state
-      entity_id: 'binary_sensor.plate01_connected'
-      to: 'on'
-    - platform: homeassistant
-      event: start
+      - platform: state
+        entity_id: alarm_control_panel.ha_alarm
+        to: "disarmed"
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
     condition:
-    - condition: state
-      entity_id: alarm_control_panel.ha_alarm
-      state: 'disarmed'
+      - condition: state
+        entity_id: alarm_control_panel.ha_alarm
+        state: "disarmed"
     action:
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/json'
-        payload: '["p[7].b[13].font=0","p[7].b[13].pco=63488","p[7].b[13].bco=65535","p[7].b[13].txt=\"DIS\\rARMED\"","p[7].b[15].font=1","p[7].b[15].pco=65535","p[7].b[15].bco=63488","p[7].b[15].txt=\"ARM\""]'
-  
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload: '["p[7].b[13].font=0","p[7].b[13].pco=63488","p[7].b[13].bco=65535","p[7].b[13].txt=\" DIS\\rARMED\"","p[7].b[15].font=1","p[7].b[15].pco=65535","p[7].b[15].bco=63488","p[7].b[15].txt=\"ARM\""]'
+
   # set key labels at system start when system is armed_away, or when switching to armed_away
   - alias: hasp_plate01_p7_AlarmArmed
     trigger:
-    - platform: state
-      entity_id: alarm_control_panel.ha_alarm
-      to: 'armed_away'
-    - platform: state
-      entity_id: 'binary_sensor.plate01_connected'
-      to: 'on'
-    - platform: homeassistant
-      event: start
+      - platform: state
+        entity_id: alarm_control_panel.ha_alarm
+        to: "armed_away"
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
     condition:
-    - condition: state
-      entity_id: alarm_control_panel.ha_alarm
-      state: 'armed_away'
+      - condition: state
+        entity_id: alarm_control_panel.ha_alarm
+        state: "armed_away"
     action:
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/json'
-        payload: '["p[7].b[13].font=0","p[7].b[13].pco=65535","p[7].b[13].bco=63488","p[7].b[13].txt=\"ARMED\"","p[7].b[15].font=0","p[7].b[15].pco=63488","p[7].b[15].bco=65535","p[7].b[15].txt=\"DISARM\""]'
-        
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload: '["p[7].b[13].font=0","p[7].b[13].pco=65535","p[7].b[13].bco=63488","p[7].b[13].txt=\"ARMED\"","p[7].b[15].font=0","p[7].b[15].pco=63488","p[7].b[15].bco=65535","p[7].b[15].txt=\"DISARM\""]'
+
   # This automation catches the key presses 1-9 and sets our input numbers in response.
   # Button p[7]b[4] is labeled 1, so I'm grabbing buttons p[7]b[4] through p[7]b[13]
   # then subtracting 3.  The math doesn't work out for button "0" so that will be handled
@@ -67,131 +67,201 @@ automation:
   # 3 to 2, 4 to 3, then set our new value into slider 4 to update our rolling code entry.
   - alias: hasp_plate01_p7_AlarmCodeEntry1to9
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/state/+'
-      payload: 'ON'
-    condition: 
-    - condition: template
-      value_template: '{{ (trigger.topic.split("/")[-1].split("p[")[1].split("]")[0]|int == 7) and ( 4 <= trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int <= 12) }}'
+      - platform: mqtt
+        topic: "hasp/plate01/state/+"
+        payload: "ON"
+    condition:
+      - condition: template
+        value_template: '{{ (trigger.topic.split("/")[-1].split("p[")[1].split("]")[0]|int == 7) and ( 4 <= trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int <= 12) }}'
     action:
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode1
-        value: '{{ states.input_number.hasp_plate01_alarmcode2.state }}'
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode2
-        value: '{{ states.input_number.hasp_plate01_alarmcode3.state }}'
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode3
-        value: '{{ states.input_number.hasp_plate01_alarmcode4.state }}'
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode4
-        value: '{{trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int-3}}'
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode1
+          value: "{{ states('input_number.hasp_alarmcode2') }}"
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode2
+          value: "{{ states('input_number.hasp_alarmcode3') }}"
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode3
+          value: "{{ states('input_number.hasp_alarmcode4') }}"
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode4
+          value: '{{trigger.topic.split("/")[-1].split("].b[")[1].strip("]")|int-3}}'
   # same as above, for button labeled 0
   - alias: hasp_plate01_p7_AlarmCodeEntry0
     trigger:
       platform: mqtt
-      topic: 'hasp/plate01/state/p[7].b[14]'
-      payload: 'ON'
+      topic: "hasp/plate01/state/p[7].b[14]"
+      payload: "ON"
     action:
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode1
-        value: '{{ states.input_number.hasp_plate01_alarmcode2.state }}'
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode2
-        value: '{{ states.input_number.hasp_plate01_alarmcode3.state }}'
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode3
-        value: '{{ states.input_number.hasp_plate01_alarmcode4.state }}'
-    - service: input_number.set_value
-      data:
-        entity_id: input_number.hasp_plate01_alarmcode4
-        value: '0'
-  
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode1
+          value: "{{ states('input_number.hasp_alarmcode2') }}"
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode2
+          value: "{{ states('input_number.hasp_alarmcode3') }}"
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode3
+          value: "{{ states('input_number.hasp_alarmcode4') }}"
+      - service: input_number.set_value
+        data:
+          entity_id: input_number.hasp_alarmcode4
+          value: "0"
+
   # Alarm panel is pending arm so update panel text
   - alias: hasp_plate01_p7_AlarmStatusPending
     trigger:
-    - platform: state
-      entity_id: alarm_control_panel.ha_alarm
-      to: 'pending'
+      - platform: state
+        entity_id: alarm_control_panel.ha_alarm
+        to: "pending"
     condition:
-    - condition: state
-      entity_id: 'binary_sensor.plate01_connected'
-      state: 'on'
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
-    - service: mqtt.publish
-      data:
-        topic: 'hasp/plate01/command/p[7].b[13].txt'
-        payload: '"ARMING"'
-  
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/p[7].b[13].txt"
+          payload: '"ARMING"'
+
   # User is attempting to disarm the panel.  Send the alarm service our collected code then
-  # reset all the sliders.      
+  # reset all the sliders.
   - alias: hasp_plate01_p7_AlarmDisarm
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/state/p[7].b[15]'
-      payload: 'OFF'
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[7].b[15]"
+        payload: "OFF"
     condition:
-    - condition: state
-      entity_id: alarm_control_panel.ha_alarm
-      state: 'armed_away'
+      - condition: state
+        entity_id: alarm_control_panel.ha_alarm
+        state: "armed_away"
     action:
-    - service: alarm_control_panel.alarm_disarm
-      entity_id: alarm_control_panel.ha_alarm
-      data_template:
-        code: '{{ states.input_number.hasp_plate01_alarmcode1.state|int }}{{ states.input_number.hasp_plate01_alarmcode2.state|int }}{{ states.input_number.hasp_plate01_alarmcode3.state|int }}{{ states.input_number.hasp_plate01_alarmcode4.state|int }}'
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode1
-        value: '-1'
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode2
-        value: '-1'
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode3
-        value: '-1'
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode4
-        value: '-1'
-        
+      - service: alarm_control_panel.alarm_disarm
+        entity_id: alarm_control_panel.ha_alarm
+        data_template:
+          code: "{{ states('input_number.hasp_alarmcode1')|int }}{{ states('input_number.hasp_alarmcode2')|int }}{{ states('input_number.hasp_alarmcode3')|int }}{{ states('input_number.hasp_alarmcode4')|int }}"
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode1
+          value: "-1"
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode2
+          value: "-1"
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode3
+          value: "-1"
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode4
+          value: "-1"
+
   # User is attempting to arm the panel.  Send the alarm service our collected code then
   # reset all the sliders.
   - alias: hasp_plate01_p7_AlarmArm
     trigger:
-    - platform: mqtt
-      topic: 'hasp/plate01/state/p[7].b[15]'
-      payload: 'OFF'
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[7].b[15]"
+        payload: "OFF"
     condition:
-    - condition: state
-      entity_id: alarm_control_panel.ha_alarm
-      state: 'disarmed'
+      - condition: state
+        entity_id: alarm_control_panel.ha_alarm
+        state: "disarmed"
     action:
-    - service: alarm_control_panel.alarm_arm_away
-      entity_id: alarm_control_panel.ha_alarm
-      data_template:
-        code: '{{ states.input_number.hasp_plate01_alarmcode1.state|int }}{{ states.input_number.hasp_plate01_alarmcode2.state|int }}{{ states.input_number.hasp_plate01_alarmcode3.state|int }}{{ states.input_number.hasp_plate01_alarmcode4.state|int }}'
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode1
-        value: '-1'
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode2
-        value: '-1'
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode3
-        value: '-1'
-    - service: input_number.set_value
-      data_template:
-        entity_id: input_number.hasp_plate01_alarmcode4
-        value: '-1'
+      - service: alarm_control_panel.alarm_arm_away
+        entity_id: alarm_control_panel.ha_alarm
+        data_template:
+          code: "{{ states('input_number.hasp_alarmcode1')|int }}{{ states('input_number.hasp_alarmcode2')|int }}{{ states('input_number.hasp_alarmcode3')|int }}{{ states('input_number.hasp_alarmcode4')|int }}"
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode1
+          value: "-1"
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode2
+          value: "-1"
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode3
+          value: "-1"
+      - service: input_number.set_value
+        data_template:
+          entity_id: input_number.hasp_alarmcode4
+          value: "-1"
+
+##############################################################################
+# Automations to set colors on HASP Page 7
+  - alias: hasp_plate01_p7_ColorConfig_selectedforegroundcolor
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedforegroundcolor
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{%- for i in range(4,13) -%}"p[7].b[{{i}}].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}",{%- endfor -%}
+            "p[7].b[14].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}"]
+
+  - alias: hasp_plate01_p7_ColorConfig_selectedbackgroundcolor
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{%- for i in range(4,13) -%}"p[7].b[{{i}}].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}",{%- endfor -%}
+            "p[7].b[14].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}"]
+
+  - alias: hasp_plate01_p7_ColorConfig_unselectedforegroundcolor
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{%- for i in range(4,13) -%}"p[7].b[{{i}}].pco2={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}",{%- endfor -%}
+            "p[7].b[14].pco2={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}"]
+
+  - alias: hasp_plate01_p7_ColorConfig_unselectedbackgroundcolor
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{%- for i in range(4,13) -%}"p[7].b[{{i}}].bco2={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}",{%- endfor -%}
+            "p[7].b[14].bco2={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}"]
