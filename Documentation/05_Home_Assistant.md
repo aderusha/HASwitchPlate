@@ -18,7 +18,9 @@ Once those are installed, configured, and started, you can open the Terminal and
 bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
 ```
 
-You will be prompted for a device name and the script will do the rest.  Once it completes, restart your Home Assistant service to apply changes (`Configuration` > `Server Controls` > `Server management` > `RESTART`) and then continue to the [First time setup](#first-time-setup) section below to initialize your environment.
+You will be prompted for a device name and the script will do the rest.  Once it completes, the script will display a Lovelace configuration which you can paste into your existing Home Assistant UI through the Lovelace editor.
+
+To apply your changes, restart Home Assistant (`Configuration` > `Server Controls` > `Server management` > `RESTART`) and then continue to the [First time setup](#first-time-setup) section below to initialize your environment.
 
 [Check out this video](https://youtu.be/wbtVfuDKaM4) for the complete process of starting up a new Hass.io installation, configuring the required add-ons, and setting up your first HASP device.
 
