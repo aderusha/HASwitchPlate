@@ -124,7 +124,7 @@ fi
 hasp_temp_dir=`mktemp -d`
 
 # Download latest packages
-wget -q -P $hasp_temp_dir https://github.com/aderusha/HASwitchPlate/raw/dev/Home_Assistant/hasppackages.tar.gz
+wget -q -P $hasp_temp_dir https://github.com/aderusha/HASwitchPlate/raw/Home_Assistant/hasppackages.tar.gz
 tar -zxf $hasp_temp_dir/hasppackages.tar.gz -C $hasp_temp_dir
 rm $hasp_temp_dir/hasppackages.tar.gz
 
