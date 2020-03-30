@@ -252,7 +252,7 @@ void loop()
 
   if (!mqttClient.connected())
   { // Check MQTT connection
-    debugPrintln("MQTT: not connected, connecting.");
+    debugPrintln(String(F("MQTT: not connected, connecting.")));
     mqttConnect();
   }
 
@@ -422,14 +422,14 @@ void mqttConnect()
       { // Force any subscribed clients to toggle OFF/ON when we first connect to
         // make sure we get a full panel refresh at power on.  Sending OFF,
         // "ON" will be sent by the mqttStatusTopic subscription action.
-        debugPrintln(String(F("MQTT: binary_sensor state: [")) + mqttStatusTopic + "] : [OFF]");
         mqttClient.publish(mqttStatusTopic, "OFF", true, 1);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + "' : 'OFF'");
         mqttFirstConnect = false;
       }
       else
       {
-        debugPrintln(String(F("MQTT: binary_sensor state: [")) + mqttStatusTopic + "] : [ON]");
         mqttClient.publish(mqttStatusTopic, "ON", true, 1);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + "' : 'ON'");
       }
 
       mqttReconnectCount = 0;
@@ -488,7 +488,7 @@ void mqttCallback(String &strTopic, String &strPayload)
   // '[...]/device/command/p[1].b[4].txt' -m '' = nextionGetAttr("p[1].b[4].txt")
   // '[...]/device/command/p[1].b[4].txt' -m '"Lights On"' = nextionSetAttr("p[1].b[4].txt", "\"Lights On\"")
 
-  debugPrintln(String(F("MQTT IN: '")) + strTopic + "' : '" + strPayload + "'");
+  debugPrintln(String(F("MQTT IN: '")) + strTopic + String(F("' : '")) + strPayload + String(F("'")));
 
   if (((strTopic == mqttCommandTopic) || (strTopic == mqttGroupCommandTopic)) && (strPayload == ""))
   {                     // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
@@ -588,21 +588,25 @@ void mqttCallback(String &strTopic, String &strPayload)
     nextionSetAttr("dim", String(panelDim));
     nextionSendCmd("dims=dim");
     mqttClient.publish(mqttLightBrightStateTopic, strPayload);
+    debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : '")) + strPayload + String(F("'")));
   }
   else if (strTopic == mqttLightCommandTopic && strPayload == "OFF")
   { // set the panel dim OFF from the light topic, saving current dim level first
     nextionSendCmd("dims=dim");
     nextionSetAttr("dim", "0");
     mqttClient.publish(mqttLightStateTopic, "OFF");
+    debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
   }
   else if (strTopic == mqttLightCommandTopic && strPayload == "ON")
   { // set the panel dim ON from the light topic, restoring saved dim level
     nextionSendCmd("dim=dims");
     mqttClient.publish(mqttLightStateTopic, "ON");
+    debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
   }
   else if (strTopic == mqttStatusTopic && strPayload == "OFF")
   { // catch a dangling LWT from a previous connection if it appears
     mqttClient.publish(mqttStatusTopic, "ON");
+    debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + String(F("' : 'ON'")));
   }
 }
 
@@ -646,9 +650,7 @@ void mqttStatusUpdate()
   mqttStatusPayload += "}";
 
   mqttClient.publish(mqttSensorTopic, mqttStatusPayload, true, 1);
-  mqttClient.publish(mqttStatusTopic, "ON", true, 1);
-  debugPrintln(String(F("MQTT: status update: ")) + String(mqttStatusPayload));
-  debugPrintln(String(F("MQTT: binary_sensor state: [")) + mqttStatusTopic + "] : [ON]");
+  debugPrintln(String(F("MQTT OUT: '")) + mqttSensorTopic + String(F("' : '")) + mqttStatusPayload + String(F("'")));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -713,10 +715,12 @@ void nextionProcessInput()
     {
       debugPrintln(String(F("HMI IN: [Button ON] 'p[")) + nextionPage + "].b[" + nextionButtonID + "]'");
       String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
-      debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'ON'");
       mqttClient.publish(mqttButtonTopic, "ON");
-      String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + String(nextionPage) + String(F("].b[")) + String(nextionButtonID) + String(F("]\", \"value\":\"ON\"}"));
+      debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'ON'");
+      String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + nextionPage + String(F("].b[")) + nextionButtonID + String(F("]\", \"value\":\"ON\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+
       if (beepEnabled)
       {
         beepOnTime = 500;
@@ -728,8 +732,8 @@ void nextionProcessInput()
     {
       debugPrintln(String(F("HMI IN: [Button OFF] 'p[")) + nextionPage + "].b[" + nextionButtonID + "]'");
       String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
-      debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'OFF'");
       mqttClient.publish(mqttButtonTopic, "OFF");
+      debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'OFF'");
       // Now see if this object has a .val that might have been updated.  Works for sliders,
       // two-state buttons, etc, throws a 0x1A error for normal buttons which we'll catch and ignore
       mqttGetSubtopic = "/p[" + nextionPage + "].b[" + nextionButtonID + "].val";
@@ -743,14 +747,14 @@ void nextionProcessInput()
     // Example: 0x66 0x02 0xFF 0xFF 0xFF
     // Meaning: page 2
     String nextionPage = String(nextionReturnBuffer[1]);
-    debugPrintln(String(F("HMI IN: [sendme Page] '")) + nextionPage + "'");
+    debugPrintln(String(F("HMI IN: [sendme Page] '")) + nextionPage + String(F("'")));
     // if ((nextionActivePage != nextionPage.toInt()) && ((nextionPage != "0") || nextionReportPage0))
     if ((nextionPage != "0") || nextionReportPage0)
     { // If we have a new page AND ( (it's not "0") OR (we've set the flag to report 0 anyway) )
       nextionActivePage = nextionPage.toInt();
       String mqttPageTopic = mqttStateTopic + "/page";
-      debugPrintln(String(F("MQTT OUT: '")) + mqttPageTopic + "' : '" + nextionPage + "'");
       mqttClient.publish(mqttPageTopic, nextionPage);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttPageTopic + String(F("' : '")) + nextionPage + String(F("'")));
     }
   }
   else if (nextionReturnBuffer[0] == 0x67)
@@ -767,17 +771,17 @@ void nextionProcessInput()
     byte nextionTouchAction = nextionReturnBuffer[5];
     if (nextionTouchAction == 0x01)
     {
-      debugPrintln(String(F("HMI IN: [Touch ON] '")) + xyCoord + "'");
+      debugPrintln(String(F("HMI IN: [Touch ON] '")) + xyCoord + String(F("'")));
       String mqttTouchTopic = mqttStateTopic + "/touchOn";
-      debugPrintln(String(F("MQTT OUT: '")) + mqttTouchTopic + "' : '" + xyCoord + "'");
       mqttClient.publish(mqttTouchTopic, xyCoord);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttTouchTopic + String(F("' : '")) + xyCoord + String(F("'")));
     }
     else if (nextionTouchAction == 0x00)
     {
-      debugPrintln(String(F("HMI IN: [Touch OFF] '")) + xyCoord + "'");
+      debugPrintln(String(F("HMI IN: [Touch OFF] '")) + xyCoord + String(F("'")));
       String mqttTouchTopic = mqttStateTopic + "/touchOff";
-      debugPrintln(String(F("MQTT OUT: '")) + mqttTouchTopic + "' : '" + xyCoord + "'");
       mqttClient.publish(mqttTouchTopic, xyCoord);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttTouchTopic + String(F("' : '")) + xyCoord + String(F("'")));
     }
   }
   else if (nextionReturnBuffer[0] == 0x70)
@@ -790,17 +794,17 @@ void nextionProcessInput()
     { // convert the payload into a string
       getString += (char)nextionReturnBuffer[i];
     }
-    debugPrintln(String(F("HMI IN: [String Return] '")) + getString + "'");
+    debugPrintln(String(F("HMI IN: [String Return] '")) + getString + String(F("'")));
     if (mqttGetSubtopic == "")
     { // If there's no outstanding request for a value, publish to mqttStateTopic
-      debugPrintln(String(F("MQTT OUT: '")) + mqttStateTopic + "' : '" + getString + "]");
       mqttClient.publish(mqttStateTopic, getString);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttStateTopic + String(F("' : '")) + getString + String(F("'")));
     }
     else
     { // Otherwise, publish the to saved mqttGetSubtopic and then reset mqttGetSubtopic
       String mqttReturnTopic = mqttStateTopic + mqttGetSubtopic;
-      debugPrintln(String(F("MQTT OUT: '")) + mqttReturnTopic + "' : '" + getString + "]");
       mqttClient.publish(mqttReturnTopic, getString);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttReturnTopic + String(F("' : '")) + getString + String(F("'")));
       mqttGetSubtopic = "";
     }
   }
@@ -814,25 +818,28 @@ void nextionProcessInput()
     getInt = getInt * 256 + nextionReturnBuffer[2];
     getInt = getInt * 256 + nextionReturnBuffer[1];
     String getString = String(getInt);
-    debugPrintln(String(F("HMI IN: [Int Return] '")) + getString + "'");
+    debugPrintln(String(F("HMI IN: [Int Return] '")) + getString + String(F("'")));
 
     if (lcdVersionQueryFlag)
     {
       lcdVersion = getInt;
       lcdVersionQueryFlag = false;
-      debugPrintln(String(F("HMI IN: lcdVersion '")) + String(lcdVersion) + "'");
+      debugPrintln(String(F("HMI IN: lcdVersion '")) + String(lcdVersion) + String(F("'")));
     }
     else if (mqttGetSubtopic == "")
     {
       mqttClient.publish(mqttStateTopic, getString);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttStateTopic + String(F("' : '")) + getString + String(F("'")));
     }
     // Otherwise, publish the to saved mqttGetSubtopic and then reset mqttGetSubtopic
     else
     {
       String mqttReturnTopic = mqttStateTopic + mqttGetSubtopic;
       mqttClient.publish(mqttReturnTopic, getString);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttReturnTopic + String(F("' : '")) + getString + String(F("'")));
       String mqttButtonJSONEvent = String(F("{\"event\":\"")) + mqttGetSubtopicJSON + String(F("\", \"value\":")) + getString + String(F("}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
       mqttGetSubtopic = "";
     }
   }
@@ -879,7 +886,7 @@ void nextionSetAttr(String hmiAttribute, String hmiValue)
   Serial1.print("=");
   Serial1.print(hmiValue);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
-  debugPrintln(String(F("HMI OUT: '")) + hmiAttribute + "=" + hmiValue + "'");
+  debugPrintln(String(F("HMI OUT: '")) + hmiAttribute + "=" + hmiValue + String(F("'")));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -889,7 +896,7 @@ void nextionGetAttr(String hmiAttribute)
   // return of that value will be handled by nextionProcessInput and placed into mqttGetSubtopic
   Serial1.print("get " + hmiAttribute);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
-  debugPrintln(String(F("HMI OUT: 'get ")) + hmiAttribute + "'");
+  debugPrintln(String(F("HMI OUT: 'get ")) + hmiAttribute + String(F("'")));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -964,7 +971,10 @@ void nextionStartOtaDownload(String otaUrl)
       {
         debugPrintln(F("LCD OTA: LCD firmware upload starting, closing MQTT connection."));
         mqttClient.publish(mqttStatusTopic, "OFF", true, 1);
-        mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}", true, 1);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + String(F("' : 'OFF'")));
+        String mqttSensorPayload = "{\"status\": \"unavailable\"}";
+        mqttClient.publish(mqttSensorTopic, mqttSensorPayload, true, 1);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttSensorTopic + String(F("' : '")) + mqttSensorPayload + String(F("'")));
         mqttClient.disconnect();
       }
 
@@ -1181,6 +1191,7 @@ void nextionReset()
     debugPrintln(F("ERROR: Rebooting LCD completed, but LCD is not responding."));
   }
   mqttClient.publish(mqttStatusTopic, "OFF");
+  debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + String(F("' : 'OFF'")));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1392,7 +1403,10 @@ void espReset()
   if (mqttClient.connected())
   {
     mqttClient.publish(mqttStatusTopic, "OFF", true, 1);
-    mqttClient.publish(mqttSensorTopic, "{\"status\": \"unavailable\"}", true, 1);
+    debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + String(F("' : 'OFF'")));
+    String mqttSensorPayload = "{\"status\": \"unavailable\"}";
+    mqttClient.publish(mqttSensorTopic, mqttSensorPayload, true, 1);
+    debugPrintln(String(F("MQTT OUT: '")) + mqttSensorTopic + String(F("' : '")) + mqttSensorPayload + String(F("'")));
     mqttClient.disconnect();
   }
   nextionReset();
@@ -2519,6 +2533,7 @@ void motionUpdate()
     {
       motionLatchTimer = millis();
       mqttClient.publish(mqttMotionStateTopic, "ON");
+      debugPrintln(String(F("MQTT OUT: '")) + mqttMotionStateTopic + String(F("' : 'ON'")));
       motionActive = motionActiveBuffer;
       debugPrintln("MOTION: Active");
     }
@@ -2526,6 +2541,7 @@ void motionUpdate()
     {
       motionLatchTimer = millis();
       mqttClient.publish(mqttMotionStateTopic, "OFF");
+      debugPrintln(String(F("MQTT OUT: '")) + mqttMotionStateTopic + String(F("' : 'OFF'")));
       motionActive = motionActiveBuffer;
       debugPrintln("MOTION: Inactive");
     }
