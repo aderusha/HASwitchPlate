@@ -87,6 +87,12 @@ The HASP also includes [Google's "Noto Sans"](https://github.com/googlefonts/not
 | 9      | Noto Sans Regular 80 point |
 | 10     | Noto Sans Bold 80 point    |
 
+## Using FontAwesome Icons
+
+FontAwesome ("FA") icons are now included with HASP in fonts 6-10 (`Noto Sans` fonts).  To use these, open the [FontAwesome Cheat Sheet](https://fontawesome.com/cheatsheet), browse to any of the "Solid", "Regular", or "Brands" pages, highlight the icon in your browser, and then paste the result into your automation or the Nextion editor.  The result in your editor should look like this: 
+
+When sent to your LCD with the appropriate font selected (again, only fonts 6-10), the icon should show up as seen on the Cheat Sheet.  You can also mix text and icons in the same string.
+
 ## HOW TO: Run this software with an ESP8266 only
 
 One feature of the Nextion Editor is the [Nextion Simulator](https://www.itead.cc/wiki/Nextion_Editor_Quick_Start_Guide#Debug.2C_online_simulator), which allows the user to debug an HMI being edited.  You've probably used this if you've worked on editing your own HMI file.  You can run through the screens using your mouse to issue touch commands and feed it commands and see output in the text boxes provided.
