@@ -93,6 +93,8 @@ FontAwesome ("FA") icons are now included with HASP in fonts 6-10 (`Noto Sans` f
 
 When sent to your LCD with the appropriate font selected (again, only fonts 6-10), the icon should show up as seen on the Cheat Sheet.  You can also mix text and icons in the same string.
 
+![Using FontAwesome Icons](Images/HASP-Icons.gif?raw=true)
+
 ## HOW TO: Run this software with an ESP8266 only
 
 One feature of the Nextion Editor is the [Nextion Simulator](https://www.itead.cc/wiki/Nextion_Editor_Quick_Start_Guide#Debug.2C_online_simulator), which allows the user to debug an HMI being edited.  You've probably used this if you've worked on editing your own HMI file.  You can run through the screens using your mouse to issue touch commands and feed it commands and see output in the text boxes provided.
