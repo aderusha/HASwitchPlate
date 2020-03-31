@@ -87,6 +87,8 @@ The HASP also includes [Google's "Noto Sans"](https://github.com/googlefonts/not
 | 9      | Noto Sans Regular 80 point |
 | 10     | Noto Sans Bold 80 point    |
 
+![HASP Fonts 0-3](Images/NextionUI_Fonts_0-3.png?raw=true) ![HASP Fonts 4-7](Images/NextionUI_Fonts_4-7.png?raw=true) ![HASP Fonts 8-10](Images/NextionUI_Fonts_8-10.png?raw=true)
+
 ## Using FontAwesome Icons
 
 FontAwesome ("FA") icons are now included with HASP in fonts 6-10 (`Noto Sans` fonts).  To use these, open the [FontAwesome Cheat Sheet](https://fontawesome.com/cheatsheet), browse to any of the "Solid", "Regular", or "Brands" pages, highlight the icon in your browser, and then paste the result into your automation or the Nextion editor.  The result in your editor should look like this: 
