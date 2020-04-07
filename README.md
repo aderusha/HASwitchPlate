@@ -28,7 +28,7 @@ To build a simple version of this project you will minimally need the [Nextion d
 
 A complete build that's ready to install will require the following components:
 
-* [Nextion 2.4" LCD Touchscreen display](https://amzn.to/2TRTEU2)
+* [Nextion 2.4" LCD Touchscreen display](https://amzn.to/2RksiXr)
 * [WeMos D1 Mini ESP8266 WiFi microcontroller](https://amzn.to/2UZlga4)
 * [3D printed switch plate](3D_Printable_Models/HASwitchPlate_front_single.stl)
 * [3D printed rear cover](3D_Printable_Models/HASwitchPlate_rear_nolcdmod.stl)
