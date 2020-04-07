@@ -25,7 +25,7 @@ If you are still testing the HASP before complete assembly, continue to the [Hom
 
 ### BOM
 
-* [Nextion 2.4" LCD Touchscreen display](https://amzn.to/2TRTEU2)
+* [Nextion 2.4" LCD Touchscreen display](https://amzn.to/2RksiXr)
 * [WeMos D1 Mini ESP8266 WiFi microcontroller](https://amzn.to/2UZlga4)
 * [Mean Well IRM-03-5 AC to 5VDC Power supply](https://amzn.to/2UUWGa8)
 * [2N3904 NPN Transistor](https://amzn.to/2TRuwwD)
