@@ -3,12 +3,6 @@
 # these and/or replace with your own devices, but remember to change
 # any other automations here which reference them.
 
-# Pull weather reports from NWS, probably only useful in North America
-weather:
-  - platform: nws
-    api_key: haspuser@haswitchplate.com
-    name: nws
-
 # create a demo alarm panel with secure code.  also usable on my luggage.
 alarm_control_panel:
   - platform: manual
