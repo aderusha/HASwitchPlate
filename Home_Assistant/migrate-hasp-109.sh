@@ -43,6 +43,6 @@ fi
 if [ -d hasp-examples ]
 then
   # Search through existing examples to see if we have any weather providers to rename
-  find packages -name "hasp_*.yaml" -exec sed -i 's/weather.nws/weather.home/g' {} +
-  find packages -name "hasp_*.yaml" -exec sed -i 's/weather.met_no/weather.home/g' {} +
+  find hasp-examples -name "hasp_*.yaml" -exec sed -i 's/weather.nws/weather.home/g' {} +
+  find hasp-examples -name "hasp_*.yaml" -exec sed -i 's/weather.met_no/weather.home/g' {} +
 fi
