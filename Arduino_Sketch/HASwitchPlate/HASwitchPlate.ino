@@ -32,10 +32,20 @@ char wifiPass[64] = ""; // when updating, but that's probably OK because they wi
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // These defaults may be overwritten with values saved by the web interface
+/* According to the MQTT standard, there is no practical limit on username or password length.
+ * The standard says: 
+ *    The Password field contains 0 to 65535 bytes of binary data prefixed with a two byte length field which 
+ *       indicates the number of bytes used by the binary data (it does not include the two bytes taken up by the 
+ *       length field itself).
+ * 
+ *  From: section: 3.1.3.5 Password
+ *  See: https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/cos01/mqtt-v3.1.1-cos01.html#_Toc385349247
+ *
+ */
 char mqttServer[64] = "";
 char mqttPort[6] = "1883";
-char mqttUser[32] = "";
-char mqttPassword[32] = "";
+char mqttUser[128] = "";
+char mqttPassword[128] = "";
 char haspNode[16] = "plate01";
 char groupName[16] = "plates";
 char configUser[32] = "admin";
