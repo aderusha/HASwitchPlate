@@ -32,10 +32,20 @@ char wifiPass[64] = ""; // when updating, but that's probably OK because they wi
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // These defaults may be overwritten with values saved by the web interface
+/* According to the MQTT standard, there is no practical limit on username or password length.
+ * The standard says: 
+ *    The Password field contains 0 to 65535 bytes of binary data prefixed with a two byte length field which 
+ *       indicates the number of bytes used by the binary data (it does not include the two bytes taken up by the 
+ *       length field itself).
+ * 
+ *  From: section: 3.1.3.5 Password
+ *  See: https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/cos01/mqtt-v3.1.1-cos01.html#_Toc385349247
+ *
+ */
 char mqttServer[64] = "";
 char mqttPort[6] = "1883";
-char mqttUser[32] = "";
-char mqttPassword[32] = "";
+char mqttUser[128] = "";
+char mqttPassword[128] = "";
 char haspNode[16] = "plate01";
 char groupName[16] = "plates";
 char configUser[32] = "admin";
@@ -1214,10 +1224,12 @@ void espWifiSetup()
     WiFiManagerParameter custom_haspNode("haspNode", "HASP Node (required. lowercase letters, numbers, and _ only)", haspNode, 15, " maxlength=15 required pattern='[a-z0-9_]*'");
     WiFiManagerParameter custom_groupName("groupName", "Group Name (required)", groupName, 15, " maxlength=15 required");
     WiFiManagerParameter custom_mqttHeader("<br/><br/><b>MQTT Broker</b>");
-    WiFiManagerParameter custom_mqttServer("mqttServer", "MQTT Server", mqttServer, 63, " maxlength=39");
+    WiFiManagerParameter custom_mqttServer("mqttServer", "MQTT Server", mqttServer, 63, " maxlength=63");
     WiFiManagerParameter custom_mqttPort("mqttPort", "MQTT Port", mqttPort, 5, " maxlength=5 type='number'");
-    WiFiManagerParameter custom_mqttUser("mqttUser", "MQTT User", mqttUser, 31, " maxlength=31");
-    WiFiManagerParameter custom_mqttPassword("mqttPassword", "MQTT Password", mqttPassword, 31, " maxlength=31 type='password'");
+
+    //                                      id        placeholder default   length cutsom-attributes
+    WiFiManagerParameter custom_mqttUser("mqttUser", "MQTT User", mqttUser, 127, " maxlength=127");
+    WiFiManagerParameter custom_mqttPassword("mqttPassword", "MQTT Password", mqttPassword, 127, " maxlength=127 type='password'");
     WiFiManagerParameter custom_configHeader("<br/><br/><b>Admin access</b>");
     WiFiManagerParameter custom_configUser("configUser", "Config User", configUser, 15, " maxlength=31'");
     WiFiManagerParameter custom_configPassword("configPassword", "Config Password", configPassword, 31, " maxlength=31 type='password'");
@@ -1662,8 +1674,8 @@ void webHandleRoot()
   httpMessage += String(F("<br/><br/><b>Group Name</b> <i><small>(required)</small></i><input id='groupName' required name='groupName' maxlength=15 placeholder='Group Name' value='")) + String(groupName) + "'>";
   httpMessage += String(F("<br/><br/><b>MQTT Broker</b> <i><small>(required)</small></i><input id='mqttServer' required name='mqttServer' maxlength=63 placeholder='mqttServer' value='")) + String(mqttServer) + "'>";
   httpMessage += String(F("<br/><b>MQTT Port</b> <i><small>(required)</small></i><input id='mqttPort' required name='mqttPort' type='number' maxlength=5 placeholder='mqttPort' value='")) + String(mqttPort) + "'>";
-  httpMessage += String(F("<br/><b>MQTT User</b> <i><small>(optional)</small></i><input id='mqttUser' name='mqttUser' maxlength=31 placeholder='mqttUser' value='")) + String(mqttUser) + "'>";
-  httpMessage += String(F("<br/><b>MQTT Password</b> <i><small>(optional)</small></i><input id='mqttPassword' name='mqttPassword' type='password' maxlength=31 placeholder='mqttPassword' value='"));
+  httpMessage += String(F("<br/><b>MQTT User</b> <i><small>(optional)</small></i><input id='mqttUser' name='mqttUser' maxlength=127 placeholder='mqttUser' value='")) + String(mqttUser) + "'>";
+  httpMessage += String(F("<br/><b>MQTT Password</b> <i><small>(optional)</small></i><input id='mqttPassword' name='mqttPassword' type='password' maxlength=127 placeholder='mqttPassword' value='"));
   if (strlen(mqttPassword) != 0)
   {
     httpMessage += String("********");
@@ -1820,12 +1832,12 @@ void webHandleSaveConfig()
   if (webServer.arg("mqttUser") != String(mqttUser))
   { // Handle mqttUser
     shouldSaveConfig = true;
-    webServer.arg("mqttUser").toCharArray(mqttUser, 32);
+    webServer.arg("mqttUser").toCharArray(mqttUser, 128);
   }
   if (webServer.arg("mqttPassword") != String("********"))
   { // Handle mqttPassword
     shouldSaveConfig = true;
-    webServer.arg("mqttPassword").toCharArray(mqttPassword, 32);
+    webServer.arg("mqttPassword").toCharArray(mqttPassword, 128);
   }
   if (webServer.arg("configUser") != String(configUser))
   { // Handle configUser
