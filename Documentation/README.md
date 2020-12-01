@@ -10,7 +10,9 @@ The end result is a thing that connects to live voltage and will be placed into 
 
 ## With that out of the way, let's get started!
 
-If you want to jump right in, follow the steps below in order to build and setup your device.  Keep reading after that for some background on how this all actually works.
+If you have an assembled device and you want to get it connected to Home Assistant, start with **[Step 5 - Home Assistant](05_Home_Assistant.md)**
+
+If you are building your own device from scratch, follow the steps below in order to build and setup your device.  Keep reading after that for some background on how this all actually works.
 
 ## Step-by-step Instructions
 
@@ -49,6 +51,8 @@ Time to remove the training wheels and learn to send commands to and from the pa
 ----
 
 ## HASwitchPlate Architecture
+
+Below is an overview of how HASP works under the hood.  It might be helpful to review this information to get a better understanding of the functional components at work.
 
 The complete HA SwitchPlate ("HASP") build consists of 4 physical components:
 
