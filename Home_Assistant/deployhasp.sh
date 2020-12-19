@@ -97,27 +97,8 @@ fi
 # Enable recorder if not enabled to persist relevant values
 if ! grep "^recorder:" configuration.yaml > /dev/null
 then
+  echo >> configuration.yaml
   echo "recorder:" >> configuration.yaml
-fi
-
-# Warn if MQTT is not enabled
-if ! grep "^mqtt:" configuration.yaml > /dev/null
-then
-  if ! grep '"domain": "mqtt"' .storage/core.config_entries > /dev/null
-  then
-    echo "==========================================================================="
-    echo "WARNING: Required MQTT broker configuration not setup in configuration.yaml"
-    echo "         or added under Configuration > Integrations."
-    echo ""
-    echo "HASP WILL NOT FUNCTION UNTIL THIS HAS BEEN CONFIGURED!"
-    echo ""
-    echo "Review the following for options on setting up your Home Assistant install"
-    echo "with MQTT: https://www.home-assistant.io/docs/mqtt/broker"
-    echo ""
-    echo "For hassio users, you can deploy the Mosquitto broker add-on here:"
-    echo "https://github.com/home-assistant/hassio-addons/blob/master/mosquitto"
-    echo "==========================================================================="
-  fi
 fi
 
 # Create a temp dir
@@ -214,6 +195,7 @@ echo "to manage the new device."
 echo ""
 echo "Here are the contents of that file to paste into your Lovelace config."
 echo "Hold 'shift' while selecting this text to copy to your clipboard:"
+echo "==========================================================================="
 echo ""
 
 cat packages/hasp_${hasp_device}_lovelace.txt
