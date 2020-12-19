@@ -58,7 +58,7 @@ automation:
         topic: "hasp/plate01/state/p[3].b[7]"
         payload: "ON"
     action:
-      - service_template: >
+      - service: >
           {% if states('group.light_toggle_group') == "on" -%}
             homeassistant.turn_off
           {%- else -%}

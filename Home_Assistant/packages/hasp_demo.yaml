@@ -39,18 +39,6 @@ input_number:
     step: 1
     initial: -1
 
-# Hide the input_numbers created above by default
-homeassistant:
-  customize:
-    input_number.hasp_alarmcode1:
-      hidden: true
-    input_number.hasp_alarmcode2:
-      hidden: true
-    input_number.hasp_alarmcode3:
-      hidden: true
-    input_number.hasp_alarmcode4:
-      hidden: true
-
 # Create a demo HVAC device
 climate:
   - platform: mqtt
@@ -71,6 +59,7 @@ climate:
     hold_state_topic: homeassistant/mqtthvac/hold
     min_temp: 55
     max_temp: 95
+    send_if_off: true
     retain: true
 
 # Create a demo fan device
@@ -83,6 +72,11 @@ fan:
     oscillation_command_topic: "homeassistant/mqttfan/oscillation"
     speed_state_topic: "homeassistant/mqttfan/speed"
     speed_command_topic: "homeassistant/mqttfan/speed"
+    speeds:
+      - "off"
+      - "low"
+      - "medium"
+      - "high"
     retain: true
 
 # Create 3 demo lights
@@ -120,56 +114,56 @@ scene:
 - name: Lights On
   entities:
     light.light_1:
-      state: on
+      state: "on"
       brightness: 255
     light.light_2:
-      state: on
+      state: "on"
       brightness: 255
     light.light_3:
-      state: on
+      state: "on"
       brightness: 255
     light.plate01_backlight:
-      state: on
+      state: "on"
       brightness: 255
 
 - name: Daylight
   entities:
     light.light_1:
-      state: on
+      state: "on"
       brightness: 150
     light.light_2:
-      state: on
+      state: "on"
       brightness: 150
     light.light_3:
-      state: on
+      state: "on"
       brightness: 150
     light.plate01_backlight:
-      state: on
+      state: "on"
       brightness: 150
 
 - name: Night
   entities:
     light.light_1:
-      state: on
+      state: "on"
       brightness: 50
     light.light_2:
-      state: on
+      state: "on"
       brightness: 50
     light.light_3:
-      state: on
+      state: "on"
       brightness: 50
     light.plate01_backlight:
-      state: on
+      state: "on"
       brightness: 50
 
 - name: Lights Off
   entities:
     light.light_1:
-      state: off
+      state: "off"
     light.light_2:
-      state: off
+      state: "off"
     light.light_3:
-      state: off
+      state: "off"
     light.plate01_backlight:
-      state: on
+      state: "on"
       brightness: 20
