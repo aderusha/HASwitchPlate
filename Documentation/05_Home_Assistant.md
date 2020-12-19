@@ -1,6 +1,6 @@
 # Home Assistant integration
 
-Configuring Home Assistant for the HASP requires making some basic changes to your configuration and downloading the packages to your installation.  [Continue below]((#standard-home-assistant-installation) for a standard Home Assistant installation in a container (HassOS, HassIO, Docker, etc).  If you aren't sure which Home Assistant method you've used, you're probably using the Standard installation.
+Configuring Home Assistant for the HASP requires making some basic changes to your configuration and downloading the packages to your installation.  [Continue below](#standard-home-assistant-installation) for a standard Home Assistant installation in a container (HassOS, HassIO, Docker, etc).  If you aren't sure which Home Assistant method you've used, you're probably using the Standard installation.
 
 The procedure will be a little different if you're running Home Assistant Core (venv, hassbian, or similar), so [skip to that section](#home-assistant-core-installation).
 
@@ -19,9 +19,11 @@ Before deploying your first HASP device, you'll need to install and configure th
 
 ### HASP configuration for MQTT
 
-Open a web browser to the HASP IP shown when the device boots up (or try `<hasp device name>.local`).  On the main admin page, enter the IP address of your Home Assistant installation under `MQTT Broker`, enter port `1883` for `MQTT Port`, and then enter your Home Assistant username and password for `MQTT User` and `MQTT Password`.  You can also create a dedicated Home Assistant user account for this purpose, no administrative privileges are required for operation.  Click `save settings` to commit your changes and reboot the HASP device.
+1. Open a web browser to the HASP IP shown when the device boots up (or try `<hasp device name>.local`).  
+2. On the main admin page, enter the IP address of your Home Assistant installation under `MQTT Broker`, enter port `1883` for `MQTT Port`, and then enter your Home Assistant username and password for `MQTT User` and `MQTT Password`.
+3. Click `save settings` to commit your changes and reboot the HASP device.
 
-### Setup Home Assistant automations for HASP
+### Home Assistant automations for HASP
 
 We are now ready to deploy the Home Assistant automations for HASP.  Select `Terminal` from the left pane, and then paste the following:
 
@@ -31,7 +33,7 @@ bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitc
 
 You will be prompted for a device name and the script will do the rest.  Once it completes, the script will display a Lovelace configuration which you can paste into your existing Home Assistant UI through the Lovelace editor.
 
-### Setup Home Assistant Lovelace
+### Home Assistant Lovelace Configuration
 
 The graphical elements in the Home Assistant web UI are made available through a Lovelace configuration.
 
@@ -42,9 +44,12 @@ The graphical elements in the Home Assistant web UI are made available through a
 5. Paste the Lovelace configuration you copied in step 1 at the very end of the existing configuration and select `SAVE` from the top-right.
 6. Click the `X` at the top-left to exit the raw configuration editor, then click `X` at the top-left again to exit the dashboard editor.
 
-To apply your changes, restart Home Assistant (`Configuration` > `Server Controls` > `Server management` > `RESTART`) and then continue to the [First time setup](#first-time-setup) section below to initialize your environment.
+### First time setup
 
-[Check out this video](https://youtu.be/wbtVfuDKaM4) for the complete process of starting up a new Hass.io installation, configuring the required add-ons, and setting up your first HASP device.
+1. To apply your changes, restart Home Assistant (`Configuration` > `Server Controls` > `Server management` > `RESTART`)
+2. After Home Assistant has restarted, look for a tab along the top with your device name and select it.  Click the button labeled `Click here for HASP <name> First-Time Setup`.
+
+You should now have a fully-functioning HASP installation ready for customization!
 
 ---
 
@@ -60,7 +65,7 @@ cd ~/.homeassistant
 bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
 ```
 
-You will be prompted for a device name and the script will do the rest.  Once it completes, restart your Home Assistant service to apply changes and then continue to the [First time setup](#first-time-setup) section below to initialize your environment.
+You will be prompted for a device name and the script will do the rest.  Once it completes, restart your Home Assistant service to apply changes.  After Home Assistant has restarted, look for a tab along the top with your device name and select it.  Click the button labeled `Click here for HASP <name> First-Time Setup`.
 
 ---
 
@@ -104,10 +109,4 @@ cd ~/.homeassistant
 bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
 ```
 
-Finally, you'll need to restart Home Assistant to apply your changes then continue to the [First time setup](#first-time-setup) section below to initialize your environment.
-
----
-
-## First time setup
-
-After Home Assistant has restarted, look for a tab along the top with your device name and select it.  Click the button labeled `Click here for HASP <name> First-Time Setup`.  You should now have a fully-functioning HASP installation ready for customization!
+Finally, you'll need to restart Home Assistant to apply your changes.  After Home Assistant has restarted, look for a tab along the top with your device name and select it.  Click the button labeled `Click here for HASP <name> First-Time Setup`.
