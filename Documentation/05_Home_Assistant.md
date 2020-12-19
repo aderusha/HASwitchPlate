@@ -10,7 +10,7 @@ Finally, if you'd rather make all the changes yourself, jump to the [Manual Home
 
 Before deploying your first HASP device, you'll need to install and configure the [`Mosquitto broker`](https://www.home-assistant.io/addons/mosquitto/) and [`Terminal & SSH`](https://www.home-assistant.io/addons/ssh/) add-ons from the default repository.
 
-### Component installation step-by-step
+### Component installation
 
 1. In the Home Assistant web interface, select your user name in the lower-left screen, then select the toggle to enable "Advanced Mode"
 2. Select `Supervisor` > `Add-on Store` > `Mosquitto broker`, then select `Install`.  Once that completes, click `START` to start the Mosquitto MQTT broker
