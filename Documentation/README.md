@@ -14,7 +14,7 @@ If you have an assembled device and you want to get it connected to Home Assista
 
 If you are building your own device from scratch, follow the steps below in order to build and setup your device.  Keep reading after that for some background on how this all actually works.
 
-## Step-by-step Instructions
+## Step-by-step Build Instructions
 
 ### Step 1 - [Arduino Sketch](01_Arduino_Sketch.md)
 

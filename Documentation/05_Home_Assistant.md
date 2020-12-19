@@ -8,17 +8,39 @@ Finally, if you'd rather make all the changes yourself, jump to the [Manual Home
 
 ## Standard Home Assistant installation
 
-Before deploying your first HASP device, you'll need to install and configure the [`Mosquitto broker`](https://www.home-assistant.io/addons/mosquitto/) and [`Terminal & SSH`](https://www.home-assistant.io/addons/ssh/) add-ons from the default repository.  Be sure to follow the configuration instructions provided for both add-ons.
+Before deploying your first HASP device, you'll need to install and configure the [`Mosquitto broker`](https://www.home-assistant.io/addons/mosquitto/) and [`Terminal & SSH`](https://www.home-assistant.io/addons/ssh/) add-ons from the default repository.
 
-The mosquitto broker package requires a username and password.  Be sure to configure the "MQTT User" and "MQTT Password" on the HASP with a valid user from your Home Assistant configuration, and set the broker to the IP address of your Hass.io installation.  You will also need to setup the MQTT Integration (`Configuration` > `Integrations` > `MQTT` > `CONFIGURE`) and check the box `Enable discovery`.
+### Component installation step-by-step
 
-Once those are installed, configured, and started, you can open the Terminal and execute the following command:
+1. In the Home Assistant web interface, select your user name in the lower-left screen, then select the toggle to enable "Advanced Mode"
+2. Select `Supervisor` > `Add-on Store` > `Mosquitto broker`, then select `Install`.  Once that completes, click `START` to start the Mosquitto MQTT broker
+3. Select `Supervisor` > `Add-on Store` > `Terminal & SSH`, then select `Install`.  Once the install completes, click "Show in sidebar" and then click `START`
+4. Select `Configuration` > `Integrations` and then select `Configure` under `MQTT`.  Leave `Enable discovery` checked and click `SUBMIT`.  Select `FINISH` upon completion.
+
+### HASP configuration for MQTT
+
+Open a web browser to the HASP IP shown when the device boots up (or try `<hasp device name>.local`).  On the main admin page, enter the IP address of your Home Assistant installation under `MQTT Broker`, enter port `1883` for `MQTT Port`, and then enter your Home Assistant username and password for `MQTT User` and `MQTT Password`.  You can also create a dedicated Home Assistant user account for this purpose, no administrative privileges are required for operation.  Click `save settings` to commit your changes and reboot the HASP device.
+
+### Setup Home Assistant automations for HASP
+
+We are now ready to deploy the Home Assistant automations for HASP.  Select `Terminal` from the left pane, and then paste the following:
 
 ```bash
 bash <(wget -qO- -o /dev/null https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Home_Assistant/deployhasp.sh)
 ```
 
 You will be prompted for a device name and the script will do the rest.  Once it completes, the script will display a Lovelace configuration which you can paste into your existing Home Assistant UI through the Lovelace editor.
+
+### Setup Home Assistant Lovelace
+
+The graphical elements in the Home Assistant web UI are made available through a Lovelace configuration.
+
+1. After `deployhasp.sh` completes a Lovelace configuration will be displayed.  Hold the `SHIFT` key on your keyboard and highlight the code shown to copy to your clipboard.
+2. Select `Overview` on the left
+3. Select the three dots `⋮` at the top-right, then select `Edit Dashboard`.  If this is your first time editing your dashboard, select `TAKE CONTROL` to proceed.
+4. Select the three dots `⋮` at the top-right again, this time selecting the option `Raw configuration editor`
+5. Paste the Lovelace configuration you copied in step 1 at the very end of the existing configuration and select `SAVE` from the top-right.
+6. Click the `X` at the top-left to exit the raw configuration editor, then click `X` at the top-left again to exit the dashboard editor.
 
 To apply your changes, restart Home Assistant (`Configuration` > `Server Controls` > `Server management` > `RESTART`) and then continue to the [First time setup](#first-time-setup) section below to initialize your environment.
 
@@ -88,10 +110,4 @@ Finally, you'll need to restart Home Assistant to apply your changes then contin
 
 ## First time setup
 
-## Lovelace configuration
-
-Lovelace doesn't support automation of the UI so a few manual steps need to happen next
-
-Upon startup the default HMI display file contains empty buttons with no text.  Launch the Home Assistant web UI and look for a new tab with your chosen device name.  Select that tab and look for the automation titled `hasp_<your_device_name>_00_FirstTimeSetup`.  Select that automation and click "TRIGGER" to apply the basic configuration to your new device.
-
-![Home_Assistant_FirstTimeSetup](https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/Home_Assistant_FirstTimeSetup.png?raw=true)
+After Home Assistant has restarted, look for a tab along the top with your device name and select it.  Click the button labeled `Click here for HASP <name> First-Time Setup`.  You should now have a fully-functioning HASP installation ready for customization!
