@@ -120,6 +120,7 @@ Messages sent to the panel under the `command` topic will be handled based on th
 * **`-t 'hasp/plate01/command/p[1].b[4].txt' -m ''`** A `command` with a subtopic and an empty payload will request the current value of the attribute named in the subtopic from the panel.  The value will be returned under the `state` topic as `'hasp/plate01/state/p[1].b[4].txt' -m '"Lamp On"'`
 * **`-t 'hasp/plate01/command/statusupdate'`** `statusupdate` will publish a JSON string indicating system status.
 * **`-t 'hasp/plate01/command/reboot'`** The `reboot` command will reboot the HASP device.
+* **`-t 'hasp/plate01/command/lcdreboot'`** The `lcdreboot` command will power cycle the LCD display.
 * **`-t 'hasp/plate01/command/factoryreset'`** The `factoryreset` command will wipe out saved WiFi, nodename, and MQTT broker details to reset the device back to default settings.
 * **`-t 'hasp/plate01/command/lcdupdate'`** The `lcdupdate` command subtopic with no message will attempt to update the Nextion from the HASP GitHub repository.
 * **`-t 'hasp/plate01/command/lcdupdate' -m 'http://192.168.0.10:8123/local/HASwitchPlate.tft'`** The `lcdupdate` command subtopic attempts to update the Nextion from the HTTP URL named in the payload.

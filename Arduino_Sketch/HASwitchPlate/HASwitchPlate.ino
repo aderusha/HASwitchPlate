@@ -69,7 +69,7 @@ char motionPinConfig[3] = "0";
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 
-const float haspVersion = 0.40;                     // Current HASP software release version
+const float haspVersion = 0.41;                     // Current HASP software release version
 byte nextionReturnBuffer[128];                      // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;                     // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                      // Track active LCD page
@@ -421,7 +421,7 @@ void mqttConnect()
       }
       if (mqttClient.subscribe(mqttLightBrightSubscription))
       {
-        debugPrintln(String(F("MQTT: subscribed to ")) + mqttLightSubscription);
+        debugPrintln(String(F("MQTT: subscribed to ")) + mqttLightBrightSubscription);
       }
       if (mqttClient.subscribe(mqttStatusTopic))
       {
@@ -434,6 +434,11 @@ void mqttConnect()
         // "ON" will be sent by the mqttStatusTopic subscription action.
         mqttClient.publish(mqttStatusTopic, "OFF", true, 1);
         debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + "' : 'OFF'");
+        if (lcdConnected)
+        { // now that MQTT is connected, check on our backlight and publish current dimmer value
+          mqttGetSubtopic = mqttLightBrightStateTopic;
+          nextionGetAttr("dim");
+        }
         mqttFirstConnect = false;
       }
       else
@@ -594,8 +599,9 @@ void mqttCallback(String &strTopic, String &strPayload)
   }
   else if (strTopic == mqttLightBrightCommandTopic)
   { // change the brightness from the light topic
-    int panelDim = map(strPayload.toInt(), 0, 255, 0, 100);
-    nextionSetAttr("dim", String(panelDim));
+    // int panelDim = map(strPayload.toInt(), 0, 255, 0, 100);
+    // nextionSetAttr("dim", String(panelDim));
+    nextionSetAttr("dim", String(strPayload));
     nextionSendCmd("dims=dim");
     mqttClient.publish(mqttLightBrightStateTopic, strPayload);
     debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : '")) + strPayload + String(F("'")));
@@ -610,6 +616,7 @@ void mqttCallback(String &strTopic, String &strPayload)
   else if (strTopic == mqttLightCommandTopic && strPayload == "ON")
   { // set the panel dim ON from the light topic, restoring saved dim level
     nextionSendCmd("dim=dims");
+    nextionSendCmd("sleep=0");
     mqttClient.publish(mqttLightStateTopic, "ON");
     debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
   }
@@ -877,7 +884,20 @@ void nextionProcessInput()
       }
     }
   }
-
+  else if (nextionReturnBuffer[0] == 0x86)
+  { // Returned when Nextion enters sleep automatically. Using sleep=1 will not return an 0x86
+    // 0x86+End
+    mqttClient.publish(mqttLightStateTopic, "OFF");
+    debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
+  }
+  else if (nextionReturnBuffer[0] == 0x87)
+  { // Returned when Nextion leaves sleep automatically. Using sleep=0 will not return an 0x87
+    // 0x87+End
+    mqttClient.publish(mqttLightStateTopic, "ON");
+    debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
+    mqttGetSubtopic = mqttLightBrightStateTopic;
+    nextionGetAttr("dim");
+  }
   else if (nextionReturnBuffer[0] == 0x1A)
   { // Catch 0x1A error, possibly from .val query against things that might not support that request
     // 0x1A+End

@@ -19,6 +19,7 @@ light:
     brightness_state_topic: "hasp/plate01/brightness/state"
     brightness_command_topic: "hasp/plate01/brightness/set"
     availability_topic: "hasp/plate01/status"
+    brightness_scale: 100
     payload_available: "ON"
     payload_not_available: "OFF"
   # These MQTT lights allow the user to select from a color wheel. Bitwise
