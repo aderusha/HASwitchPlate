@@ -8,8 +8,11 @@
 #        show_header_toggle: false
 #        entities:
 #          - entity: input_text.hasp_plate01_messagetext
+#            name: Message to display
 #          - entity: input_select.hasp_plate01_messagedisplayfont
+#            name: Message font
 #          - entity: input_number.hasp_plate01_messagetime
+#            name: Display Time
 #          - type: button
 #            name: Show Message
 #            action_name: Show Message
@@ -34,6 +37,7 @@ input_number:
     min: 1
     max: 600
     step: 1
+    unit_of_measurement: seconds
 
 input_select:
   hasp_plate01_messagedisplayfont:

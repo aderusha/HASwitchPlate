@@ -23,30 +23,43 @@
           - entity: input_select.hasp_plate01_theme
           - entity: light.hasp_plate01_selected_foreground_color
             icon: 'mdi:palette'
-            name: plate01 Selected Foreground Color
+            name: Selected Foreground Color
           - entity: light.hasp_plate01_selected_background_color
             icon: 'mdi:palette'
-            name: plate01 Selected Background Color
+            name: Selected Background Color
           - entity: light.hasp_plate01_unselected_foreground_color
             icon: 'mdi:palette'
-            name: plate01 Unselected Foreground Color
+            name: Unselected Foreground Color
           - entity: light.hasp_plate01_unselected_background_color
             icon: 'mdi:palette'
-            name: plate01 Unselected Background Color
+            name: Unselected Background Color
       - type: entities
         title: plate01 Page Selection
         show_header_toggle: false
         entities:
           - entity: input_number.hasp_plate01_activepage
+            name: Current Active Page
+          - type: divider
           - entity: input_number.hasp_plate01_pagebutton1page
+            name: Page Button 1 Page
           - entity: input_text.hasp_plate01_pagebutton1label
+            name: Page Button 1 Text
           - entity: input_select.hasp_plate01_pagebutton1font
+            name: Page Button 1 Font
+          - type: divider
           - entity: input_number.hasp_plate01_pagebutton2page
+            name: Page Button 2 Page
           - entity: input_text.hasp_plate01_pagebutton2label
+            name: Page Button 2 Text
           - entity: input_select.hasp_plate01_pagebutton2font
+            name: Page Button 2 Font
+          - type: divider
           - entity: input_number.hasp_plate01_pagebutton3page
+            name: Page Button 3 Page
           - entity: input_text.hasp_plate01_pagebutton3label
+            name: Page Button 3 Text
           - entity: input_select.hasp_plate01_pagebutton3font
+            name: Page Button 3 Font
       - type: entities
         title: plate01 Backlight
         show_header_toggle: false

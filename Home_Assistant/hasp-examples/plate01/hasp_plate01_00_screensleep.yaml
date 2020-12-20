@@ -4,8 +4,10 @@
 # Paste the following into your Lovelace config to control this via the UI:
 ##############################################################################
 #      - type: entities
+#        title: plate01 Screen Sleep
 #        entities:
 #          - entity: input_number.hasp_plate01_sleeptime
+#            name: Sleep timeout
 #        show_header_toggle: false
 ##############################################################################
 
