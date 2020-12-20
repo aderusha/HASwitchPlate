@@ -203,40 +203,10 @@ input_number:
     mode: box
 
 group:
-  plate01:
-    name: plate01
-    entities:
-      - binary_sensor.plate01_connected
-      - sensor.plate01_status
-      - light.plate01_backlight
-      - group.plate01_pageselect
-      - group.plate01_colors
-      - group.plate01_automations
-  plate01_pageselect:
-    name: plate01 Page Selection
-    entities:
-      - input_number.hasp_plate01_activepage
-      - input_number.hasp_plate01_pagebutton1page
-      - input_text.hasp_plate01_pagebutton1label
-      - input_select.hasp_plate01_pagebutton1font
-      - input_number.hasp_plate01_pagebutton2page
-      - input_text.hasp_plate01_pagebutton2label
-      - input_select.hasp_plate01_pagebutton2font
-      - input_number.hasp_plate01_pagebutton3page
-      - input_text.hasp_plate01_pagebutton3label
-      - input_select.hasp_plate01_pagebutton3font
   plate01_automations:
     name: plate01 automations
     entities:
       - automation.hasp_plate01_00_firsttimesetup
-  plate01_colors:
-    name: plate01 colors
-    entities:
-      - input_select.hasp_plate01_theme
-      - light.hasp_plate01_selected_foreground_color
-      - light.hasp_plate01_selected_background_color
-      - light.hasp_plate01_unselected_foreground_color
-      - light.hasp_plate01_unselected_background_color
 
 automation:
   ##############################################################################
