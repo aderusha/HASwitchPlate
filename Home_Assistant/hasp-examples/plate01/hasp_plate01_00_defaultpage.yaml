@@ -5,10 +5,14 @@
 # Paste the following into your Lovelace config to control this via the UI:
 ##############################################################################
 #      - type: entities
+#        title: plate01 Default idle page
 #        entities:
 #          - entity: input_number.hasp_plate01_defaultpagenumber
+#            name: Default page
 #          - entity: input_number.hasp_plate01_defaultpagetimeout
+#            name: Idle timeout
 #          - entity: timer.hasp_plate01_defaultpagetimer
+#            name: Default page timer
 ##############################################################################
 
 ##############################################################################
@@ -30,6 +34,7 @@ input_number:
     min: 1
     max: 9999
     step: 1
+    unit_of_measurement: seconds
 
 automation:
   ##############################################################################
