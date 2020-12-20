@@ -1,7 +1,8 @@
 ##############################################################################
 # Automations and required components to enable "sleep mode" screen timeout.
+##############################################################################
 # Paste the following into your Lovelace config to control this via the UI:
-#
+##############################################################################
 #      - type: entities
 #        entities:
 #          - entity: input_number.hasp_plate01_sleeptime
