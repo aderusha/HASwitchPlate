@@ -13,9 +13,10 @@
 #            name: Idle timeout
 #          - entity: timer.hasp_plate01_defaultpagetimer
 #            name: Default page timer
+#          - entity: automation.hasp_plate01_00_defaultpageset
+#            name: Default idle page enabled
 ##############################################################################
 
-##############################################################################
 timer:
   hasp_plate01_defaultpagetimer:
     name: plate01 Default Page Timer
@@ -34,7 +35,6 @@ input_number:
     min: 1
     max: 9999
     step: 1
-    unit_of_measurement: seconds
 
 automation:
   ##############################################################################

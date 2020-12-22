@@ -32,16 +32,6 @@ char wifiPass[64] = ""; // when updating, but that's probably OK because they wi
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // These defaults may be overwritten with values saved by the web interface
-/* According to the MQTT standard, there is no practical limit on username or password length.
- * The standard says: 
- *    The Password field contains 0 to 65535 bytes of binary data prefixed with a two byte length field which 
- *       indicates the number of bytes used by the binary data (it does not include the two bytes taken up by the 
- *       length field itself).
- * 
- *  From: section: 3.1.3.5 Password
- *  See: https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/cos01/mqtt-v3.1.1-cos01.html#_Toc385349247
- *
- */
 char mqttServer[64] = "";
 char mqttPort[6] = "1883";
 char mqttUser[128] = "";
@@ -51,6 +41,8 @@ char groupName[16] = "plates";
 char configUser[32] = "admin";
 char configPassword[32] = "";
 char motionPinConfig[3] = "0";
+char nextionBaud[7] = "115200";
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <FS.h>
@@ -74,15 +66,13 @@ byte nextionReturnBuffer[128];                      // Byte array to pass around
 uint8_t nextionReturnIndex = 0;                     // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                      // Track active LCD page
 bool lcdConnected = false;                          // Set to true when we've heard something from the LCD
+unsigned long debugSerialBaud = 115200;             // Desired baud rate for serial debug output
 const char wifiConfigPass[9] = "hasplate";          // First-time config WPA2 password
 const char wifiConfigAP[14] = "HASwitchPlate";      // First-time config SSID
 bool shouldSaveConfig = false;                      // Flag to save json config to SPIFFS
 bool nextionReportPage0 = false;                    // If false, don't report page 0 sendme
 const unsigned long updateCheckInterval = 43200000; // Time in msec between update checks (12 hours)
 unsigned long updateCheckTimer = 0;                 // Timer for update check
-const unsigned long nextionCheckInterval = 5000;    // Time in msec between nextion connection checks
-unsigned long nextionCheckTimer = 0;                // Timer for nextion connection checks
-unsigned int nextionRetryMax = 5;                   // Attempt to connect to panel this many times
 bool updateEspAvailable = false;                    // Flag for update check to report new ESP FW version
 float updateEspAvailableVersion;                    // Float to hold the new ESP FW version number
 bool updateLcdAvailable = false;                    // Flag for update check to report new LCD FW version
@@ -107,6 +97,8 @@ unsigned long lcdVersion = 0;                       // Int to hold current LCD F
 unsigned long updateLcdAvailableVersion;            // Int to hold the new LCD FW version number
 bool lcdVersionQueryFlag = false;                   // Flag to set if we've queried lcdVersion
 const String lcdVersionQuery = "p[0].b[2].val";     // Object ID for lcdVersion in HMI
+uint8_t lcdBacklight = 0;                           // Backlight dimmer value
+bool lcdBacklightQueryFlag = false;                 // Flag to set if we've queried lcdBacklight
 bool startupCompleteFlag = false;                   // Startup process has completed
 const long statusUpdateInterval = 300000;           // Time in msec between publishing MQTT status updates (5 minutes)
 long statusUpdateTimer = 0;                         // Timer for update check
@@ -133,6 +125,20 @@ String nextionModel;                                // Record reported model num
 const byte nextionSuffix[] = {0xFF, 0xFF, 0xFF};    // Standard suffix for Nextion commands
 uint32_t tftFileSize = 0;                           // Filesize for TFT firmware upload
 uint8_t nextionResetPin = D6;                       // Pin for Nextion power rail switch (GPIO12/D6)
+unsigned long nextionSpeeds[] = {2400,
+                                 4800,
+                                 9600,
+                                 19200,
+                                 31250,
+                                 38400,
+                                 57600,
+                                 115200,
+                                 230400,
+                                 250000,
+                                 256000,
+                                 512000,
+                                 921600};                                            // Valid serial speeds for Nextion communication
+unsigned int nextionSpeedsLength = sizeof(nextionSpeeds) / sizeof(nextionSpeeds[0]); // Size of our list of speeds
 
 WiFiClient wifiClient;
 WiFiClient wifiMQTTClient;
@@ -154,32 +160,30 @@ String lcdFirmwareUrl = "http://haswitchplate.com/update/HASwitchPlate.tft";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup()
-{ // System setup
-  pinMode(nextionResetPin, OUTPUT);
-  digitalWrite(nextionResetPin, HIGH);
-  Serial.begin(115200);  // Serial - LCD RX (after swap), debug TX
-  Serial1.begin(115200); // Serial1 - LCD TX, no RX
-  Serial.swap();
+{                                      // System setup
+  pinMode(nextionResetPin, OUTPUT);    // Take control over the power switch for the LCD
+  digitalWrite(nextionResetPin, HIGH); // Power on the LCD
 
   debugPrintln(String(F("SYSTEM: Starting HASwitchPlate v")) + String(haspVersion));
   debugPrintln(String(F("SYSTEM: Last reset reason: ")) + String(ESP.getResetInfo()));
 
   configRead(); // Check filesystem for a saved config.json
 
-  while (!lcdConnected && (millis() < 5000))
-  { // Wait up to 5 seconds for serial input from LCD
-    nextionHandleInput();
-  }
-  if (lcdConnected)
-  {
-    debugPrintln(F("HMI: LCD responding, continuing program load"));
-    nextionSendCmd("connect");
-  }
-  else
-  {
-    debugPrintln(F("HMI: LCD not responding, continuing program load"));
-  }
+  Serial.begin(atoi(nextionBaud));  // Serial - LCD RX (after swap), debug TX
+  Serial1.begin(atoi(nextionBaud)); // Serial1 - LCD TX, no RX
+  Serial.swap();                    // Swap to allow hardware UART comms to LCD
 
+  if (!nextionConnect())
+  {
+    if (lcdConnected)
+    {
+      debugPrintln(F("HMI: LCD responding but initialization wasn't completed. Continuing program load anyway."));
+    }
+    else
+    {
+      debugPrintln(F("HMI: LCD not responding, continuing program load"));
+    }
+  }
   espWifiSetup(); // Start up networking
 
   if (mdnsEnabled)
@@ -208,7 +212,8 @@ void setup()
   webServer.on("/resetBacklight", webHandleResetBacklight);
   webServer.on("/firmware", webHandleFirmware);
   webServer.on("/espfirmware", webHandleEspFirmware);
-  webServer.on("/lcdupload", HTTP_POST, []() { webServer.send(200); }, webHandleLcdUpload);
+  webServer.on(
+      "/lcdupload", HTTP_POST, []() { webServer.send(200); }, webHandleLcdUpload);
   webServer.on("/tftFileSize", webHandleTftFileSize);
   webServer.on("/lcddownload", webHandleLcdDownload);
   webServer.on("/lcdOtaSuccess", webHandleLcdUpdateSuccess);
@@ -245,11 +250,7 @@ void setup()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop()
 { // Main execution loop
-
-  if (nextionHandleInput())
-  { // Process user input from HMI
-    nextionProcessInput();
-  }
+  nextionHandleInput();
 
   while ((WiFi.status() != WL_CONNECTED) || (WiFi.localIP().toString() == "0.0.0.0"))
   { // Check WiFi is connected and that we have a valid IP, retry until we do.
@@ -272,25 +273,6 @@ void loop()
   if (mdnsEnabled)
   {
     MDNS.update();
-  }
-
-  if ((lcdVersion < 1) && (millis() <= (nextionRetryMax * nextionCheckInterval)))
-  { // Attempt to connect to LCD panel to collect model and version info during startup
-    nextionConnect();
-  }
-  else if ((lcdVersion > 0) && (millis() <= (nextionRetryMax * nextionCheckInterval)) && !startupCompleteFlag)
-  { // We have LCD info, so trigger an update check + report
-    if (updateCheck())
-    { // Send a status update if the update check worked
-      mqttStatusUpdate();
-      startupCompleteFlag = true;
-    }
-  }
-  else if ((millis() > (nextionRetryMax * nextionCheckInterval)) && !startupCompleteFlag)
-  { // We still don't have LCD info so go ahead and run the rest of the checks once at startup anyway
-    updateCheck();
-    mqttStatusUpdate();
-    startupCompleteFlag = true;
   }
 
   if ((millis() - statusUpdateTimer) >= statusUpdateInterval)
@@ -359,10 +341,7 @@ void mqttConnect()
     while (mqttServer[0] == 0)
     { // Handle HTTP and OTA while we're waiting for MQTT to be configured
       yield();
-      if (nextionHandleInput())
-      { // Process user input from HMI
-        nextionProcessInput();
-      }
+      nextionHandleInput();
       webServer.handleClient();
       ArduinoOTA.handle();
     }
@@ -434,11 +413,6 @@ void mqttConnect()
         // "ON" will be sent by the mqttStatusTopic subscription action.
         mqttClient.publish(mqttStatusTopic, "OFF", true, 1);
         debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + "' : 'OFF'");
-        if (lcdConnected)
-        { // now that MQTT is connected, check on our backlight and publish current dimmer value
-          mqttGetSubtopic = mqttLightBrightStateTopic;
-          nextionGetAttr("dim");
-        }
         mqttFirstConnect = false;
       }
       else
@@ -470,10 +444,7 @@ void mqttConnect()
       unsigned long mqttReconnectTimer = millis(); // record current time for our timeout
       while ((millis() - mqttReconnectTimer) < 30000)
       { // Handle HTTP and OTA while we're waiting 30sec for MQTT to reconnect
-        if (nextionHandleInput())
-        { // Process user input from HMI
-          nextionProcessInput();
-        }
+        nextionHandleInput();
         webServer.handleClient();
         ArduinoOTA.handle();
         delay(10);
@@ -599,24 +570,23 @@ void mqttCallback(String &strTopic, String &strPayload)
   }
   else if (strTopic == mqttLightBrightCommandTopic)
   { // change the brightness from the light topic
-    // int panelDim = map(strPayload.toInt(), 0, 255, 0, 100);
-    // nextionSetAttr("dim", String(panelDim));
-    nextionSetAttr("dim", String(strPayload));
-    nextionSendCmd("dims=dim");
+    nextionSetAttr("dim", strPayload);
+    nextionSetAttr("dims", "dim");
+    lcdBacklight = strPayload.toInt();
     mqttClient.publish(mqttLightBrightStateTopic, strPayload);
     debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : '")) + strPayload + String(F("'")));
   }
   else if (strTopic == mqttLightCommandTopic && strPayload == "OFF")
   { // set the panel dim OFF from the light topic, saving current dim level first
-    nextionSendCmd("dims=dim");
+    nextionSetAttr("dims", "dim");
     nextionSetAttr("dim", "0");
     mqttClient.publish(mqttLightStateTopic, "OFF");
     debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
   }
   else if (strTopic == mqttLightCommandTopic && strPayload == "ON")
   { // set the panel dim ON from the light topic, restoring saved dim level
-    nextionSendCmd("dim=dims");
-    nextionSendCmd("sleep=0");
+    nextionSetAttr("dim", "dims");
+    nextionSetAttr("sleep", "0");
     mqttClient.publish(mqttLightStateTopic, "ON");
     debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
   }
@@ -671,27 +641,22 @@ void mqttStatusUpdate()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-bool nextionHandleInput()
+void nextionHandleInput()
 { // Handle incoming serial data from the Nextion panel
   // This will collect serial data from the panel and place it into the global buffer
   // nextionReturnBuffer[nextionReturnIndex]
-  // Return: true if we've received a string of 3 consecutive 0xFF values
-  // Return: false otherwise
   bool nextionCommandComplete = false;
-  static int nextionTermByteCnt = 0;   // counter for our 3 consecutive 0xFFs
-  static String hmiDebug = "HMI IN: "; // assemble a string for debug output
+  static int nextionTermByteCnt = 0; // counter for our 3 consecutive 0xFFs
 
-  if (Serial.available())
+  while (Serial.available())
   {
-    lcdConnected = true;
     byte nextionCommandByte = Serial.read();
-    hmiDebug += (" 0x" + String(nextionCommandByte, HEX));
-    // check to see if we have one of 3 consecutive 0xFF which indicates the end of a command
     if (nextionCommandByte == 0xFF)
-    {
+    { // check to see if we have one of 3 consecutive 0xFF which indicates the end of a command
       nextionTermByteCnt++;
       if (nextionTermByteCnt >= 3)
       { // We have received a complete command
+        lcdConnected = true;
         nextionCommandComplete = true;
         nextionTermByteCnt = 0; // reset counter
       }
@@ -702,21 +667,19 @@ bool nextionHandleInput()
     }
     nextionReturnBuffer[nextionReturnIndex] = nextionCommandByte;
     nextionReturnIndex++;
+    if (nextionCommandComplete)
+    {
+      nextionProcessInput();
+      nextionCommandComplete = false;
+    }
   }
-  if (nextionCommandComplete)
-  {
-    debugPrintln(hmiDebug);
-    hmiDebug = "HMI IN: ";
-  }
-  return nextionCommandComplete;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void nextionProcessInput()
-{ // Process incoming serial commands from the Nextion panel
+{ // Process complete incoming serial command from the Nextion panel
   // Command reference: https://www.itead.cc/wiki/Nextion_Instruction_Set#Format_of_Device_Return_Data
   // tl;dr: command byte, command data, 0xFF 0xFF 0xFF
-
   if (nextionReturnBuffer[0] == 0x65)
   { // Handle incoming touch command
     // 0x65+Page ID+Component ID+TouchEvent+End
@@ -731,12 +694,15 @@ void nextionProcessInput()
     if (nextionButtonAction == 0x01)
     {
       debugPrintln(String(F("HMI IN: [Button ON] 'p[")) + nextionPage + "].b[" + nextionButtonID + "]'");
-      String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
-      mqttClient.publish(mqttButtonTopic, "ON");
-      debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'ON'");
-      String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + nextionPage + String(F("].b[")) + nextionButtonID + String(F("]\", \"value\":\"ON\"}"));
-      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
-      debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+      if (mqttClient.connected())
+      {
+        String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
+        mqttClient.publish(mqttButtonTopic, "ON");
+        debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'ON'");
+        String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + nextionPage + String(F("].b[")) + nextionButtonID + String(F("]\", \"value\":\"ON\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+      }
 
       if (beepEnabled)
       {
@@ -748,14 +714,20 @@ void nextionProcessInput()
     if (nextionButtonAction == 0x00)
     {
       debugPrintln(String(F("HMI IN: [Button OFF] 'p[")) + nextionPage + "].b[" + nextionButtonID + "]'");
-      String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
-      mqttClient.publish(mqttButtonTopic, "OFF");
-      debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'OFF'");
-      // Now see if this object has a .val that might have been updated.  Works for sliders,
-      // two-state buttons, etc, throws a 0x1A error for normal buttons which we'll catch and ignore
-      mqttGetSubtopic = "/p[" + nextionPage + "].b[" + nextionButtonID + "].val";
-      mqttGetSubtopicJSON = "p[" + nextionPage + "].b[" + nextionButtonID + "].val";
-      nextionGetAttr("p[" + nextionPage + "].b[" + nextionButtonID + "].val");
+      if (mqttClient.connected())
+      {
+        String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
+        mqttClient.publish(mqttButtonTopic, "OFF");
+        debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'OFF'");
+        // Now see if this object has a .val that might have been updated.  Works for sliders,
+        // two-state buttons, etc, throws a 0x1A error for normal buttons which we'll catch and ignore
+        mqttGetSubtopic = "/p[" + nextionPage + "].b[" + nextionButtonID + "].val";
+        mqttGetSubtopicJSON = "p[" + nextionPage + "].b[" + nextionButtonID + "].val";
+        // This right here is dicey.  We're done w/ this command so reset the index allowing this to be kinda-reentrant
+        // because the call to nextionGetAttr is going to call us back.
+        nextionReturnIndex = 0;        
+        nextionGetAttr("p[" + nextionPage + "].b[" + nextionButtonID + "].val");
+      }
     }
   }
   else if (nextionReturnBuffer[0] == 0x66)
@@ -769,9 +741,12 @@ void nextionProcessInput()
     if ((nextionPage != "0") || nextionReportPage0)
     { // If we have a new page AND ( (it's not "0") OR (we've set the flag to report 0 anyway) )
       nextionActivePage = nextionPage.toInt();
-      String mqttPageTopic = mqttStateTopic + "/page";
-      mqttClient.publish(mqttPageTopic, nextionPage);
-      debugPrintln(String(F("MQTT OUT: '")) + mqttPageTopic + String(F("' : '")) + nextionPage + String(F("'")));
+      if (mqttClient.connected())
+      {
+        String mqttPageTopic = mqttStateTopic + "/page";
+        mqttClient.publish(mqttPageTopic, nextionPage);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttPageTopic + String(F("' : '")) + nextionPage + String(F("'")));
+      }
     }
   }
   else if (nextionReturnBuffer[0] == 0x67)
@@ -789,16 +764,22 @@ void nextionProcessInput()
     if (nextionTouchAction == 0x01)
     {
       debugPrintln(String(F("HMI IN: [Touch ON] '")) + xyCoord + String(F("'")));
-      String mqttTouchTopic = mqttStateTopic + "/touchOn";
-      mqttClient.publish(mqttTouchTopic, xyCoord);
-      debugPrintln(String(F("MQTT OUT: '")) + mqttTouchTopic + String(F("' : '")) + xyCoord + String(F("'")));
+      if (mqttClient.connected())
+      {
+        String mqttTouchTopic = mqttStateTopic + "/touchOn";
+        mqttClient.publish(mqttTouchTopic, xyCoord);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttTouchTopic + String(F("' : '")) + xyCoord + String(F("'")));
+      }
     }
     else if (nextionTouchAction == 0x00)
     {
       debugPrintln(String(F("HMI IN: [Touch OFF] '")) + xyCoord + String(F("'")));
-      String mqttTouchTopic = mqttStateTopic + "/touchOff";
-      mqttClient.publish(mqttTouchTopic, xyCoord);
-      debugPrintln(String(F("MQTT OUT: '")) + mqttTouchTopic + String(F("' : '")) + xyCoord + String(F("'")));
+      if (mqttClient.connected())
+      {
+        String mqttTouchTopic = mqttStateTopic + "/touchOff";
+        mqttClient.publish(mqttTouchTopic, xyCoord);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttTouchTopic + String(F("' : '")) + xyCoord + String(F("'")));
+      }
     }
   }
   else if (nextionReturnBuffer[0] == 0x70)
@@ -812,17 +793,20 @@ void nextionProcessInput()
       getString += (char)nextionReturnBuffer[i];
     }
     debugPrintln(String(F("HMI IN: [String Return] '")) + getString + String(F("'")));
-    if (mqttGetSubtopic == "")
-    { // If there's no outstanding request for a value, publish to mqttStateTopic
-      mqttClient.publish(mqttStateTopic, getString);
-      debugPrintln(String(F("MQTT OUT: '")) + mqttStateTopic + String(F("' : '")) + getString + String(F("'")));
-    }
-    else
-    { // Otherwise, publish the to saved mqttGetSubtopic and then reset mqttGetSubtopic
-      String mqttReturnTopic = mqttStateTopic + mqttGetSubtopic;
-      mqttClient.publish(mqttReturnTopic, getString);
-      debugPrintln(String(F("MQTT OUT: '")) + mqttReturnTopic + String(F("' : '")) + getString + String(F("'")));
-      mqttGetSubtopic = "";
+    if (mqttClient.connected())
+    {
+      if (mqttGetSubtopic == "")
+      { // If there's no outstanding request for a value, publish to mqttStateTopic
+        mqttClient.publish(mqttStateTopic, getString);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateTopic + String(F("' : '")) + getString + String(F("'")));
+      }
+      else
+      { // Otherwise, publish the to saved mqttGetSubtopic and then reset mqttGetSubtopic
+        String mqttReturnTopic = mqttStateTopic + mqttGetSubtopic;
+        mqttClient.publish(mqttReturnTopic, getString);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttReturnTopic + String(F("' : '")) + getString + String(F("'")));
+        mqttGetSubtopic = "";
+      }
     }
   }
   else if (nextionReturnBuffer[0] == 0x71)
@@ -843,20 +827,32 @@ void nextionProcessInput()
       lcdVersionQueryFlag = false;
       debugPrintln(String(F("HMI IN: lcdVersion '")) + String(lcdVersion) + String(F("'")));
     }
+    else if (lcdBacklightQueryFlag)
+    {
+      lcdBacklight = getInt;
+      lcdBacklightQueryFlag = false;
+      debugPrintln(String(F("HMI IN: lcdBacklight '")) + String(lcdBacklight) + String(F("'")));
+    }
     else if (mqttGetSubtopic == "")
     {
-      mqttClient.publish(mqttStateTopic, getString);
-      debugPrintln(String(F("MQTT OUT: '")) + mqttStateTopic + String(F("' : '")) + getString + String(F("'")));
+      if (mqttClient.connected())
+      {
+        mqttClient.publish(mqttStateTopic, getString);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateTopic + String(F("' : '")) + getString + String(F("'")));
+      }
     }
     // Otherwise, publish the to saved mqttGetSubtopic and then reset mqttGetSubtopic
     else
     {
-      String mqttReturnTopic = mqttStateTopic + mqttGetSubtopic;
-      mqttClient.publish(mqttReturnTopic, getString);
-      debugPrintln(String(F("MQTT OUT: '")) + mqttReturnTopic + String(F("' : '")) + getString + String(F("'")));
-      String mqttButtonJSONEvent = String(F("{\"event\":\"")) + mqttGetSubtopicJSON + String(F("\", \"value\":")) + getString + String(F("}"));
-      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
-      debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+      if (mqttClient.connected())
+      {
+        String mqttReturnTopic = mqttStateTopic + mqttGetSubtopic;
+        mqttClient.publish(mqttReturnTopic, getString);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttReturnTopic + String(F("' : '")) + getString + String(F("'")));
+        String mqttButtonJSONEvent = String(F("{\"event\":\"")) + mqttGetSubtopicJSON + String(F("\", \"value\":")) + getString + String(F("}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+      }
       mqttGetSubtopic = "";
     }
   }
@@ -887,16 +883,26 @@ void nextionProcessInput()
   else if (nextionReturnBuffer[0] == 0x86)
   { // Returned when Nextion enters sleep automatically. Using sleep=1 will not return an 0x86
     // 0x86+End
-    mqttClient.publish(mqttLightStateTopic, "OFF");
-    debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
+    if (mqttClient.connected())
+    {
+      mqttClient.publish(mqttLightStateTopic, "OFF");
+      debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
+    }
   }
   else if (nextionReturnBuffer[0] == 0x87)
   { // Returned when Nextion leaves sleep automatically. Using sleep=0 will not return an 0x87
     // 0x87+End
-    mqttClient.publish(mqttLightStateTopic, "ON");
-    debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
-    mqttGetSubtopic = mqttLightBrightStateTopic;
-    nextionGetAttr("dim");
+    if (mqttClient.connected())
+    {
+      mqttClient.publish(mqttLightStateTopic, "ON");
+      debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
+      mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklight));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x88)
+  { // Returned when Nextion powers on
+    // 0x88+End
+    debugPrintln(F("HMI: Nextion panel connected."));
   }
   else if (nextionReturnBuffer[0] == 0x1A)
   { // Catch 0x1A error, possibly from .val query against things that might not support that request
@@ -905,6 +911,10 @@ void nextionProcessInput()
     // We'll be triggering this a lot due to requesting .val on every component that sends us a Touch Off
     // Just reset mqttGetSubtopic and move on with life.
     mqttGetSubtopic = "";
+    if (lcdVersionQueryFlag)
+    {
+      lcdVersionQueryFlag = false;
+    }
   }
   nextionReturnIndex = 0; // Done handling the buffer, reset index back to 0
 }
@@ -917,6 +927,7 @@ void nextionSetAttr(String hmiAttribute, String hmiValue)
   Serial1.print(hmiValue);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   debugPrintln(String(F("HMI OUT: '")) + hmiAttribute + "=" + hmiValue + String(F("'")));
+  nextionHandleInput();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -927,6 +938,7 @@ void nextionGetAttr(String hmiAttribute)
   Serial1.print("get " + hmiAttribute);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   debugPrintln(String(F("HMI OUT: 'get ")) + hmiAttribute + String(F("'")));
+  nextionHandleInput();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -935,6 +947,7 @@ void nextionSendCmd(String nextionCmd)
   Serial1.print(nextionCmd);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   debugPrintln(String(F("HMI OUT: ")) + nextionCmd);
+  nextionHandleInput();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1012,7 +1025,7 @@ void nextionStartOtaDownload(String otaUrl)
       Serial1.write(nextionSuffix, sizeof(nextionSuffix)); // Send empty command
       Serial1.flush();
       nextionHandleInput();
-      String lcdOtaNextionCmd = "whmi-wri " + String(lcdOtaFileSize) + ",115200,0";
+      String lcdOtaNextionCmd = "whmi-wri " + String(lcdOtaFileSize) + "," + String(nextionBaud) + ",0";
       debugPrintln(String(F("LCD OTA: Sending LCD upload command: ")) + lcdOtaNextionCmd);
       Serial1.print(lcdOtaNextionCmd);
       Serial1.write(nextionSuffix, sizeof(nextionSuffix));
@@ -1143,50 +1156,103 @@ bool nextionOtaResponse()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void nextionConnect()
+bool nextionConnect()
 {
-  if ((millis() - nextionCheckTimer) >= nextionCheckInterval)
-  {
-    static unsigned int nextionRetryCount = 0;
-    if ((nextionModel.length() == 0) && (nextionRetryCount < (nextionRetryMax - 2)))
-    { // Try issuing the "connect" command a few times
-      debugPrintln(F("HMI: sending Nextion connect request"));
-      nextionSendCmd("connect");
-      nextionRetryCount++;
-      nextionCheckTimer = millis();
-    }
-    else if ((nextionModel.length() == 0) && (nextionRetryCount < nextionRetryMax))
-    { // If we still don't have model info, try to change nextion serial speed from 9600 to 115200
-      nextionSetSpeed();
-      nextionRetryCount++;
-      debugPrintln(F("HMI: sending Nextion serial speed 115200 request"));
-      nextionCheckTimer = millis();
-    }
-    else if ((lcdVersion < 1) && (nextionRetryCount <= nextionRetryMax))
+  const unsigned long nextionCheckTimeout = 2000; // Max time in msec for nextion connection check
+  unsigned long nextionCheckTimer = millis();     // Timer for nextion connection checks
+
+  Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+
+  if (!lcdConnected)
+  { // Check for some traffic from our LCD
+    debugPrintln(F("HMI: Waiting for LCD connection"));
+    while (((millis() - nextionCheckTimer) <= nextionCheckTimeout) && !lcdConnected)
     {
-      if (nextionModel.length() == 0)
-      { // one last hail mary, maybe the serial speed is set correctly now
-        nextionSendCmd("connect");
-      }
-      nextionSendCmd("get " + lcdVersionQuery);
-      lcdVersionQueryFlag = true;
-      nextionRetryCount++;
-      debugPrintln(F("HMI: sending Nextion version query"));
-      nextionCheckTimer = millis();
+      nextionHandleInput();
     }
   }
+  if (!lcdConnected)
+  { // No response from the display using the configured speed, so scan all possible speeds
+    nextionSetSpeed();
+
+    nextionCheckTimer = millis(); // Reset our timer
+    debugPrintln(F("HMI: Waiting again for LCD connection"));
+    while (((millis() - nextionCheckTimer) <= nextionCheckTimeout) && !lcdConnected)
+    {
+      Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+      nextionHandleInput();
+    }
+    if (!lcdConnected)
+    {
+      debugPrintln(F("HMI: LCD connection timed out"));
+      return false;
+    }
+  }
+
+  // Query backlight status.  This should always succeed under simulation or non-HASP HMI
+  lcdBacklightQueryFlag = true;
+  debugPrintln(F("HMI: Querying LCD backlight status"));
+  Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+  nextionSendCmd("get dim");
+  while (((millis() - nextionCheckTimer) <= nextionCheckTimeout) && lcdBacklightQueryFlag)
+  {
+    nextionHandleInput();
+  }
+  if (lcdBacklightQueryFlag)
+  { // Our flag is still set, meaning we never got a response.
+    debugPrintln(F("HMI: LCD backlight query timed out"));
+    lcdBacklightQueryFlag = false;
+    return false;
+  }
+
+  // This check depends on the HMI having been designed with a version number in the object
+  // defined in lcdVersionQuery.  It's OK if this fails, it just means the HMI project is
+  // not utilizing the version capability that the HASP project makes use of.
+  lcdVersionQueryFlag = true;
+  debugPrintln(F("HMI: Querying LCD firmware version number"));
+  nextionSendCmd("get " + lcdVersionQuery);
+  while (((millis() - nextionCheckTimer) <= nextionCheckTimeout) && lcdVersionQueryFlag)
+  {
+    nextionHandleInput();
+  }
+  if (lcdVersionQueryFlag)
+  { // Our flag is still set, meaning we never got a response.  This should only happen if
+    // there's a problem.  Non-HASP projects should pass this check with lcdVersion = 0
+    debugPrintln(F("HMI: LCD version query timed out"));
+    lcdVersionQueryFlag = false;
+    return false;
+  }
+
+  if (nextionModel.length() == 0)
+  { // Check for LCD model via `connect`.  The Nextion simulator does not support this command,
+    // so if we're running under that environment this process should timeout.
+    debugPrintln(F("HMI: Querying LCD model information"));
+    nextionSendCmd("connect");
+    while (((millis() - nextionCheckTimer) <= nextionCheckTimeout) && (nextionModel.length() == 0))
+    {
+      nextionHandleInput();
+    }
+  }
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void nextionSetSpeed()
 {
-  debugPrintln(F("HMI: No Nextion response, attempting 9600bps connection"));
-  Serial1.begin(9600);
-  Serial1.write(nextionSuffix, sizeof(nextionSuffix));
-  Serial1.print("bauds=115200");
-  Serial1.write(nextionSuffix, sizeof(nextionSuffix));
-  Serial1.flush();
-  Serial1.begin(115200);
+  debugPrintln(String(F("HMI: No Nextion response, attempting to set serial speed to ")) + String(nextionBaud));
+  for (unsigned int nextionSpeedsIndex = 0; nextionSpeedsIndex < nextionSpeedsLength; nextionSpeedsIndex++)
+  {
+    debugPrintln(String(F("HMI: Sending bauds=")) + String(nextionBaud) + " @" + String(nextionSpeeds[nextionSpeedsIndex]) + " baud");
+    Serial1.flush();
+    Serial1.begin(nextionSpeeds[nextionSpeedsIndex]);
+    Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+    Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+    Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+    Serial1.print("bauds=" + String(nextionBaud));
+    Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+    Serial1.flush();
+  }
+  Serial1.begin(atoi(nextionBaud));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1299,7 +1365,7 @@ void espWifiSetup()
     }
   }
   else
-  { // wifiSSID has been defined, so attempt to connect to it forever
+  { // wifiSSID has been defined, so attempt to connect to it
     debugPrintln(String(F("Connecting to WiFi network: ")) + String(wifiSSID));
     WiFi.mode(WIFI_STA);
     WiFi.begin(wifiSSID, wifiPass);
@@ -1307,7 +1373,7 @@ void espWifiSetup()
     unsigned long wifiReconnectTimer = millis();
     while (WiFi.status() != WL_CONNECTED)
     {
-      delay(500);
+      delay(1);
       if (millis() >= (wifiReconnectTimer + (connectTimeout * 1000)))
       { // If we've been trying to reconnect for connectTimeout seconds, reboot and try again
         debugPrintln(F("WIFI: Failed to connect and hit timeout"));
@@ -1335,7 +1401,7 @@ void espWifiReconnect()
   unsigned long wifiReconnectTimer = millis();
   while (WiFi.status() != WL_CONNECTED)
   {
-    delay(500);
+    delay(1);
     if (millis() >= (wifiReconnectTimer + (reConnectTimeout * 1000)))
     { // If we've been trying to reconnect for reConnectTimeout seconds, reboot and try again
       debugPrintln(F("WIFI: Failed to reconnect and hit timeout"));
@@ -1348,10 +1414,6 @@ void espWifiReconnect()
 void espWifiConfigCallback(WiFiManager *myWiFiManager)
 { // Notify the user that we're entering config mode
   debugPrintln(F("WIFI: Failed to connect to assigned AP, entering config mode"));
-  while (millis() < 800)
-  { // for factory-reset system this will be called before display is responsive. give it a second.
-    delay(10);
-  }
   nextionSendCmd("page 0");
   nextionSetAttr("p[0].b[1].font", "6");
   nextionSetAttr("p[0].b[1].txt", "\" HASP WiFi Setup\\r AP: " + String(wifiConfigAP) + "\\rPassword: " + String(wifiConfigPass) + "\\r\\r\\r\\r\\r\\r\\r  http://192.168.4.1\"");
@@ -1502,6 +1564,10 @@ void configRead()
           {
             strcpy(configPassword, configJson["configPassword"]);
           }
+          if (!configJson["nextionBaud"].isNull())
+          {
+            strcpy(nextionBaud, configJson["nextionBaud"]);
+          }
           if (!configJson["motionPinConfig"].isNull())
           {
             strcpy(motionPinConfig, configJson["motionPinConfig"]);
@@ -1592,6 +1658,7 @@ void configSave()
   jsonConfigValues["groupName"] = groupName;
   jsonConfigValues["configUser"] = configUser;
   jsonConfigValues["configPassword"] = configPassword;
+  jsonConfigValues["nextionBaud"] = nextionBaud;
   jsonConfigValues["motionPinConfig"] = motionPinConfig;
   jsonConfigValues["debugSerialEnabled"] = debugSerialEnabled;
   jsonConfigValues["debugTelnetEnabled"] = debugTelnetEnabled;
@@ -1606,6 +1673,7 @@ void configSave()
   debugPrintln(String(F("SPIFFS: groupName = ")) + String(groupName));
   debugPrintln(String(F("SPIFFS: configUser = ")) + String(configUser));
   debugPrintln(String(F("SPIFFS: configPassword = ")) + String(configPassword));
+  debugPrintln(String(F("SPIFFS: nextionBaud = ")) + String(nextionBaud));
   debugPrintln(String(F("SPIFFS: motionPinConfig = ")) + String(motionPinConfig));
   debugPrintln(String(F("SPIFFS: debugSerialEnabled = ")) + String(debugSerialEnabled));
   debugPrintln(String(F("SPIFFS: debugTelnetEnabled = ")) + String(debugTelnetEnabled));
@@ -1706,8 +1774,27 @@ void webHandleRoot()
   {
     httpMessage += String("********");
   }
-  httpMessage += String(F("'><br/><hr><b>Motion Sensor Pin:&nbsp;</b><select id='motionPinConfig' name='motionPinConfig'>"));
-  httpMessage += String(F("<option value='0'"));
+  httpMessage += String(F("'><br/><hr>"));
+
+  // Big menu of possible serial speeds
+  if ((lcdVersion != 1) && (lcdVersion != 2))
+  { // HASP lcdVersion 1 and 2 have `bauds=115200` in the pre-init script of page 0.  Don't show this option if either of those two versions are running.
+    httpMessage += String(F("<b>LCD Serial Speed:&nbsp;</b><select id='nextionBaud' name='nextionBaud'>"));
+
+    for (unsigned int nextionSpeedsIndex = 0; nextionSpeedsIndex < nextionSpeedsLength; nextionSpeedsIndex++)
+    {
+      String httpLcdSerialSpeedOption = String(nextionSpeeds[nextionSpeedsIndex]);
+      httpMessage += String(F("<option value='")) + httpLcdSerialSpeedOption + String(F("'"));
+      if (httpLcdSerialSpeedOption == String(nextionBaud))
+      {
+        httpMessage += String(F(" selected"));
+      }
+      httpMessage += String(F(">")) + httpLcdSerialSpeedOption + String(F("</option>"));
+    }
+    httpMessage += String(F("</select><br/>"));
+  }
+
+  httpMessage += String(F("<b>Motion Sensor Pin:&nbsp;</b><select id='motionPinConfig' name='motionPinConfig'><option value='0'"));
   if (!motionPin)
   {
     httpMessage += String(F(" selected"));
@@ -1782,6 +1869,7 @@ void webHandleRoot()
   httpMessage += String(F("<br/><b>LCD Model: </b>")) + String(nextionModel);
   httpMessage += String(F("<br/><b>LCD Version: </b>")) + String(lcdVersion);
   httpMessage += String(F("<br/><b>LCD Active Page: </b>")) + String(nextionActivePage);
+  httpMessage += String(F("<br/><b>LCD Serial Speed: </b>")) + String(nextionBaud);
   httpMessage += String(F("<br/><b>CPU Frequency: </b>")) + String(ESP.getCpuFreqMHz()) + String(F("MHz"));
   httpMessage += String(F("<br/><b>Sketch Size: </b>")) + String(ESP.getSketchSize()) + String(F(" bytes"));
   httpMessage += String(F("<br/><b>Free Sketch Space: </b>")) + String(ESP.getFreeSketchSpace()) + String(F(" bytes"));
@@ -1868,6 +1956,11 @@ void webHandleSaveConfig()
   { // Handle configPassword
     shouldSaveConfig = true;
     webServer.arg("configPassword").toCharArray(configPassword, 32);
+  }
+  if (webServer.arg("nextionBaud") != String(nextionBaud))
+  { // Handle nextionBaud
+    shouldSaveConfig = true;
+    webServer.arg("nextionBaud").toCharArray(nextionBaud, 7);
   }
   if (webServer.arg("motionPinConfig") != String(motionPinConfig))
   { // Handle motionPinConfig
@@ -2165,7 +2258,7 @@ void webHandleLcdUpload()
     Serial1.flush();
     nextionHandleInput();
 
-    String lcdOtaNextionCmd = "whmi-wri " + String(tftFileSize) + ",115200,0";
+    String lcdOtaNextionCmd = "whmi-wri " + String(tftFileSize) + "," + String(nextionBaud) + ",0";
     debugPrintln(String(F("LCD OTA: Sending LCD upload command: ")) + lcdOtaNextionCmd);
     Serial1.print(lcdOtaNextionCmd);
     Serial1.write(nextionSuffix, sizeof(nextionSuffix));
@@ -2608,7 +2701,6 @@ void handleTelnetClient()
     if (telnetClient.available())
     {
       char telnetInputByte = telnetClient.read(); // Read client byte
-      // debugPrintln(String("telnet in: 0x") + String(telnetInputByte, HEX));
       if (telnetInputByte == 5)
       { // If the telnet client sent a bunch of control commands on connection (which end in ENQUIRY/0x05), ignore them and restart the buffer
         telnetInputIndex = 0;
@@ -2640,7 +2732,7 @@ void debugPrintln(String debugText)
   if (debugSerialEnabled)
   {
     SoftwareSerial debugSerial(-1, 1); // -1==nc for RX, 1==TX pin
-    debugSerial.begin(115200);
+    debugSerial.begin(debugSerialBaud);
     debugSerial.println(debugTimeText);
     debugSerial.flush();
   }
@@ -2664,7 +2756,7 @@ void debugPrint(String debugText)
     Serial.print(debugText);
   {
     SoftwareSerial debugSerial(-1, 1); // -1==nc for RX, 1==TX pin
-    debugSerial.begin(115200);
+    debugSerial.begin(debugSerialBaud);
     debugSerial.print(debugText);
     debugSerial.flush();
   }
