@@ -680,7 +680,209 @@ void nextionProcessInput()
 { // Process complete incoming serial command from the Nextion panel
   // Command reference: https://www.itead.cc/wiki/Nextion_Instruction_Set#Format_of_Device_Return_Data
   // tl;dr: command byte, command data, 0xFF 0xFF 0xFF
-  if (nextionReturnBuffer[0] == 0x65)
+  
+  if (nextionReturnBuffer[0] == 0x00 && nextionReturnBuffer[1] == 0x00 && nextionReturnBuffer[2] == 0x00)
+  { // Nextion Startup
+    debugPrintln(String(F("HMI IN: [Nextion Startup] 0x00 0x00 0x00")));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x00 0x00 0x00\", \"return_code_description\":\"Nextion Startup\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x00)
+  { // Invalid Instruction
+    debugPrintln(String(F("HMI IN: [Invalid Instruction] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Invalid Instruction\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x01)
+  { // 	Instruction Successful
+    debugPrintln(String(F("HMI IN: [Instruction Successful] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Instruction Successful\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x02)
+  { // Invalid Component ID
+    debugPrintln(String(F("HMI IN: [Invalid Component ID] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Invalid Component ID\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x03)
+  { // Invalid Page ID
+    debugPrintln(String(F("HMI IN: [Invalid Page ID] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Invalid Page ID\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x04)
+  { // Invalid Picture ID
+    debugPrintln(String(F("HMI IN: [Invalid Picture ID] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Invalid Picture ID\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x05)
+  { // Invalid Font ID	
+    debugPrintln(String(F("HMI IN: [Invalid Font ID	] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Invalid Font ID	\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x06)
+  { // Invalid File Operation
+    debugPrintln(String(F("HMI IN: [Invalid File Operation] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Invalid File Operation\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x09)
+  { // Invalid CRC
+    debugPrintln(String(F("HMI IN: [Invalid CRC] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Invalid CRC\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x11)
+  { // Invalid Baud rate Setting
+    debugPrintln(String(F("HMI IN: [Invalid Baud rate Setting] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Invalid Baud rate Setting\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x12)
+  { // Invalid Waveform ID or Channel #
+    debugPrintln(String(F("HMI IN: [Invalid Waveform ID or Channel #] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Invalid Waveform ID or Channel #\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x1A)
+  { // Invalid Variable name or attribute
+    debugPrintln(String(F("HMI IN: [Invalid Variable name or attribute] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Invalid Variable name or attribute\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x1B)
+  { // Invalid Variable Operation
+    debugPrintln(String(F("HMI IN: [Invalid Variable Operation] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Invalid Variable Operation\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x1C)
+  { // Assignment failed to assign
+    debugPrintln(String(F("HMI IN: [Assignment failed to assign] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Assignment failed to assign\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x1D)
+  { // EEPROM Operation failed
+    debugPrintln(String(F("HMI IN: [EEPROM Operation failed] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"EEPROM Operation failed\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x1E)
+  { // Invalid Quantity of Parameters
+    debugPrintln(String(F("HMI IN: [Invalid Quantity of Parameters] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Invalid Quantity of Parameters\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x1F)
+  { // IO Operation failed
+    debugPrintln(String(F("HMI IN: [IO Operation failed] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"IO Operation failed\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x20)
+  { // Escape Character Invalid
+    debugPrintln(String(F("HMI IN: [Escape Character Invalid] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Escape Character Invalid\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x23)
+  { // Variable name too long
+    debugPrintln(String(F("HMI IN: [Variable name too long] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Variable name too long\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+  else if (nextionReturnBuffer[0] == 0x24)
+  { // Serial Buffer Overflow
+    debugPrintln(String(F("HMI IN: [Serial Buffer Overflow] 0x")) + String(nextionReturnBuffer[0],HEX));
+    if (mqttClient.connected())
+    {
+        String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0],HEX) + String(F("\", \"return_code_description\":\"Serial Buffer Overflow\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
+    }
+  }
+
+  else if (nextionReturnBuffer[0] == 0x65)
   { // Handle incoming touch command
     // 0x65+Page ID+Component ID+TouchEvent+End
     // Return this data when the touch event created by the user is pressed.
@@ -719,8 +921,11 @@ void nextionProcessInput()
         String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
         mqttClient.publish(mqttButtonTopic, "OFF");
         debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'OFF'");
+        String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + nextionPage + String(F("].b[")) + nextionButtonID + String(F("]\", \"value\":\"OFF\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
         // Now see if this object has a .val that might have been updated.  Works for sliders,
-        // two-state buttons, etc, throws a 0x1A error for normal buttons which we'll catch and ignore
+        // two-state buttons, etc, returns 0 for normal buttons
         mqttGetSubtopic = "/p[" + nextionPage + "].b[" + nextionButtonID + "].val";
         mqttGetSubtopicJSON = "p[" + nextionPage + "].b[" + nextionButtonID + "].val";
         // This right here is dicey.  We're done w/ this command so reset the index allowing this to be kinda-reentrant
@@ -2793,12 +2998,12 @@ String getSubtringField(String data, char separator, int index)
 
 ////////////////////////////////////////////////////////////////////////////////
 String printHex8(byte *data, uint8_t length)
-{ // returns input bytes as printable hex values in the format 01 23 FF
+{ // returns input bytes as printable hex values in the format 0x01 0x23 0xFF
 
   String hex8String;
   for (int i = 0; i < length; i++)
   {
-    // hex8String += "0x";
+    hex8String += "0x";
     if (data[i] < 0x10)
     {
       hex8String += "0";
