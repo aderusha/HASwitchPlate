@@ -60,8 +60,6 @@ char nextionBaud[7] = "115200";
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
 
-// #define MQTTTLSTEST
-
 const float haspVersion = 0.41;                       // Current HASP software release version
 byte nextionReturnBuffer[128];                        // Byte array to pass around data coming from the panel
 uint8_t nextionReturnIndex = 0;                       // Index for nextionReturnBuffer
@@ -100,32 +98,33 @@ const String lcdVersionQuery = "p[0].b[2].val";       // Object ID for lcdVersio
 uint8_t lcdBacklight = 0;                             // Backlight dimmer value
 bool lcdBacklightQueryFlag = false;                   // Flag to set if we've queried lcdBacklight
 bool startupCompleteFlag = false;                     // Startup process has completed
-const long statusUpdateInterval = 300000;             // Time in msec between publishing MQTT status updates (5 minutes)
-long statusUpdateTimer = 0;                           // Timer for update check
-const unsigned long connectTimeout = 300;             // Timeout for WiFi and MQTT connection attempts in seconds
-const unsigned long reConnectTimeout = 15;            // Timeout for WiFi reconnection attempts in seconds
-byte espMac[6];                                       // Byte array to store our MAC address
-bool mqttTlsEnabled = false;                          // Enable MQTT client TLS connections
-const uint16_t mqttMaxPacketSize = 2048;              // Size of buffer for incoming MQTT message
-String mqttClientId;                                  // Auto-generated MQTT ClientID
-String mqttGetSubtopic;                               // MQTT subtopic for incoming commands requesting .val
-String mqttGetSubtopicJSON;                           // MQTT object buffer for JSON status when requesting .val
-String mqttStateTopic;                                // MQTT topic for outgoing panel interactions
-String mqttStateJSONTopic;                            // MQTT topic for outgoing panel interactions in JSON format
-String mqttCommandTopic;                              // MQTT topic for incoming panel commands
-String mqttGroupCommandTopic;                         // MQTT topic for incoming group panel commands
-String mqttStatusTopic;                               // MQTT topic for publishing device connectivity state
-String mqttSensorTopic;                               // MQTT topic for publishing device information in JSON format
-String mqttLightCommandTopic;                         // MQTT topic for incoming panel backlight on/off commands
-String mqttBeepCommandTopic;                          // MQTT topic for error beep
-String mqttLightStateTopic;                           // MQTT topic for outgoing panel backlight on/off state
-String mqttLightBrightCommandTopic;                   // MQTT topic for incoming panel backlight dimmer commands
-String mqttLightBrightStateTopic;                     // MQTT topic for outgoing panel backlight dimmer state
-String mqttMotionStateTopic;                          // MQTT topic for outgoing motion sensor state
-String nextionModel;                                  // Record reported model number of LCD panel
-const byte nextionSuffix[] = {0xFF, 0xFF, 0xFF};      // Standard suffix for Nextion commands
-uint32_t tftFileSize = 0;                             // Filesize for TFT firmware upload
-uint8_t nextionResetPin = D6;                         // Pin for Nextion power rail switch (GPIO12/D6)
+// const long statusUpdateInterval = 300000;             // Time in msec between publishing MQTT status updates (5 minutes)
+const long statusUpdateInterval = 5000;          // Time in msec between publishing MQTT status updates (5 minutes)
+long statusUpdateTimer = 0;                      // Timer for update check
+const unsigned long connectTimeout = 300;        // Timeout for WiFi and MQTT connection attempts in seconds
+const unsigned long reConnectTimeout = 15;       // Timeout for WiFi reconnection attempts in seconds
+byte espMac[6];                                  // Byte array to store our MAC address
+bool mqttTlsEnabled = false;                     // Enable MQTT client TLS connections
+const uint16_t mqttMaxPacketSize = 2048;         // Size of buffer for incoming MQTT message
+String mqttClientId;                             // Auto-generated MQTT ClientID
+String mqttGetSubtopic;                          // MQTT subtopic for incoming commands requesting .val
+String mqttGetSubtopicJSON;                      // MQTT object buffer for JSON status when requesting .val
+String mqttStateTopic;                           // MQTT topic for outgoing panel interactions
+String mqttStateJSONTopic;                       // MQTT topic for outgoing panel interactions in JSON format
+String mqttCommandTopic;                         // MQTT topic for incoming panel commands
+String mqttGroupCommandTopic;                    // MQTT topic for incoming group panel commands
+String mqttStatusTopic;                          // MQTT topic for publishing device connectivity state
+String mqttSensorTopic;                          // MQTT topic for publishing device information in JSON format
+String mqttLightCommandTopic;                    // MQTT topic for incoming panel backlight on/off commands
+String mqttBeepCommandTopic;                     // MQTT topic for error beep
+String mqttLightStateTopic;                      // MQTT topic for outgoing panel backlight on/off state
+String mqttLightBrightCommandTopic;              // MQTT topic for incoming panel backlight dimmer commands
+String mqttLightBrightStateTopic;                // MQTT topic for outgoing panel backlight dimmer state
+String mqttMotionStateTopic;                     // MQTT topic for outgoing motion sensor state
+String nextionModel;                             // Record reported model number of LCD panel
+const byte nextionSuffix[] = {0xFF, 0xFF, 0xFF}; // Standard suffix for Nextion commands
+uint32_t tftFileSize = 0;                        // Filesize for TFT firmware upload
+uint8_t nextionResetPin = D6;                    // Pin for Nextion power rail switch (GPIO12/D6)
 const unsigned long nextionSpeeds[] = {2400,
                                        4800,
                                        9600,
@@ -141,27 +140,25 @@ const unsigned long nextionSpeeds[] = {2400,
                                        921600};                                       // Valid serial speeds for Nextion communication
 const uint8_t nextionSpeedsLength = sizeof(nextionSpeeds) / sizeof(nextionSpeeds[0]); // Size of our list of speeds
 
-WiFiClient wifiClient;
-WiFiClient wifiMQTTClient;
-MQTTClient mqttClient(mqttMaxPacketSize);
-ESP8266WebServer webServer(80);
-ESP8266HTTPUpdateServer httpOTAUpdate;
-WiFiServer telnetServer(23);
-WiFiClient telnetClient;
-MDNSResponder::hMDNSService hMDNSService;
-
-#ifdef MQTTTLSTEST
-WiFiClientSecure wifiMQTTClientSecure;
-#endif
+WiFiClientSecure wifiClientSecure;        // TLS-enabled WiFiClient 
+WiFiClient wifiClient;                    // Standard WiFiClient
+MQTTClient mqttClient(mqttMaxPacketSize); // MQTT client
+ESP8266WebServer webServer(80);           // Admin web server on port 80
+ESP8266HTTPUpdateServer httpOTAUpdate;    // Arduino OTA server
+WiFiServer telnetServer(23);              // Telnet server (if enabled)
+WiFiClient telnetClient;                  // Telnet client
+MDNSResponder::hMDNSService hMDNSService; // mDNS
 
 // Additional CSS style to match Hass theme
 const char HASP_STYLE[] PROGMEM = "<style>button{background-color:#03A9F4;}body{width:60%;margin:auto;}input:invalid{border:1px solid red;}input[type=checkbox]{width:20px;}</style>";
 // URL for auto-update "version.json"
-const char UPDATE_URL[] PROGMEM = "http://haswitchplate.com/update/version.json";
+const char UPDATE_URL[] PROGMEM = "https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/update/version.json";
 // Default link to compiled Arduino firmware image
-String espFirmwareUrl = "http://haswitchplate.com/update/HASwitchPlate.ino.d1_mini.bin";
+// String espFirmwareUrl = "http://haswitchplate.com/update/HASwitchPlate.ino.d1_mini.bin";
+String espFirmwareUrl = "https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Arduino_Sketch/HASwitchPlate.ino.d1_mini.bin";
 // Default link to compiled Nextion firmware images
-String lcdFirmwareUrl = "http://haswitchplate.com/update/HASwitchPlate.tft";
+// String lcdFirmwareUrl = "http://haswitchplate.com/update/HASwitchPlate.tft";
+String lcdFirmwareUrl = "https://raw.githubusercontent.com/aderusha/HASwitchPlate/master/Nextion_HMI/HASwitchPlate.tft";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup()
@@ -268,9 +265,9 @@ void loop()
   mqttClient.loop();        // MQTT client loop
   ArduinoOTA.handle();      // Arduino OTA loop
   webServer.handleClient(); // webServer loop
-  handleTelnetClient();     // telnet client loop
-  handleMotion();           // motion sensor loop
-  handleBeep();             // beep feedback loop
+  telnetHandleClient();     // telnet client loop
+  motionHandle();           // motion sensor loop
+  beepHandle();             // beep feedback loop
 
   if (mdnsEnabled)
   {
@@ -316,34 +313,32 @@ void mqttConnect()
       nextionHandleInput();     // Nextion serial communications loop
       ArduinoOTA.handle();      // Arduino OTA loop
       webServer.handleClient(); // webServer loop
-      handleTelnetClient();     // telnet client loop
-      handleMotion();           // motion sensor loop
-      handleBeep();             // beep feedback loop
+      telnetHandleClient();     // telnet client loop
+      motionHandle();           // motion sensor loop
+      beepHandle();             // beep feedback loop
     }
   }
 
-#ifdef MQTTTLSTEST
   if (mqttTlsEnabled)
   { // Create MQTT service object with TLS connection
-    mqttClient.begin(mqttServer, atoi(mqttPort), wifiMQTTClientSecure);
+    mqttClient.begin(mqttServer, atoi(mqttPort), wifiClientSecure);
     if (strcmp(mqttFingerprint, "") == 0)
     {
       debugPrintln(String(F("MQTT: Configuring MQTT TLS connection without fingerprint validation.")));
-      wifiMQTTClientSecure.setInsecure();
+      wifiClientSecure.setInsecure();
     }
     else
     {
       debugPrintln(String(F("MQTT: Configuring MQTT TLS connection with fingerprint validation.")));
-      wifiMQTTClientSecure.allowSelfSignedCerts();
-      wifiMQTTClientSecure.setFingerprint(mqttFingerprint);
+      wifiClientSecure.allowSelfSignedCerts();
+      wifiClientSecure.setFingerprint(mqttFingerprint);
     }
+    wifiClientSecure.setBufferSizes(512, 512);
   }
   else
-#endif
   { // Create MQTT service object without TLS connection
-
     debugPrintln(String(F("MQTT: Configuring MQTT connection without TLS.")));
-    mqttClient.begin(mqttServer, atoi(mqttPort), wifiMQTTClient);
+    mqttClient.begin(mqttServer, atoi(mqttPort), wifiClient);
   }
 
   mqttClient.onMessage(mqttCallback); // Setup MQTT callback function
@@ -450,9 +445,9 @@ void mqttConnect()
         nextionHandleInput();     // Nextion serial communications loop
         ArduinoOTA.handle();      // Arduino OTA loop
         webServer.handleClient(); // webServer loop
-        handleTelnetClient();     // telnet client loop
-        handleMotion();           // motion sensor loop
-        handleBeep();             // beep feedback loop
+        telnetHandleClient();     // telnet client loop
+        motionHandle();           // motion sensor loop
+        beepHandle();             // beep feedback loop
       }
     }
   }
@@ -960,12 +955,13 @@ void nextionProcessInput()
       }
     }
   }
-  else if (nextionReturnBuffer[0] == 0x67)
+  else if (nextionReturnBuffer[0] == 0x67 || nextionReturnBuffer[0] == 0x68)
   { // Handle touch coordinate data
     // 0X67+Coordinate X High+Coordinate X Low+Coordinate Y High+Coordinate Y Low+TouchEvent+End
     // Example: 0X67 0X00 0X7A 0X00 0X1E 0X01 0XFF 0XFF 0XFF
     // Meaning: Coordinate (122,30), Touch Event: Press
     // issue Nextion command "sendxy=1" to enable this output
+    // 0x68 is the same, but returned when the screen touch has awakened the screen from sleep
     uint16_t xCoord = nextionReturnBuffer[1];
     xCoord = xCoord * 256 + nextionReturnBuffer[2];
     uint16_t yCoord = nextionReturnBuffer[3];
@@ -980,6 +976,17 @@ void nextionProcessInput()
         String mqttTouchTopic = mqttStateTopic + "/touchOn";
         mqttClient.publish(mqttTouchTopic, xyCoord);
         debugPrintln(String(F("MQTT OUT: '")) + mqttTouchTopic + String(F("' : '")) + xyCoord + String(F("'")));
+        String mqttButtonJSONEvent = String(F("{\"event\":\"touchxy\", \"touch_event\":\"ON\", \"touchx\":\"")) + String(xCoord) + String(F("\", \"touchy\":\"")) + String(yCoord) + String(F("\", \"screen_state\":\""));
+        if (nextionReturnBuffer[0] == 0x67)
+        {
+          mqttButtonJSONEvent += "awake\"}";
+        }
+        else
+        {
+          mqttButtonJSONEvent += "asleep\"}";
+        }
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
       }
     }
     else if (nextionTouchAction == 0x00)
@@ -990,6 +997,17 @@ void nextionProcessInput()
         String mqttTouchTopic = mqttStateTopic + "/touchOff";
         mqttClient.publish(mqttTouchTopic, xyCoord);
         debugPrintln(String(F("MQTT OUT: '")) + mqttTouchTopic + String(F("' : '")) + xyCoord + String(F("'")));
+        String mqttButtonJSONEvent = String(F("{\"event\":\"touchxy\", \"touch_event\":\"OFF\", \"touchx\":\"")) + String(xCoord) + String(F("\", \"touchy\":\"")) + String(yCoord) + String(F("\", \"screen_state\":\""));
+        if (nextionReturnBuffer[0] == 0x67)
+        {
+          mqttButtonJSONEvent += "awake\"}";
+        }
+        else
+        {
+          mqttButtonJSONEvent += "asleep\"}";
+        }
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
       }
     }
   }
@@ -1658,30 +1676,42 @@ void espSetupOta()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void espStartOta(const String &espOtaUrl)
-{ // Update ESP firmware from HTTP
+{ // Update ESP firmware from HTTP/HTTPS
   nextionSendCmd("page 0");
-  nextionSetAttr("p[0].b[1].txt", "\"HTTP update\\rstarting...\"");
+  nextionSetAttr("p[0].b[1].txt", "\"ESP update\\rstarting...\"");
   WiFiUDP::stopAll(); // Keep mDNS responder from breaking things
 
-  t_httpUpdate_return returnCode = ESPhttpUpdate.update(wifiClient, espOtaUrl);
-  switch (returnCode)
+  t_httpUpdate_return espOtaUrlReturnCode;
+  if (espOtaUrl.startsWith(F("https")))
+  {
+    debugPrintln("ESPFW: Attempting firmware update from HTTPS host: " + espOtaUrl);
+    wifiClientSecure.setInsecure();
+    espOtaUrlReturnCode = ESPhttpUpdate.update(wifiClientSecure, espOtaUrl);
+  }
+  else
+  {
+    debugPrintln("ESPFW: Attempting firmware update from HTTP host: " + espOtaUrl);
+    espOtaUrlReturnCode = ESPhttpUpdate.update(wifiClient, espOtaUrl);
+  }
+
+  switch (espOtaUrlReturnCode)
   {
   case HTTP_UPDATE_FAILED:
     debugPrintln("ESPFW: HTTP_UPDATE_FAILED error " + String(ESPhttpUpdate.getLastError()) + " " + ESPhttpUpdate.getLastErrorString());
-    nextionSetAttr("p[0].b[1].txt", "\"HTTP Update\\rFAILED\"");
+    nextionSetAttr("p[0].b[1].txt", "\"ESP Update\\rFAILED\"");
     break;
 
   case HTTP_UPDATE_NO_UPDATES:
     debugPrintln(F("ESPFW: HTTP_UPDATE_NO_UPDATES"));
-    nextionSetAttr("p[0].b[1].txt", "\"HTTP Update\\rNo update\"");
+    nextionSetAttr("p[0].b[1].txt", "\"ESP Update\\rNo update\"");
     break;
 
   case HTTP_UPDATE_OK:
     debugPrintln(F("ESPFW: HTTP_UPDATE_OK"));
-    nextionSetAttr("p[0].b[1].txt", "\"HTTP Update\\rcomplete!\\r\\rRestarting.\"");
+    nextionSetAttr("p[0].b[1].txt", "\"ESP Update\\rcomplete!\\r\\rRestarting.\"");
     espReset();
   }
-  delay(5000);
+  delay(1000);
   nextionSendCmd("page " + String(nextionActivePage));
 }
 
@@ -2014,7 +2044,6 @@ void webHandleRoot()
   }
   webServer.sendContent(F("'>"));
 
-#ifdef MQTTTLSTEST
   webServer.sendContent(F("<br/><b>MQTT TLS enabled:</b><input id='mqttTlsEnabled' name='mqttTlsEnabled' type='checkbox'"));
   if (mqttTlsEnabled)
   {
@@ -2026,7 +2055,6 @@ void webHandleRoot()
     webServer.sendContent(mqttFingerprint);
   }
   webServer.sendContent(F("'>"));
-#endif
 
   webServer.sendContent(F("<br/><br/><b>HASP Admin Username</b> <i><small>(optional)</small></i><input id='configUser' name='configUser' maxlength=31 placeholder='Admin User' value='"));
   webServer.sendContent(configUser);
@@ -2905,7 +2933,11 @@ bool updateCheck()
 { // firmware update check
   HTTPClient updateClient;
   debugPrintln(String(F("UPDATE: Checking update URL: ")) + String(UPDATE_URL));
-  updateClient.begin(wifiClient, UPDATE_URL);
+
+  wifiClientSecure.setInsecure();
+  wifiClientSecure.setBufferSizes(512, 512);
+  updateClient.begin(wifiClientSecure, UPDATE_URL);
+
   int httpCode = updateClient.GET(); // start connection and send HTTP header
   if (httpCode != HTTP_CODE_OK)
   {
@@ -2970,7 +3002,7 @@ void motionSetup()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void handleMotion()
+void motionHandle()
 { // Monitor motion sensor
   if (motionEnabled)
   {                                                    // Check on our motion sensor
@@ -3007,7 +3039,7 @@ void handleMotion()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void handleBeep()
+void beepHandle()
 { // Handle beep/tactile feedback
   if (beepEnabled)
   {
@@ -3033,7 +3065,7 @@ void handleBeep()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void handleTelnetClient()
+void telnetHandleClient()
 { // Basic telnet client handling code from: https://gist.github.com/tablatronix/4793677ca748f5f584c95ec4a2b10303
   if (debugTelnetEnabled)
   { // Only do any of this if we're actually enabled

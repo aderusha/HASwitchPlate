@@ -129,7 +129,17 @@ Messages sent to the panel under the `command` topic will be handled based on th
 
 In each of those commands, you can substitute the `<node_name>` for the `<group_name>` if you want to target all devices in a group.
 
-### MQTT Error codes (rc=n)
+## MQTT TLS connections
+
+HASP supports connecting to an MQTT broker using TLS.  In the web admin page, select "MQTT TLS enabled" to connect to the specified broker over TLS.  If the "MQTT TLS Fingerprint" field is empty, no checking is done against the remote system.  This is insecure, but does allow for encrypted communications.  If the fingerprint is specified, HASP will validate the SHA-1 fingerprint of your MQTT broker prior to connecting.  You can obtain the TLS fingerprint of a remote host using `open_ssl` as shown in the following example (substitute `hassio` with the name or IP address of your MQTT broker):
+
+```bash
+openssl s_client -connect hassio:8883 < /dev/null 2>/dev/null | openssl x509 -fingerprint -noout -in /dev/stdin | cut -d= -f2
+```
+
+Paste the resulting SHA-1 fingerprint, including the semicolons, into the field provided to enable fingerprint checking.  Note that auto-renewed certificates (such as Let's Encrypt) will have their fingerprints changing on a regular basis, which will require a re-configuration of HASP with each certificate update.
+
+## MQTT Error codes (rc=n)
 
 If the HASP cannot connect to MQTT it will display a return code on the screen as RC=_n_.  These codes are specified by the MQTT spec [here](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Table_3.1_-).
 
