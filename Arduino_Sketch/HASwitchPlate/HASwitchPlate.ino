@@ -6,7 +6,7 @@
 //        Home Automation Switch Plate
 // https://github.com/aderusha/HASwitchPlate
 //
-// Copyright (c) 2019 Allen Derusha allen@derusha.org
+// Copyright (c) 2020 Allen Derusha allen@derusha.org
 //
 // MIT License
 //
@@ -26,12 +26,10 @@
 // OUT OF OR IN CONNECTION WITH THE PRODUCT OR THE USE OR OTHER DEALINGS IN THE PRODUCT.
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// OPTIONAL: Assign default values here.
-char wifiSSID[32] = ""; // Leave unset for wireless autoconfig. Note that these values will be lost
-char wifiPass[64] = ""; // when updating, but that's probably OK because they will be saved in EEPROM.
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // These defaults may be overwritten with values saved by the web interface
+char wifiSSID[32] = "";
+char wifiPass[64] = "";
 char mqttServer[64] = "";
 char mqttPort[6] = "1883";
 char mqttUser[128] = "";
@@ -61,6 +59,8 @@ char nextionBaud[7] = "115200";
 #include <MQTT.h>
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
+
+// #define MQTTTLSTEST
 
 const float haspVersion = 0.41;                       // Current HASP software release version
 byte nextionReturnBuffer[128];                        // Byte array to pass around data coming from the panel
@@ -138,12 +138,11 @@ const unsigned long nextionSpeeds[] = {2400,
                                        250000,
                                        256000,
                                        512000,
-                                       921600};                                            // Valid serial speeds for Nextion communication
-const unsigned int nextionSpeedsLength = sizeof(nextionSpeeds) / sizeof(nextionSpeeds[0]); // Size of our list of speeds
+                                       921600};                                       // Valid serial speeds for Nextion communication
+const uint8_t nextionSpeedsLength = sizeof(nextionSpeeds) / sizeof(nextionSpeeds[0]); // Size of our list of speeds
 
 WiFiClient wifiClient;
 WiFiClient wifiMQTTClient;
-WiFiClientSecure wifiMQTTClientSecure;
 MQTTClient mqttClient(mqttMaxPacketSize);
 ESP8266WebServer webServer(80);
 ESP8266HTTPUpdateServer httpOTAUpdate;
@@ -151,10 +150,14 @@ WiFiServer telnetServer(23);
 WiFiClient telnetClient;
 MDNSResponder::hMDNSService hMDNSService;
 
+#ifdef MQTTTLSTEST
+WiFiClientSecure wifiMQTTClientSecure;
+#endif
+
 // Additional CSS style to match Hass theme
-const char HASP_STYLE[] = "<style>button{background-color:#03A9F4;}body{width:60%;margin:auto;}input:invalid{border:1px solid red;}input[type=checkbox]{width:20px;}</style>";
+const char HASP_STYLE[] PROGMEM = "<style>button{background-color:#03A9F4;}body{width:60%;margin:auto;}input:invalid{border:1px solid red;}input[type=checkbox]{width:20px;}</style>";
 // URL for auto-update "version.json"
-const char UPDATE_URL[] = "http://haswitchplate.com/update/version.json";
+const char UPDATE_URL[] PROGMEM = "http://haswitchplate.com/update/version.json";
 // Default link to compiled Arduino firmware image
 String espFirmwareUrl = "http://haswitchplate.com/update/HASwitchPlate.ino.d1_mini.bin";
 // Default link to compiled Nextion firmware images
@@ -307,16 +310,19 @@ void mqttConnect()
     nextionSendCmd("page 0");
     nextionSetAttr("p[0].b[1].font", "6");
     nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rConfigure MQTT:\\rhttp://" + WiFi.localIP().toString() + "\"");
-    while (mqttServer[0] == 0)
-    { // Handle HTTP and OTA while we're waiting for MQTT to be configured
+    while (strcmp(mqttServer, "") == 0)
+    { // Handle other stuff while we're waiting for MQTT to be configured
       yield();
-      nextionHandleInput();
-      webServer.handleClient();
-      ArduinoOTA.handle();
-      handleTelnetClient();
+      nextionHandleInput();     // Nextion serial communications loop
+      ArduinoOTA.handle();      // Arduino OTA loop
+      webServer.handleClient(); // webServer loop
+      handleTelnetClient();     // telnet client loop
+      handleMotion();           // motion sensor loop
+      handleBeep();             // beep feedback loop
     }
   }
 
+#ifdef MQTTTLSTEST
   if (mqttTlsEnabled)
   { // Create MQTT service object with TLS connection
     mqttClient.begin(mqttServer, atoi(mqttPort), wifiMQTTClientSecure);
@@ -333,12 +339,13 @@ void mqttConnect()
     }
   }
   else
+#endif
   { // Create MQTT service object without TLS connection
+
     debugPrintln(String(F("MQTT: Configuring MQTT connection without TLS.")));
     mqttClient.begin(mqttServer, atoi(mqttPort), wifiMQTTClient);
   }
 
-  mqttClient.begin(mqttServer, atoi(mqttPort), wifiMQTTClient);
   mqttClient.onMessage(mqttCallback); // Setup MQTT callback function
 
   // MQTT topic string definitions
@@ -434,16 +441,18 @@ void mqttConnect()
         debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Restarting device.")));
         espReset();
       }
-      debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Trying again in 30 seconds.")));
+      debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Trying again in 5 seconds.")));
       nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connect to:\\r " + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\r\\rRetry in 30 sec\"");
       unsigned long mqttReconnectTimer = millis(); // record current time for our timeout
-      while ((millis() - mqttReconnectTimer) < 30000)
-      { // Handle HTTP and OTA while we're waiting 30sec for MQTT to reconnect
+      while ((millis() - mqttReconnectTimer) < 5000)
+      { // Handle HTTP and OTA while we're waiting 5sec for MQTT to reconnect
         yield();
-        nextionHandleInput();
-        webServer.handleClient();
-        ArduinoOTA.handle();
-        handleTelnetClient();
+        nextionHandleInput();     // Nextion serial communications loop
+        ArduinoOTA.handle();      // Arduino OTA loop
+        webServer.handleClient(); // webServer loop
+        handleTelnetClient();     // telnet client loop
+        handleMotion();           // motion sensor loop
+        handleBeep();             // beep feedback loop
       }
     }
   }
@@ -629,6 +638,7 @@ void mqttStatusUpdate()
   mqttStatusPayload += String(F("\"haspIP\":\"")) + WiFi.localIP().toString() + String(F("\","));
   mqttStatusPayload += String(F("\"heapFree\":")) + String(ESP.getFreeHeap()) + String(F(","));
   mqttStatusPayload += String(F("\"heapFragmentation\":")) + String(ESP.getHeapFragmentation()) + String(F(","));
+  mqttStatusPayload += String(F("\"heapMaxFreeBlockSize\":")) + String(ESP.getMaxFreeBlockSize()) + String(F(","));
   mqttStatusPayload += String(F("\"espCore\":\"")) + String(ESP.getCoreVersion()) + String(F("\""));
   mqttStatusPayload += "}";
 
@@ -1105,23 +1115,11 @@ void nextionProcessInput()
     // 0x88+End
     debugPrintln(F("HMI: Nextion panel connected."));
   }
-  else if (nextionReturnBuffer[0] == 0x1A)
-  { // Catch 0x1A error, possibly from .val query against things that might not support that request
-    // 0x1A+End
-    // ERROR: Variable name invalid
-    // We'll be triggering this a lot due to requesting .val on every component that sends us a Touch Off
-    // Just reset mqttGetSubtopic and move on with life.
-    mqttGetSubtopic = "";
-    if (lcdVersionQueryFlag)
-    {
-      lcdVersionQueryFlag = false;
-    }
-  }
   nextionReturnIndex = 0; // Done handling the buffer, reset index back to 0
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void nextionSetAttr(String hmiAttribute, String hmiValue)
+void nextionSetAttr(const String &hmiAttribute, const String &hmiValue)
 { // Set the value of a Nextion component attribute
   Serial1.print(hmiAttribute);
   Serial1.print("=");
@@ -1132,18 +1130,19 @@ void nextionSetAttr(String hmiAttribute, String hmiValue)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void nextionGetAttr(String hmiAttribute)
+void nextionGetAttr(const String &hmiAttribute)
 { // Get the value of a Nextion component attribute
   // This will only send the command to the panel requesting the attribute, the actual
   // return of that value will be handled by nextionProcessInput and placed into mqttGetSubtopic
-  Serial1.print("get " + hmiAttribute);
+  Serial1.print("get ");
+  Serial1.print(hmiAttribute);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   debugPrintln(String(F("HMI OUT: 'get ")) + hmiAttribute + String(F("'")));
   nextionHandleInput();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void nextionSendCmd(String nextionCmd)
+void nextionSendCmd(const String &nextionCmd)
 { // Send a raw command to the Nextion panel
   Serial1.print(nextionCmd);
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
@@ -1152,33 +1151,28 @@ void nextionSendCmd(String nextionCmd)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void nextionParseJson(String &strPayload)
+void nextionParseJson(const String &strPayload)
 { // Parse an incoming JSON array into individual Nextion commands
-  if (strPayload.endsWith(",]"))
-  { // Trailing null array elements are an artifact of older Home Assistant automations and need to
-    // be removed before parsing by ArduinoJSON 6+
-    strPayload.remove(strPayload.length() - 2, 2);
-    strPayload.concat("]");
-  }
   DynamicJsonDocument nextionCommands(mqttMaxPacketSize + 1024);
   DeserializationError jsonError = deserializeJson(nextionCommands, strPayload);
 
   if (jsonError)
   { // Couldn't parse incoming JSON command
     debugPrintln(String(F("MQTT: [ERROR] Failed to parse incoming JSON command with error: ")) + String(jsonError.c_str()));
+    mqttClient.publish(mqttStateJSONTopic, String(F("{\"event\":\"jsonError\",\"event_source\":\"nextionParseJson()\",\"event_description\":\"Failed to parse incoming JSON command with error\"")) + String(jsonError.c_str()));
   }
   else
   {
     for (uint8_t i = 0; i < nextionCommands.size(); i++)
     {
       nextionSendCmd(nextionCommands[i]);
-      delayMicroseconds(500); // Larger JSON objects can take a while to run through over serial,
+      delayMicroseconds(750); // Larger JSON objects can take a while to run through over serial,
     }                         // give the ESP and Nextion a moment to deal with life
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void nextionStartOtaDownload(String otaUrl)
+void nextionStartOtaDownload(const String &otaUrl)
 { // Upload firmware to the Nextion LCD via HTTP download
   // based in large part on code posted by indev2 here:
   // http://support.iteadstudio.com/support/discussions/topics/11000007686/page/2
@@ -1663,7 +1657,7 @@ void espSetupOta()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void espStartOta(String espOtaUrl)
+void espStartOta(const String &espOtaUrl)
 { // Update ESP firmware from HTTP
   nextionSendCmd("page 0");
   nextionSetAttr("p[0].b[1].txt", "\"HTTP update\\rstarting...\"");
@@ -1940,19 +1934,28 @@ void configClearSaved()
 void webHandleNotFound()
 { // webServer 404
   debugPrintln(String(F("HTTP: Sending 404 to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = "File Not Found\n\n";
-  httpMessage += "URI: ";
-  httpMessage += webServer.uri();
-  httpMessage += "\nMethod: ";
-  httpMessage += (webServer.method() == HTTP_GET) ? "GET" : "POST";
-  httpMessage += "\nArguments: ";
-  httpMessage += webServer.args();
-  httpMessage += "\n";
+  String httpHeader = FPSTR(HTTP_HEADER);
+  httpHeader.replace("{v}", "HASwitchPlate " + String(haspNode) + " 404");
+  webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  webServer.send(404, "text/html", httpHeader);
+  webServer.sendContent_P(HTTP_SCRIPT);
+  webServer.sendContent_P(HTTP_STYLE);
+  webServer.sendContent_P(HASP_STYLE);
+  webServer.sendContent_P(HTTP_HEADER_END);
+  webServer.sendContent(F("<h1>404: File Not Found</h1>One of us appears to have done something horribly wrong.<hr/><b>URI: </b>"));
+  webServer.sendContent(webServer.uri());
+  webServer.sendContent(F("<br/><b>Method: </b>"));
+  webServer.sendContent((webServer.method() == HTTP_GET) ? F("GET") : F("POST"));
+  webServer.sendContent(F("<br/><b>Arguments: </b>"));
+  webServer.sendContent(String(webServer.args()));
   for (uint8_t i = 0; i < webServer.args(); i++)
   {
-    httpMessage += " " + webServer.argName(i) + ": " + webServer.arg(i) + "\n";
+    webServer.sendContent(F("<br/><b>"));
+    webServer.sendContent(String(webServer.argName(i)));
+    webServer.sendContent(F(":</b> "));
+    webServer.sendContent(String(webServer.arg(i)));
   }
-  webServer.send(404, "text/plain", httpMessage);
+  webServer.sendContent("");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1966,151 +1969,205 @@ void webHandleRoot()
     }
   }
   debugPrintln(String(F("HTTP: Sending root page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEADER);
-  httpMessage.replace("{v}", String(haspNode));
-  httpMessage += FPSTR(HTTP_SCRIPT);
-  httpMessage += FPSTR(HTTP_STYLE);
-  httpMessage += String(HASP_STYLE);
-  httpMessage += FPSTR(HTTP_HEADER_END);
-  httpMessage += String(F("<h1>"));
-  httpMessage += String(haspNode);
-  httpMessage += String(F("</h1>"));
 
-  httpMessage += String(F("<form method='POST' action='saveConfig'>"));
-  httpMessage += String(F("<b>WiFi SSID</b> <i><small>(required)</small></i><input id='wifiSSID' required name='wifiSSID' maxlength=32 placeholder='WiFi SSID' value='")) + String(WiFi.SSID()) + "'>";
-  httpMessage += String(F("<br/><b>WiFi Password</b> <i><small>(required)</small></i><input id='wifiPass' required name='wifiPass' type='password' maxlength=64 placeholder='WiFi Password' value='")) + String("********") + "'>";
-  httpMessage += String(F("<br/><br/><b>HASP Node Name</b> <i><small>(required. lowercase letters, numbers, and _ only)</small></i><input id='haspNode' required name='haspNode' maxlength=15 placeholder='HASP Node Name' pattern='[a-z0-9_]*' value='")) + String(haspNode) + "'>";
-  httpMessage += String(F("<br/><br/><b>Group Name</b> <i><small>(required)</small></i><input id='groupName' required name='groupName' maxlength=15 placeholder='Group Name' value='")) + String(groupName) + "'>";
-  httpMessage += String(F("<br/><br/><b>MQTT Broker</b> <i><small>(required)</small></i><input id='mqttServer' required name='mqttServer' maxlength=63 placeholder='mqttServer' value='")) + String(mqttServer) + "'>";
-  httpMessage += String(F("<br/><b>MQTT Port</b> <i><small>(required)</small></i><input id='mqttPort' required name='mqttPort' type='number' maxlength=5 placeholder='mqttPort' value='")) + String(mqttPort) + "'>";
-  httpMessage += String(F("<br/><b>MQTT User</b> <i><small>(optional)</small></i><input id='mqttUser' name='mqttUser' maxlength=127 placeholder='mqttUser' value='")) + String(mqttUser) + "'>";
-  httpMessage += String(F("<br/><b>MQTT Password</b> <i><small>(optional)</small></i><input id='mqttPassword' name='mqttPassword' type='password' maxlength=127 placeholder='mqttPassword' value='"));
+  String httpHeader = FPSTR(HTTP_HEADER);
+  httpHeader.replace("{v}", "HASwitchPlate " + String(haspNode));
+  webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  webServer.send(200, "text/html", httpHeader);
+  webServer.sendContent(httpHeader);
+  webServer.sendContent_P(HTTP_SCRIPT);
+  webServer.sendContent_P(HTTP_STYLE);
+  webServer.sendContent_P(HASP_STYLE);
+  webServer.sendContent_P(HTTP_HEADER_END);
+
+  webServer.sendContent(F("<h1>"));
+  webServer.sendContent(haspNode);
+  webServer.sendContent(F("</h1>"));
+
+  webServer.sendContent(F("<form method='POST' action='saveConfig'>"));
+  webServer.sendContent(F("<b>WiFi SSID</b> <i><small>(required)</small></i><input id='wifiSSID' required name='wifiSSID' maxlength=32 placeholder='WiFi SSID' value='"));
+  webServer.sendContent(WiFi.SSID());
+  webServer.sendContent(F("'><br/><b>WiFi Password</b> <i><small>(required)</small></i><input id='wifiPass' required name='wifiPass' type='password' maxlength=64 placeholder='WiFi Password' value='********'>"));
+  webServer.sendContent(F("<br/><br/><b>HASP Node Name</b> <i><small>(required. lowercase letters, numbers, and _ only)</small></i><input id='haspNode' required name='haspNode' maxlength=15 placeholder='HASP Node Name' pattern='[a-z0-9_]*' value='"));
+  webServer.sendContent(haspNode);
+  webServer.sendContent(F("'><br/><br/><b>Group Name</b> <i><small>(required)</small></i><input id='groupName' required name='groupName' maxlength=15 placeholder='Group Name' value='"));
+  webServer.sendContent(groupName);
+  webServer.sendContent(F("'><br/><br/><b>MQTT Broker</b> <i><small>(required)</small></i><input id='mqttServer' required name='mqttServer' maxlength=63 placeholder='mqttServer' value='"));
+  if (strlen(mqttServer) != 0)
+  {
+    webServer.sendContent(mqttServer);
+  }
+  webServer.sendContent(F("'><br/><b>MQTT Port</b> <i><small>(required)</small></i><input id='mqttPort' required name='mqttPort' type='number' maxlength=5 placeholder='mqttPort' value='"));
+  if (strlen(mqttPort) != 0)
+  {
+    webServer.sendContent(mqttPort);
+  }
+  webServer.sendContent(F("'><br/><b>MQTT User</b> <i><small>(optional)</small></i><input id='mqttUser' name='mqttUser' maxlength=127 placeholder='mqttUser' value='"));
+  if (strlen(mqttUser) != 0)
+  {
+    webServer.sendContent(mqttUser);
+  }
+  webServer.sendContent(F("'><br/><b>MQTT Password</b> <i><small>(optional)</small></i><input id='mqttPassword' name='mqttPassword' type='password' maxlength=127 placeholder='mqttPassword' value='"));
   if (strlen(mqttPassword) != 0)
   {
-    httpMessage += String("********");
+    webServer.sendContent(F("********"));
   }
-  httpMessage += String(F("'><br/><b>MQTT TLS enabled:</b><input id='mqttTlsEnabled' name='mqttTlsEnabled' type='checkbox'"));
+  webServer.sendContent(F("'>"));
+
+#ifdef MQTTTLSTEST
+  webServer.sendContent(F("<br/><b>MQTT TLS enabled:</b><input id='mqttTlsEnabled' name='mqttTlsEnabled' type='checkbox'"));
   if (mqttTlsEnabled)
   {
-    httpMessage += String(F(" checked='checked'"));
+    webServer.sendContent(F(" checked='checked'"));
   }
-  httpMessage += String(F("><br/><b>MQTT TLS Fingerpint</b> <i><small>(leave blank to disable fingerprint checking)</small></i><input id='mqttFingerprint' name='mqttFingerprint' maxlength=59 minlength=59 placeholder='01:02:03:04:05:06:07:08:09:0A:0B:0C:0D:0E:0F:10:11:12:13:14' value='")) + String(mqttFingerprint) + "'>";
-  httpMessage += String(F("<br/><br/><b>HASP Admin Username</b> <i><small>(optional)</small></i><input id='configUser' name='configUser' maxlength=31 placeholder='Admin User' value='")) + String(configUser) + "'>";
-  httpMessage += String(F("'<br/><br/><b>HASP Admin Username</b> <i><small>(optional)</small></i><input id='configUser' name='configUser' maxlength=31 placeholder='Admin User' value='")) + String(configUser) + "'>";
-  httpMessage += String(F("<br/><b>HASP Admin Password</b> <i><small>(optional)</small></i><input id='configPassword' name='configPassword' type='password' maxlength=31 placeholder='Admin User Password' value='"));
-  if (strlen(configPassword) != 0)
+  webServer.sendContent(F("><br/><b>MQTT TLS Fingerpint</b> <i><small>(leave blank to disable fingerprint checking)</small></i><input id='mqttFingerprint' name='mqttFingerprint' maxlength=59 minlength=59 placeholder='01:02:03:04:05:06:07:08:09:0A:0B:0C:0D:0E:0F:10:11:12:13:14' value='"));
+  if (strcmp(mqttFingerprint, "") != 0)
   {
-    httpMessage += String("********");
+    webServer.sendContent(mqttFingerprint);
   }
-  httpMessage += String(F("'><br/><hr>"));
+  webServer.sendContent(F("'>"));
+#endif
+
+  webServer.sendContent(F("<br/><br/><b>HASP Admin Username</b> <i><small>(optional)</small></i><input id='configUser' name='configUser' maxlength=31 placeholder='Admin User' value='"));
+  webServer.sendContent(configUser);
+  webServer.sendContent(F("'><br/><b>HASP Admin Password</b> <i><small>(optional)</small></i><input id='configPassword' name='configPassword' type='password' maxlength=31 placeholder='Admin User Password' value='"));
+  if (strcmp(configPassword, "") != 0)
+  {
+    webServer.sendContent(F("********"));
+  }
+  webServer.sendContent(F("'><br/><hr>"));
 
   // Big menu of possible serial speeds
   if ((lcdVersion != 1) && (lcdVersion != 2))
   { // HASP lcdVersion 1 and 2 have `bauds=115200` in the pre-init script of page 0.  Don't show this option if either of those two versions are running.
-    httpMessage += String(F("<b>LCD Serial Speed:&nbsp;</b><select id='nextionBaud' name='nextionBaud'>"));
+    webServer.sendContent(F("<b>LCD Serial Speed:&nbsp;</b><select id='nextionBaud' name='nextionBaud'>"));
 
     for (unsigned int nextionSpeedsIndex = 0; nextionSpeedsIndex < nextionSpeedsLength; nextionSpeedsIndex++)
     {
-      String httpLcdSerialSpeedOption = String(nextionSpeeds[nextionSpeedsIndex]);
-      httpMessage += String(F("<option value='")) + httpLcdSerialSpeedOption + String(F("'"));
-      if (httpLcdSerialSpeedOption == String(nextionBaud))
+      char nextionSpeedItem[sizeof(unsigned long) * 3 + 2];
+      snprintf(nextionSpeedItem, sizeof nextionSpeedItem, "%ld", nextionSpeeds[nextionSpeedsIndex]);
+      webServer.sendContent(F("<option value='"));
+      webServer.sendContent(nextionSpeedItem);
+      webServer.sendContent(F("'"));
+      if (strcmp(nextionSpeedItem, nextionBaud) == 0)
       {
-        httpMessage += String(F(" selected"));
+        webServer.sendContent(F(" selected"));
       }
-      httpMessage += String(F(">")) + httpLcdSerialSpeedOption + String(F("</option>"));
+      webServer.sendContent(F(">"));
+      webServer.sendContent(nextionSpeedItem);
+      webServer.sendContent(F("</option>"));
     }
-    httpMessage += String(F("</select><br/>"));
+    webServer.sendContent(F("</select><br/>"));
   }
 
-  httpMessage += String(F("<b>Motion Sensor Pin:&nbsp;</b><select id='motionPinConfig' name='motionPinConfig'><option value='0'"));
+  webServer.sendContent(F("<b>Motion Sensor Pin:&nbsp;</b><select id='motionPinConfig' name='motionPinConfig'><option value='0'"));
   if (!motionPin)
   {
-    httpMessage += String(F(" selected"));
+    webServer.sendContent(F(" selected"));
   }
-  httpMessage += String(F(">disabled/not installed</option><option value='D0'"));
+  webServer.sendContent(F(">disabled/not installed</option><option value='D0'"));
   if (motionPin == D0)
   {
-    httpMessage += String(F(" selected"));
+    webServer.sendContent(F(" selected"));
   }
-  httpMessage += String(F(">D0</option><option value='D1'"));
+  webServer.sendContent(F(">D0</option><option value='D1'"));
   if (motionPin == D1)
   {
-    httpMessage += String(F(" selected"));
+    webServer.sendContent(F(" selected"));
   }
-  httpMessage += String(F(">D1</option></select>"));
-
-  httpMessage += String(F("<br/><b>Serial debug output enabled:</b><input id='debugSerialEnabled' name='debugSerialEnabled' type='checkbox'"));
-  if (debugSerialEnabled)
-  {
-    httpMessage += String(F(" checked='checked'"));
-  }
-  httpMessage += String(F("><br/><b>Telnet debug output enabled:</b><input id='debugTelnetEnabled' name='debugTelnetEnabled' type='checkbox'"));
-  if (debugTelnetEnabled)
-  {
-    httpMessage += String(F(" checked='checked'"));
-  }
-  httpMessage += String(F("><br/><b>mDNS enabled:</b><input id='mdnsEnabled' name='mdnsEnabled' type='checkbox'"));
-  if (mdnsEnabled)
-  {
-    httpMessage += String(F(" checked='checked'"));
-  }
-
-  httpMessage += String(F("><br/><b>Keypress beep enabled:</b><input id='beepEnabled' name='beepEnabled' type='checkbox'"));
+  webServer.sendContent(F(">D1</option></select>"));
+  webServer.sendContent(F("<br/><b>Keypress beep enabled on D2:</b><input id='beepEnabled' name='beepEnabled' type='checkbox'"));
   if (beepEnabled)
   {
-    httpMessage += String(F(" checked='checked'"));
+    webServer.sendContent(F(" checked='checked'"));
   }
-
-  httpMessage += String(F("><br/><hr><button type='submit'>save settings</button></form>"));
+  webServer.sendContent(F("><br/><b>Serial debug output enabled:</b><input id='debugSerialEnabled' name='debugSerialEnabled' type='checkbox'"));
+  if (debugSerialEnabled)
+  {
+    webServer.sendContent(F(" checked='checked'"));
+  }
+  webServer.sendContent(F("><br/><b>Telnet debug output enabled:</b><input id='debugTelnetEnabled' name='debugTelnetEnabled' type='checkbox'"));
+  if (debugTelnetEnabled)
+  {
+    webServer.sendContent(F(" checked='checked'"));
+  }
+  webServer.sendContent(F("><br/><b>mDNS enabled:</b><input id='mdnsEnabled' name='mdnsEnabled' type='checkbox'"));
+  if (mdnsEnabled)
+  {
+    webServer.sendContent(F(" checked='checked'"));
+  }
+  webServer.sendContent(F("><br/><hr><button type='submit'>save settings</button></form>"));
 
   if (updateEspAvailable)
   {
-    httpMessage += String(F("<br/><hr><font color='green'><center><h3>HASP Update available!</h3></center></font>"));
-    httpMessage += String(F("<form method='get' action='espfirmware'>"));
-    httpMessage += String(F("<input id='espFirmwareURL' type='hidden' name='espFirmware' value='")) + espFirmwareUrl + "'>";
-    httpMessage += String(F("<button type='submit'>update HASP to v")) + String(updateEspAvailableVersion) + String(F("</button></form>"));
+    webServer.sendContent(F("<br/><hr><font color='green'><center><h3>HASP Update available!</h3></center></font>"));
+    webServer.sendContent(F("<form method='get' action='espfirmware'>"));
+    webServer.sendContent(F("<input id='espFirmwareURL' type='hidden' name='espFirmware' value='"));
+    webServer.sendContent(espFirmwareUrl);
+    webServer.sendContent(F("'><button type='submit'>update HASP to v"));
+    webServer.sendContent(String(updateEspAvailableVersion));
+    webServer.sendContent(F("</button></form>"));
   }
 
-  httpMessage += String(F("<hr><form method='get' action='firmware'>"));
-  httpMessage += String(F("<button type='submit'>update firmware</button></form>"));
+  webServer.sendContent(F("<hr><form method='get' action='firmware'>"));
+  webServer.sendContent(F("<button type='submit'>update firmware</button></form>"));
 
-  httpMessage += String(F("<hr><form method='get' action='reboot'>"));
-  httpMessage += String(F("<button type='submit'>reboot device</button></form>"));
+  webServer.sendContent(F("<hr><form method='get' action='reboot'>"));
+  webServer.sendContent(F("<button type='submit'>reboot device</button></form>"));
 
-  httpMessage += String(F("<hr><form method='get' action='resetBacklight'>"));
-  httpMessage += String(F("<button type='submit'>reset lcd backlight</button></form>"));
+  webServer.sendContent(F("<hr><form method='get' action='resetBacklight'>"));
+  webServer.sendContent(F("<button type='submit'>reset lcd backlight</button></form>"));
 
-  httpMessage += String(F("<hr><form method='get' action='resetConfig'>"));
-  httpMessage += String(F("<button type='submit'>factory reset settings</button></form>"));
+  webServer.sendContent(F("<hr><form method='get' action='resetConfig'>"));
+  webServer.sendContent(F("<button type='submit'>factory reset settings</button></form>"));
 
-  httpMessage += String(F("<hr><b>MQTT Status: </b>"));
+  webServer.sendContent(F("<hr><b>MQTT Status: </b>"));
   if (mqttClient.connected())
   { // Check MQTT connection
-    httpMessage += String(F("Connected"));
+    webServer.sendContent(F("Connected"));
   }
   else
   {
-    httpMessage += String(F("<font color='red'><b>Disconnected</b></font>, return code: ")) + String(mqttClient.returnCode());
+    webServer.sendContent(F("<font color='red'><b>Disconnected</b></font>, return code: "));
+    webServer.sendContent(String(mqttClient.returnCode()));
   }
-  httpMessage += String(F("<br/><b>MQTT ClientID: </b>")) + String(mqttClientId);
-  httpMessage += String(F("<br/><b>HASP Version: </b>")) + String(haspVersion);
-  httpMessage += String(F("<br/><b>LCD Model: </b>")) + String(nextionModel);
-  httpMessage += String(F("<br/><b>LCD Version: </b>")) + String(lcdVersion);
-  httpMessage += String(F("<br/><b>LCD Active Page: </b>")) + String(nextionActivePage);
-  httpMessage += String(F("<br/><b>LCD Serial Speed: </b>")) + String(nextionBaud);
-  httpMessage += String(F("<br/><b>CPU Frequency: </b>")) + String(ESP.getCpuFreqMHz()) + String(F("MHz"));
-  httpMessage += String(F("<br/><b>Sketch Size: </b>")) + String(ESP.getSketchSize()) + String(F(" bytes"));
-  httpMessage += String(F("<br/><b>Free Sketch Space: </b>")) + String(ESP.getFreeSketchSpace()) + String(F(" bytes"));
-  httpMessage += String(F("<br/><b>Heap Free: </b>")) + String(ESP.getFreeHeap());
-  httpMessage += String(F("<br/><b>Heap Fragmentation: </b>")) + String(ESP.getHeapFragmentation());
-  httpMessage += String(F("<br/><b>ESP core version: </b>")) + String(ESP.getCoreVersion());
-  httpMessage += String(F("<br/><b>IP Address: </b>")) + String(WiFi.localIP().toString());
-  httpMessage += String(F("<br/><b>Signal Strength: </b>")) + String(WiFi.RSSI());
-  httpMessage += String(F("<br/><b>Uptime: </b>")) + String(long(millis() / 1000));
-  httpMessage += String(F("<br/><b>Last reset: </b>")) + String(ESP.getResetInfo());
-
-  httpMessage += FPSTR(HTTP_END);
-  webServer.send(200, "text/html", httpMessage);
+  webServer.sendContent(F("<br/><b>MQTT ClientID: </b>"));
+  webServer.sendContent(mqttClientId);
+  webServer.sendContent(F("<br/><b>HASP Version: </b>"));
+  webServer.sendContent(String(haspVersion));
+  webServer.sendContent(F("<br/><b>LCD Model: </b>"));
+  webServer.sendContent(nextionModel);
+  webServer.sendContent(F("<br/><b>LCD Version: </b>"));
+  webServer.sendContent(String(lcdVersion));
+  webServer.sendContent(F("<br/><b>LCD Active Page: </b>"));
+  webServer.sendContent(String(nextionActivePage));
+  webServer.sendContent(F("<br/><b>LCD Serial Speed: </b>"));
+  webServer.sendContent(nextionBaud);
+  webServer.sendContent(F("<br/><b>CPU Frequency: </b>"));
+  webServer.sendContent(String(ESP.getCpuFreqMHz()));
+  webServer.sendContent(F("MHz"));
+  webServer.sendContent(F("<br/><b>Sketch Size: </b>"));
+  webServer.sendContent(String(ESP.getSketchSize()));
+  webServer.sendContent(F(" bytes"));
+  webServer.sendContent(F("<br/><b>Free Sketch Space: </b>"));
+  webServer.sendContent(String(ESP.getFreeSketchSpace()));
+  webServer.sendContent(F(" bytes"));
+  webServer.sendContent(F("<br/><b>Heap Free: </b>"));
+  webServer.sendContent(String(ESP.getFreeHeap()));
+  webServer.sendContent(F("<br/><b>Heap Fragmentation: </b>"));
+  webServer.sendContent(String(ESP.getHeapFragmentation()));
+  webServer.sendContent(F("<br/><b>ESP core version: </b>"));
+  webServer.sendContent(ESP.getCoreVersion());
+  webServer.sendContent(F("<br/><b>IP Address: </b>"));
+  webServer.sendContent(WiFi.localIP().toString());
+  webServer.sendContent(F("<br/><b>Signal Strength: </b>"));
+  webServer.sendContent(String(WiFi.RSSI()));
+  webServer.sendContent(F("<br/><b>Uptime: </b>"));
+  webServer.sendContent(String(long(millis() / 1000)));
+  webServer.sendContent(F("<br/><b>Last reset: </b>"));
+  webServer.sendContent(ESP.getResetInfo());
+  webServer.sendContent_P(HTTP_END);
+  webServer.sendContent("");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2124,11 +2181,14 @@ void webHandleSaveConfig()
     }
   }
   debugPrintln(String(F("HTTP: Sending /saveConfig page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEADER);
-  httpMessage.replace("{v}", String(haspNode));
-  httpMessage += FPSTR(HTTP_SCRIPT);
-  httpMessage += FPSTR(HTTP_STYLE);
-  httpMessage += String(HASP_STYLE);
+  String httpHeader = FPSTR(HTTP_HEADER);
+  httpHeader.replace("{v}", "HASwitchPlate " + String(haspNode) + " Saving configuration");
+  webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  webServer.send(200, "text/html", httpHeader);
+  webServer.sendContent_P(HTTP_SCRIPT);
+  webServer.sendContent_P(HTTP_STYLE);
+  webServer.sendContent_P(HASP_STYLE);
+  webServer.sendContent_P(HTTP_HEADER_END);
 
   bool shouldSaveWifi = false;
   // Check required values
@@ -2257,13 +2317,15 @@ void webHandleSaveConfig()
 
   if (shouldSaveConfig)
   { // Config updated, notify user and trigger write to SPIFFS
-    httpMessage += String(F("<meta http-equiv='refresh' content='15;url=/' />"));
-    httpMessage += FPSTR(HTTP_HEADER_END);
-    httpMessage += String(F("<h1>")) + String(haspNode) + String(F("</h1>"));
-    httpMessage += String(F("<br/>Saving updated configuration values and restarting device"));
-    httpMessage += FPSTR(HTTP_END);
-    webServer.send(200, "text/html", httpMessage);
 
+    webServer.sendContent(F("<meta http-equiv='refresh' content='15;url=/' />"));
+    webServer.sendContent_P(HTTP_HEADER_END);
+    webServer.sendContent(F("<h1>"));
+    webServer.sendContent(haspNode);
+    webServer.sendContent(F("</h1>"));
+    webServer.sendContent(F("<br/>Saving updated configuration values and restarting device"));
+    webServer.sendContent_P(HTTP_END);
+    webServer.sendContent(F(""));
     configSave();
     if (shouldSaveWifi)
     {
@@ -2274,12 +2336,14 @@ void webHandleSaveConfig()
   }
   else
   { // No change found, notify user and link back to config page
-    httpMessage += String(F("<meta http-equiv='refresh' content='3;url=/' />"));
-    httpMessage += FPSTR(HTTP_HEADER_END);
-    httpMessage += String(F("<h1>")) + String(haspNode) + String(F("</h1>"));
-    httpMessage += String(F("<br/>No changes found, returning to <a href='/'>home page</a>"));
-    httpMessage += FPSTR(HTTP_END);
-    webServer.send(200, "text/html", httpMessage);
+    webServer.sendContent(F("<meta http-equiv='refresh' content='3;url=/' />"));
+    webServer.sendContent_P(HTTP_HEADER_END);
+    webServer.sendContent(F("<h1>"));
+    webServer.sendContent(haspNode);
+    webServer.sendContent(F("</h1>"));
+    webServer.sendContent(F("<br/>No changes found, returning to <a href='/'>home page</a>"));
+    webServer.sendContent_P(HTTP_END);
+    webServer.sendContent(F(""));
   }
 }
 
@@ -2294,32 +2358,34 @@ void webHandleResetConfig()
     }
   }
   debugPrintln(String(F("HTTP: Sending /resetConfig page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEADER);
-  httpMessage.replace("{v}", String(haspNode));
-  httpMessage += FPSTR(HTTP_SCRIPT);
-  httpMessage += FPSTR(HTTP_STYLE);
-  httpMessage += String(HASP_STYLE);
-  httpMessage += FPSTR(HTTP_HEADER_END);
+  String httpHeader = FPSTR(HTTP_HEADER);
+  httpHeader.replace("{v}", "HASwitchPlate " + String(haspNode) + " Resetting configuration");
+  webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  webServer.send(200, "text/html", httpHeader);
+  webServer.sendContent_P(HTTP_SCRIPT);
+  webServer.sendContent_P(HTTP_STYLE);
+  webServer.sendContent_P(HASP_STYLE);
+  webServer.sendContent_P(HTTP_HEADER_END);
 
   if (webServer.arg("confirm") == "yes")
   { // User has confirmed, so reset everything
-    httpMessage += String(F("<h1>"));
-    httpMessage += String(haspNode);
-    httpMessage += String(F("</h1><b>Resetting all saved settings and restarting device into WiFi AP mode</b>"));
-    httpMessage += FPSTR(HTTP_END);
-    webServer.send(200, "text/html", httpMessage);
-    delay(1000);
+    webServer.sendContent(F("<h1>"));
+    webServer.sendContent(haspNode);
+    webServer.sendContent(F("</h1><b>Resetting all saved settings and restarting device into WiFi AP mode</b>"));
+    webServer.sendContent_P(HTTP_END);
+    webServer.sendContent("");
+    delay(100);
     configClearSaved();
   }
   else
   {
-    httpMessage += String(F("<h1>Warning</h1><b>This process will reset all settings to the default values and restart the device.  You may need to connect to the WiFi AP displayed on the panel to re-configure the device before accessing it again."));
-    httpMessage += String(F("<br/><hr><br/><form method='get' action='resetConfig'>"));
-    httpMessage += String(F("<br/><br/><button type='submit' name='confirm' value='yes'>reset all settings</button></form>"));
-    httpMessage += String(F("<br/><hr><br/><form method='get' action='/'>"));
-    httpMessage += String(F("<button type='submit'>return home</button></form>"));
-    httpMessage += FPSTR(HTTP_END);
-    webServer.send(200, "text/html", httpMessage);
+    webServer.sendContent(F("<h1>Warning</h1><b>This process will reset all settings to the default values and restart the device.  You may need to connect to the WiFi AP displayed on the panel to re-configure the device before accessing it again."));
+    webServer.sendContent(F("<br/><hr><br/><form method='get' action='resetConfig'>"));
+    webServer.sendContent(F("<br/><br/><button type='submit' name='confirm' value='yes'>reset all settings</button></form>"));
+    webServer.sendContent(F("<br/><hr><br/><form method='get' action='/'>"));
+    webServer.sendContent(F("<button type='submit'>return home</button></form>"));
+    webServer.sendContent_P(HTTP_END);
+    webServer.sendContent("");
   }
 }
 
@@ -2333,19 +2399,23 @@ void webHandleResetBacklight()
       return webServer.requestAuthentication();
     }
   }
-
   debugPrintln(String(F("HTTP: Sending /resetBacklight page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEADER);
-  httpMessage.replace("{v}", (String(haspNode) + " HASP backlight reset"));
-  httpMessage += FPSTR(HTTP_SCRIPT);
-  httpMessage += FPSTR(HTTP_STYLE);
-  httpMessage += String(HASP_STYLE);
-  httpMessage += String(F("<meta http-equiv='refresh' content='3;url=/' />"));
-  httpMessage += FPSTR(HTTP_HEADER_END);
-  httpMessage += String(F("<h1>")) + String(haspNode) + String(F("</h1>"));
-  httpMessage += String(F("<br/>Resetting backlight to 100%"));
-  httpMessage += FPSTR(HTTP_END);
-  webServer.send(200, "text/html", httpMessage);
+  String httpHeader = FPSTR(HTTP_HEADER);
+  httpHeader.replace("{v}", "HASwitchPlate " + String(haspNode) + " Backlight reset");
+  webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  webServer.send(200, "text/html", httpHeader);
+  webServer.sendContent_P(HTTP_SCRIPT);
+  webServer.sendContent_P(HTTP_STYLE);
+  webServer.sendContent_P(HASP_STYLE);
+  webServer.sendContent(F("<meta http-equiv='refresh' content='3;url=/' />"));
+  webServer.sendContent_P(HTTP_HEADER_END);
+
+  webServer.sendContent(F("<h1>"));
+  webServer.sendContent(haspNode);
+  webServer.sendContent(F("</h1>"));
+  webServer.sendContent(F("<br/>Resetting backlight to 100%"));
+  webServer.sendContent_P(HTTP_END);
+  webServer.sendContent("");
   debugPrintln(F("HTTP: Resetting backlight to 100%"));
   nextionSetAttr("dims", "100");
 }
@@ -2361,61 +2431,68 @@ void webHandleFirmware()
     }
   }
   debugPrintln(String(F("HTTP: Sending /firmware page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEADER);
-  httpMessage.replace("{v}", (String(haspNode) + " update"));
-  httpMessage += FPSTR(HTTP_SCRIPT);
-  httpMessage += FPSTR(HTTP_STYLE);
-  httpMessage += String(HASP_STYLE);
-  httpMessage += FPSTR(HTTP_HEADER_END);
-  httpMessage += String(F("<h1>")) + String(haspNode) + String(F(" firmware</h1>"));
+  String httpHeader = FPSTR(HTTP_HEADER);
+  httpHeader.replace("{v}", "HASwitchPlate " + String(haspNode) + " Firmware updates");
+  webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  webServer.send(200, "text/html", httpHeader);
+  webServer.sendContent_P(HTTP_SCRIPT);
+  webServer.sendContent_P(HTTP_STYLE);
+  webServer.sendContent_P(HASP_STYLE);
+  webServer.sendContent_P(HTTP_HEADER_END);
+
+  webServer.sendContent(F("<h1>"));
+  webServer.sendContent(haspNode);
+  webServer.sendContent(F(" Firmware updates</h1><b>Note:</b> If updating firmware for both the ESP8266 and the Nextion LCD, you'll want to update the ESP8266 first followed by the Nextion LCD<br/><hr/>"));
 
   // Display main firmware page
   // HTTPS Disabled pending resolution of issue: https://github.com/esp8266/Arduino/issues/4696
   // Until then, using a proxy host at http://haswitchplate.com to deliver unsecured firmware images from GitHub
-  httpMessage += String(F("<form method='get' action='/espfirmware'>"));
+  webServer.sendContent(F("<form method='get' action='/espfirmware'>"));
   if (updateEspAvailable)
   {
-    httpMessage += String(F("<font color='green'><b>HASP ESP8266 update available!</b></font>"));
+    webServer.sendContent(F("<font color='green'><b>HASP ESP8266 update available!</b></font>"));
   }
-  httpMessage += String(F("<br/><b>Update ESP8266 from URL</b><small><i> http only</i></small>"));
-  httpMessage += String(F("<br/><input id='espFirmwareURL' name='espFirmware' value='")) + espFirmwareUrl + "'>";
-  httpMessage += String(F("<br/><br/><button type='submit'>Update ESP from URL</button></form>"));
+  webServer.sendContent(F("<br/><b>Update ESP8266 from URL</b><small><i> http only</i></small>"));
+  webServer.sendContent(F("<br/><input id='espFirmwareURL' name='espFirmware' value='"));
+  webServer.sendContent(espFirmwareUrl);
+  webServer.sendContent(F("'><br/><br/><button type='submit'>Update ESP from URL</button></form>"));
 
-  httpMessage += String(F("<br/><form method='POST' action='/update' enctype='multipart/form-data'>"));
-  httpMessage += String(F("<b>Update ESP8266 from file</b><input type='file' id='espSelect' name='espSelect' accept='.bin'>"));
-  httpMessage += String(F("<br/><br/><button type='submit' id='espUploadSubmit' onclick='ackEspUploadSubmit()'>Update ESP from file</button></form>"));
+  webServer.sendContent(F("<br/><form method='POST' action='/update' enctype='multipart/form-data'>"));
+  webServer.sendContent(F("<b>Update ESP8266 from file</b><input type='file' id='espSelect' name='espSelect' accept='.bin'>"));
+  webServer.sendContent(F("<br/><br/><button type='submit' id='espUploadSubmit' onclick='ackEspUploadSubmit()'>Update ESP from file</button></form>"));
 
-  httpMessage += String(F("<br/><br/><hr><h1>WARNING!</h1>"));
-  httpMessage += String(F("<b>Nextion LCD firmware updates can be risky.</b> If interrupted, the HASP will need to be manually power cycled which might mean a trip to the breaker box. "));
-  httpMessage += String(F("After a power cycle, the LCD will display an error message until a successful firmware update has completed.<br/>"));
+  webServer.sendContent(F("<br/><br/><hr><h1>WARNING!</h1>"));
+  webServer.sendContent(F("<b>Nextion LCD firmware updates can be risky.</b> If interrupted, the LCD will display an error message until a successful firmware update has completed. "));
+  webServer.sendContent(F("<br/><i>Note: Failed LCD firmware updates on HASP hardware prior to v1.0 may require a hard power cycle of the device, via a circuit breaker or by physically disconnecting the device.</i>"));
 
-  httpMessage += String(F("<br/><hr><form method='get' action='lcddownload'>"));
+  webServer.sendContent(F("<br/><hr><form method='get' action='lcddownload'>"));
   if (updateLcdAvailable)
   {
-    httpMessage += String(F("<font color='green'><b>HASP LCD update available!</b></font>"));
+    webServer.sendContent(F("<font color='green'><b>HASP LCD update available!</b></font>"));
   }
-  httpMessage += String(F("<br/><b>Update Nextion LCD from URL</b><small><i> http only</i></small>"));
-  httpMessage += String(F("<br/><input id='lcdFirmware' name='lcdFirmware' value='")) + lcdFirmwareUrl + "'>";
-  httpMessage += String(F("<br/><br/><button type='submit'>Update LCD from URL</button></form>"));
+  webServer.sendContent(F("<br/><b>Update Nextion LCD from URL</b><small><i> http only</i></small>"));
+  webServer.sendContent(F("<br/><input id='lcdFirmware' name='lcdFirmware' value='"));
+  webServer.sendContent(lcdFirmwareUrl);
+  webServer.sendContent(F("'><br/><br/><button type='submit'>Update LCD from URL</button></form>"));
 
-  httpMessage += String(F("<br/><form method='POST' action='/lcdupload' enctype='multipart/form-data'>"));
-  httpMessage += String(F("<br/><b>Update Nextion LCD from file</b><input type='file' id='lcdSelect' name='files[]' accept='.tft'/>"));
-  httpMessage += String(F("<br/><br/><button type='submit' id='lcdUploadSubmit' onclick='ackLcdUploadSubmit()'>Update LCD from file</button></form>"));
+  webServer.sendContent(F("<br/><form method='POST' action='/lcdupload' enctype='multipart/form-data'>"));
+  webServer.sendContent(F("<br/><b>Update Nextion LCD from file</b><input type='file' id='lcdSelect' name='files[]' accept='.tft'/>"));
+  webServer.sendContent(F("<br/><br/><button type='submit' id='lcdUploadSubmit' onclick='ackLcdUploadSubmit()'>Update LCD from file</button></form>"));
 
   // Javascript to collect the filesize of the LCD upload and send it to /tftFileSize
-  httpMessage += String(F("<script>function handleLcdFileSelect(evt) {"));
-  httpMessage += String(F("var uploadFile = evt.target.files[0];"));
-  httpMessage += String(F("document.getElementById('lcdUploadSubmit').innerHTML = 'Upload LCD firmware ' + uploadFile.name;"));
-  httpMessage += String(F("var tftFileSize = '/tftFileSize?tftFileSize=' + uploadFile.size;"));
-  httpMessage += String(F("var xhttp = new XMLHttpRequest();xhttp.open('GET', tftFileSize, true);xhttp.send();}"));
-  httpMessage += String(F("function ackLcdUploadSubmit() {document.getElementById('lcdUploadSubmit').innerHTML = 'Uploading LCD firmware...';}"));
-  httpMessage += String(F("function handleEspFileSelect(evt) {var uploadFile = evt.target.files[0];document.getElementById('espUploadSubmit').innerHTML = 'Upload ESP firmware ' + uploadFile.name;}"));
-  httpMessage += String(F("function ackEspUploadSubmit() {document.getElementById('espUploadSubmit').innerHTML = 'Uploading ESP firmware...';}"));
-  httpMessage += String(F("document.getElementById('lcdSelect').addEventListener('change', handleLcdFileSelect, false);"));
-  httpMessage += String(F("document.getElementById('espSelect').addEventListener('change', handleEspFileSelect, false);</script>"));
+  webServer.sendContent(F("<script>function handleLcdFileSelect(evt) {"));
+  webServer.sendContent(F("var uploadFile = evt.target.files[0];"));
+  webServer.sendContent(F("document.getElementById('lcdUploadSubmit').innerHTML = 'Upload LCD firmware ' + uploadFile.name;"));
+  webServer.sendContent(F("var tftFileSize = '/tftFileSize?tftFileSize=' + uploadFile.size;"));
+  webServer.sendContent(F("var xhttp = new XMLHttpRequest();xhttp.open('GET', tftFileSize, true);xhttp.send();}"));
+  webServer.sendContent(F("function ackLcdUploadSubmit() {document.getElementById('lcdUploadSubmit').innerHTML = 'Uploading LCD firmware...';}"));
+  webServer.sendContent(F("function handleEspFileSelect(evt) {var uploadFile = evt.target.files[0];document.getElementById('espUploadSubmit').innerHTML = 'Upload ESP firmware ' + uploadFile.name;}"));
+  webServer.sendContent(F("function ackEspUploadSubmit() {document.getElementById('espUploadSubmit').innerHTML = 'Uploading ESP firmware...';}"));
+  webServer.sendContent(F("document.getElementById('lcdSelect').addEventListener('change', handleLcdFileSelect, false);"));
+  webServer.sendContent(F("document.getElementById('espSelect').addEventListener('change', handleEspFileSelect, false);</script>"));
 
-  httpMessage += FPSTR(HTTP_END);
-  webServer.send(200, "text/html", httpMessage);
+  webServer.sendContent_P(HTTP_END);
+  webServer.sendContent("");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2430,19 +2507,22 @@ void webHandleEspFirmware()
   }
 
   debugPrintln(String(F("HTTP: Sending /espfirmware page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEADER);
-  httpMessage.replace("{v}", (String(haspNode) + " ESP update"));
-  httpMessage += FPSTR(HTTP_SCRIPT);
-  httpMessage += FPSTR(HTTP_STYLE);
-  httpMessage += String(HASP_STYLE);
-  httpMessage += String(F("<meta http-equiv='refresh' content='60;url=/' />"));
-  httpMessage += FPSTR(HTTP_HEADER_END);
-  httpMessage += String(F("<h1>"));
-  httpMessage += String(haspNode) + " ESP update";
-  httpMessage += String(F("</h1>"));
-  httpMessage += "<br/>Updating ESP firmware from: " + String(webServer.arg("espFirmware"));
-  httpMessage += FPSTR(HTTP_END);
-  webServer.send(200, "text/html", httpMessage);
+  String httpHeader = FPSTR(HTTP_HEADER);
+  httpHeader.replace("{v}", "HASwitchPlate " + String(haspNode) + " ESP8266 firmware update");
+  webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  webServer.send(200, "text/html", httpHeader);
+  webServer.sendContent_P(HTTP_SCRIPT);
+  webServer.sendContent_P(HTTP_STYLE);
+  webServer.sendContent_P(HASP_STYLE);
+  webServer.sendContent(F("<meta http-equiv='refresh' content='60;url=/' />"));
+  webServer.sendContent_P(HTTP_HEADER_END);
+  webServer.sendContent(F("<h1>"));
+  webServer.sendContent(haspNode);
+  webServer.sendContent(F(" ESP8266 firmware update</h1>"));
+  webServer.sendContent(F("<br/>Updating ESP firmware from: "));
+  webServer.sendContent(webServer.arg("espFirmware"));
+  webServer.sendContent_P(HTTP_END);
+  webServer.sendContent("");
 
   debugPrintln("ESPFW: Attempting ESP firmware update from: " + String(webServer.arg("espFirmware")));
   espStartOta(webServer.arg("espFirmware"));
@@ -2472,17 +2552,21 @@ void webHandleLcdUpload()
   if (tftFileSize == 0)
   {
     debugPrintln(String(F("LCD OTA: FAILED, no filesize sent.")));
-    String httpMessage = FPSTR(HTTP_HEADER);
-    httpMessage.replace("{v}", (String(haspNode) + " LCD update"));
-    httpMessage += FPSTR(HTTP_SCRIPT);
-    httpMessage += FPSTR(HTTP_STYLE);
-    httpMessage += String(HASP_STYLE);
-    httpMessage += String(F("<meta http-equiv='refresh' content='5;url=/' />"));
-    httpMessage += FPSTR(HTTP_HEADER_END);
-    httpMessage += String(F("<h1>")) + String(haspNode) + " LCD update FAILED</h1>";
-    httpMessage += String(F("No update file size reported.  You must use a modern browser with Javascript enabled."));
-    httpMessage += FPSTR(HTTP_END);
-    webServer.send(200, "text/html", httpMessage);
+    String httpHeader = FPSTR(HTTP_HEADER);
+    httpHeader.replace("{v}", "HASwitchPlate " + String(haspNode) + " LCD update error");
+    webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+    webServer.send(200, "text/html", httpHeader);
+    webServer.sendContent_P(HTTP_SCRIPT);
+    webServer.sendContent_P(HTTP_STYLE);
+    webServer.sendContent_P(HASP_STYLE);
+    webServer.sendContent(F("<meta http-equiv='refresh' content='5;url=/firmware' />"));
+    webServer.sendContent_P(HTTP_HEADER_END);
+    webServer.sendContent(F("<h1>"));
+    webServer.sendContent(haspNode);
+    webServer.sendContent(F(" LCD update FAILED</h1>"));
+    webServer.sendContent(F("No update file size reported.  You must use a modern browser with Javascript enabled."));
+    webServer.sendContent_P(HTTP_END);
+    webServer.sendContent("");
   }
   else if ((lcdOtaTimer > 0) && ((millis() - lcdOtaTimer) > lcdOtaTimeout))
   { // Our timer expired so reset
@@ -2631,7 +2715,7 @@ void webHandleLcdUpload()
         while ((millis() - lcdOtaDelay) < 5000)
         { // extra 5sec delay while the LCD handles any local firmware updates from new versions of code sent to it
           webServer.handleClient();
-          delay(1);
+          yield();
         }
         espReset();
       }
@@ -2644,7 +2728,7 @@ void webHandleLcdUpload()
         while ((millis() - lcdOtaDelay) < 1000)
         { // extra 1sec delay for client to grab failure page
           webServer.handleClient();
-          delay(1);
+          yield();
         }
         espReset();
       }
@@ -2660,7 +2744,7 @@ void webHandleLcdUpload()
     while ((millis() - lcdOtaDelay) < 1000)
     { // extra 1sec delay for client to grab failure page
       webServer.handleClient();
-      delay(1);
+      yield();
     }
     espReset();
   }
@@ -2674,7 +2758,7 @@ void webHandleLcdUpload()
     while ((millis() - lcdOtaDelay) < 1000)
     { // extra 1sec delay for client to grab failure page
       webServer.handleClient();
-      delay(1);
+      yield();
     }
     espReset();
   }
@@ -2691,17 +2775,21 @@ void webHandleLcdUpdateSuccess()
     }
   }
   debugPrintln(String(F("HTTP: Sending /lcdOtaSuccess page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEADER);
-  httpMessage.replace("{v}", (String(haspNode) + " LCD update success"));
-  httpMessage += FPSTR(HTTP_SCRIPT);
-  httpMessage += FPSTR(HTTP_STYLE);
-  httpMessage += String(HASP_STYLE);
-  httpMessage += String(F("<meta http-equiv='refresh' content='15;url=/' />"));
-  httpMessage += FPSTR(HTTP_HEADER_END);
-  httpMessage += String(F("<h1>")) + String(haspNode) + String(F(" LCD update success</h1>"));
-  httpMessage += String(F("Restarting HASwitchPlate to apply changes..."));
-  httpMessage += FPSTR(HTTP_END);
-  webServer.send(200, "text/html", httpMessage);
+  String httpHeader = FPSTR(HTTP_HEADER);
+  httpHeader.replace("{v}", "HASwitchPlate " + String(haspNode) + " LCD firmware update success");
+  webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  webServer.send(200, "text/html", httpHeader);
+  webServer.sendContent_P(HTTP_SCRIPT);
+  webServer.sendContent_P(HTTP_STYLE);
+  webServer.sendContent_P(HASP_STYLE);
+  webServer.sendContent(F("<meta http-equiv='refresh' content='15;url=/' />"));
+  webServer.sendContent_P(HTTP_HEADER_END);
+  webServer.sendContent(F("<h1>"));
+  webServer.sendContent(haspNode);
+  webServer.sendContent(F(" LCD update success</h1>"));
+  webServer.sendContent(F("Restarting HASwitchPlate to apply changes..."));
+  webServer.sendContent_P(HTTP_END);
+  webServer.sendContent("");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2715,17 +2803,21 @@ void webHandleLcdUpdateFailure()
     }
   }
   debugPrintln(String(F("HTTP: Sending /lcdOtaFailure page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEADER);
-  httpMessage.replace("{v}", (String(haspNode) + " LCD update failed"));
-  httpMessage += FPSTR(HTTP_SCRIPT);
-  httpMessage += FPSTR(HTTP_STYLE);
-  httpMessage += String(HASP_STYLE);
-  httpMessage += String(F("<meta http-equiv='refresh' content='15;url=/' />"));
-  httpMessage += FPSTR(HTTP_HEADER_END);
-  httpMessage += String(F("<h1>")) + String(haspNode) + String(F(" LCD update failed :(</h1>"));
-  httpMessage += String(F("Restarting HASwitchPlate to reset device..."));
-  httpMessage += FPSTR(HTTP_END);
-  webServer.send(200, "text/html", httpMessage);
+  String httpHeader = FPSTR(HTTP_HEADER);
+  httpHeader.replace("{v}", "HASwitchPlate " + String(haspNode) + " LCD firmware update failed");
+  webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  webServer.send(200, "text/html", httpHeader);
+  webServer.sendContent_P(HTTP_SCRIPT);
+  webServer.sendContent_P(HTTP_STYLE);
+  webServer.sendContent_P(HASP_STYLE);
+  webServer.sendContent(F("<meta http-equiv='refresh' content='15;url=/' />"));
+  webServer.sendContent_P(HTTP_HEADER_END);
+  webServer.sendContent(F("<h1>"));
+  webServer.sendContent(haspNode);
+  webServer.sendContent(F(" LCD update failed :(</h1>"));
+  webServer.sendContent(F("Restarting HASwitchPlate to apply changes..."));
+  webServer.sendContent_P(HTTP_END);
+  webServer.sendContent("");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2739,19 +2831,21 @@ void webHandleLcdDownload()
     }
   }
   debugPrintln(String(F("HTTP: Sending /lcddownload page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEADER);
-  httpMessage.replace("{v}", (String(haspNode) + " LCD update"));
-  httpMessage += FPSTR(HTTP_SCRIPT);
-  httpMessage += FPSTR(HTTP_STYLE);
-  httpMessage += String(HASP_STYLE);
-  httpMessage += FPSTR(HTTP_HEADER_END);
-  httpMessage += String(F("<h1>"));
-  httpMessage += String(haspNode) + " LCD update";
-  httpMessage += String(F("</h1>"));
-  httpMessage += "<br/>Updating LCD firmware from: " + String(webServer.arg("lcdFirmware"));
-  httpMessage += FPSTR(HTTP_END);
-  webServer.send(200, "text/html", httpMessage);
-
+  String httpHeader = FPSTR(HTTP_HEADER);
+  httpHeader.replace("{v}", "HASwitchPlate " + String(haspNode) + " LCD firmware update");
+  webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  webServer.send(200, "text/html", httpHeader);
+  webServer.sendContent_P(HTTP_SCRIPT);
+  webServer.sendContent_P(HTTP_STYLE);
+  webServer.sendContent_P(HASP_STYLE);
+  webServer.sendContent_P(HTTP_HEADER_END);
+  webServer.sendContent(F("<h1>"));
+  webServer.sendContent(haspNode);
+  webServer.sendContent(F(" LCD update</h1>"));
+  webServer.sendContent(F("<br/>Updating LCD firmware from: "));
+  webServer.sendContent(webServer.arg("lcdFirmware"));
+  webServer.sendContent_P(HTTP_END);
+  webServer.sendContent("");
   nextionStartOtaDownload(webServer.arg("lcdFirmware"));
 }
 
@@ -2766,13 +2860,13 @@ void webHandleTftFileSize()
     }
   }
   debugPrintln(String(F("HTTP: Sending /tftFileSize page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEADER);
-  httpMessage.replace("{v}", (String(haspNode) + " TFT Filesize"));
-  httpMessage += FPSTR(HTTP_HEADER_END);
-  httpMessage += FPSTR(HTTP_END);
-  webServer.send(200, "text/html", httpMessage);
+  String httpHeader = FPSTR(HTTP_HEADER);
+  httpHeader.replace("{v}", "HASwitchPlate " + String(haspNode) + " TFT Filesize");
+  webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  webServer.send(200, "text/html", httpHeader);
+  webServer.sendContent_P(HTTP_HEADER_END);
   tftFileSize = webServer.arg("tftFileSize").toInt();
-  debugPrintln(String(F("WEB: tftFileSize: ")) + String(tftFileSize));
+  debugPrintln(String(F("WEB: Received tftFileSize: ")) + String(tftFileSize));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2786,18 +2880,21 @@ void webHandleReboot()
     }
   }
   debugPrintln(String(F("HTTP: Sending /reboot page to client connected from: ")) + webServer.client().remoteIP().toString());
-  String httpMessage = FPSTR(HTTP_HEADER);
-  httpMessage.replace("{v}", (String(haspNode) + " HASP reboot"));
-  httpMessage += FPSTR(HTTP_SCRIPT);
-  httpMessage += FPSTR(HTTP_STYLE);
-  httpMessage += String(HASP_STYLE);
-  httpMessage += String(F("<meta http-equiv='refresh' content='10;url=/' />"));
-  httpMessage += FPSTR(HTTP_HEADER_END);
-  httpMessage += String(F("<h1>")) + String(haspNode) + String(F("</h1>"));
-  httpMessage += String(F("<br/>Rebooting device"));
-  httpMessage += FPSTR(HTTP_END);
-  webServer.send(200, "text/html", httpMessage);
-  debugPrintln(F("RESET: Rebooting device"));
+  String httpHeader = FPSTR(HTTP_HEADER);
+  httpHeader.replace("{v}", "HASwitchPlate " + String(haspNode) + " reboot");
+  webServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  webServer.send(200, "text/html", httpHeader);
+  webServer.sendContent_P(HTTP_SCRIPT);
+  webServer.sendContent_P(HTTP_STYLE);
+  webServer.sendContent_P(HASP_STYLE);
+  webServer.sendContent(F("<meta http-equiv='refresh' content='10;url=/' />"));
+  webServer.sendContent_P(HTTP_HEADER_END);
+  webServer.sendContent(F("<h1>"));
+  webServer.sendContent(haspNode);
+  webServer.sendContent(F(" Reboot</h1>"));
+  webServer.sendContent(F("<br/>Rebooting device"));
+  webServer.sendContent_P(HTTP_END);
+  webServer.sendContent("");
   nextionSendCmd("page 0");
   nextionSetAttr("p[0].b[1].txt", "\"Rebooting...\"");
   espReset();
@@ -2823,6 +2920,7 @@ bool updateCheck()
   if (jsonError)
   { // Couldn't parse the returned JSON, so bail
     debugPrintln(String(F("UPDATE: JSON parsing failed: ")) + String(jsonError.c_str()));
+    mqttClient.publish(mqttStateJSONTopic, String(F("{\"event\":\"jsonError\",\"event_source\":\"updateCheck()\",\"event_description\":\"Failed to parse incoming JSON command with error\"")) + String(jsonError.c_str()));
     return false;
   }
   else
@@ -2989,28 +3087,32 @@ void handleTelnetClient()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void debugPrintln(String debugText)
+void debugPrintln(const String &debugText)
 { // Debug output line of text to our debug targets
-  String debugTimeText = "[+" + String(float(millis()) / 1000, 3) + "s] " + debugText;
-  Serial.println(debugTimeText);
+  // String debugTimeText = "[+" + String(float(millis()) / 1000, 3) + "s] " + debugText;
+  const String debugTimeText = "[+" + String(float(millis()) / 1000, 3) + "s] ";
+  Serial.print(debugTimeText);
+  Serial.println(debugText);
   if (debugSerialEnabled)
   {
     SoftwareSerial debugSerial(-1, 1); // -1==nc for RX, 1==TX pin
     debugSerial.begin(debugSerialBaud);
-    debugSerial.println(debugTimeText);
+    debugSerial.print(debugTimeText);
+    debugSerial.println(debugText);
     debugSerial.flush();
   }
   if (debugTelnetEnabled)
   {
     if (telnetClient.connected())
     {
-      telnetClient.println(debugTimeText);
+      telnetClient.print(debugTimeText);
+      telnetClient.println(debugText);
     }
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void debugPrint(String debugText)
+void debugPrint(const String &debugText)
 { // Debug output single character to our debug targets (DON'T USE THIS!)
   // Try to avoid using this function if at all possible.  When connected to telnet, printing each
   // character requires a full TCP round-trip + acknowledgement back and execution halts while this
