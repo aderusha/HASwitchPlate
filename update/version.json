@@ -1,18 +1,18 @@
 {
   "d1_mini": {
     "version": "0.40",
-    "firmware": "http://haswitchplate.com/update/HASwitchPlate.ino.d1_mini.bin"
+    "firmware": "https://github.com/aderusha/HASwitchPlate/raw/master/Arduino_Sketch/HASwitchPlate.ino.d1_mini.bin"
   },
   "NX3224T024_011R": {
     "version": 2,
-    "firmware": "http://haswitchplate.com/update/HASwitchPlate.tft"
+    "firmware": "https://github.com/aderusha/HASwitchPlate/raw/master/Nextion_HMI/HASwitchPlate.tft"
   },
   "NX3224K024_011R": {
     "version": 2,
-    "firmware": "http://haswitchplate.com/update/HASwitchPlate-Enhanced.tft"
+    "firmware": "https://github.com/aderusha/HASwitchPlate/raw/master/Nextion_HMI/HASwitchPlate-Enhanced.tft"
   },
   "TJC3224T024_011R": {
     "version": 2,
-    "firmware": "http://haswitchplate.com/update/HASwitchPlate-TJC.tft"
+    "firmware": "https://github.com/aderusha/HASwitchPlate/raw/master/Nextion_HMI/HASwitchPlate-TJC.tft"
   }
 }
