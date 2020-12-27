@@ -2035,22 +2035,22 @@ void webHandleRoot()
   webServer.sendContent(F("'><br/><b>Group Name</b> <i><small>(required)</small></i><input id='groupName' required name='groupName' maxlength=15 placeholder='Group Name' value='"));
   webServer.sendContent(groupName);
   webServer.sendContent(F("'><br/><br/><b>MQTT Broker</b> <i><small>(required)</small></i><input id='mqttServer' required name='mqttServer' maxlength=63 placeholder='mqttServer' value='"));
-  if (strlen(mqttServer) != 0)
+  if (strcmp(mqttServer, "") != 0)
   {
     webServer.sendContent(mqttServer);
   }
   webServer.sendContent(F("'><br/><b>MQTT Port</b> <i><small>(required)</small></i><input id='mqttPort' required name='mqttPort' type='number' maxlength=5 placeholder='mqttPort' value='"));
-  if (strlen(mqttPort) != 0)
+  if (strcmp(mqttPort, "") != 0)
   {
     webServer.sendContent(mqttPort);
   }
   webServer.sendContent(F("'><br/><b>MQTT User</b> <i><small>(optional)</small></i><input id='mqttUser' name='mqttUser' maxlength=127 placeholder='mqttUser' value='"));
-  if (strlen(mqttUser) != 0)
+  if (strcmp(mqttUser, "") != 0)
   {
     webServer.sendContent(mqttUser);
   }
   webServer.sendContent(F("'><br/><b>MQTT Password</b> <i><small>(optional)</small></i><input id='mqttPassword' name='mqttPassword' type='password' maxlength=127 placeholder='mqttPassword' value='"));
-  if (strlen(mqttPassword) != 0)
+  if (strcmp(mqttUser, "") != 0)
   {
     webServer.sendContent(F("********"));
   }
@@ -2069,7 +2069,10 @@ void webHandleRoot()
   webServer.sendContent(F("'>"));
 
   webServer.sendContent(F("<br/><br/><b>HASP Admin Username</b> <i><small>(optional)</small></i><input id='configUser' name='configUser' maxlength=31 placeholder='Admin User' value='"));
-  webServer.sendContent(configUser);
+  if (strcmp(configUser, "") != 0)
+  {
+    webServer.sendContent(configUser);
+  }
   webServer.sendContent(F("'><br/><b>HASP Admin Password</b> <i><small>(optional)</small></i><input id='configPassword' name='configPassword' type='password' maxlength=31 placeholder='Admin User Password' value='"));
   if (strcmp(configPassword, "") != 0)
   {
