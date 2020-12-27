@@ -186,9 +186,7 @@ void setup()
       debugPrintln(F("HMI: LCD not responding, continuing program load"));
     }
   }
-
   espWifiSetup(); // Start up networking
-
   if (mdnsEnabled)
   { // Setup mDNS service discovery if enabled
     hMDNSService = MDNS.addService(haspNode, "http", "tcp", 80);
@@ -200,7 +198,6 @@ void setup()
     MDNS.addServiceTxt(hMDNSService, "app_version", String(haspVersion).c_str());
     MDNS.update();
   }
-
   if ((configPassword[0] != '\0') && (configUser[0] != '\0'))
   { // Start the webserver with our assigned password if it's been configured...
     httpOTAUpdate.setup(&webServer, "/update", configUser, configPassword);
@@ -225,7 +222,6 @@ void setup()
   webServer.onNotFound(webHandleNotFound);
   webServer.begin();
   debugPrintln(String(F("HTTP: Server started @ http://")) + WiFi.localIP().toString());
-
   espSetupOta(); // Start OTA firmware update
   mqttConnect(); // Connect to MQTT
   motionSetup(); // Setup motion sensor if configured
@@ -372,7 +368,14 @@ void mqttConnect()
     nextionSendCmd("page 0");
     nextionSetAttr("p[0].b[1].font", "6");
     nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connecting:\\r " + String(mqttServer) + "\"");
-    debugPrintln(String(F("MQTT: Attempting connection to broker ")) + String(mqttServer) + String(F(" on port ")) + String(mqttPort) + String(F(" as clientID ")) + mqttClientId);
+    if (mqttTlsEnabled)
+    {
+      debugPrintln(String(F("MQTT: Attempting connection to broker ")) + String(mqttServer) + String(F(" on port ")) + String(mqttPort) + String(F(" with TLS enabled as clientID ")) + mqttClientId);
+    }
+    else
+    {
+      debugPrintln(String(F("MQTT: Attempting connection to broker ")) + String(mqttServer) + String(F(" on port ")) + String(mqttPort) + String(F(" with TLS disabled as clientID ")) + mqttClientId);
+    }
 
     // Set keepAlive, cleanSession, timeout
     mqttClient.setOptions(30, true, 5000);
@@ -1542,12 +1545,17 @@ void espWifiSetup()
     WiFiManagerParameter custom_mqttUser("mqttUser", "MQTT User (optional)", mqttUser, 127, " maxlength=127");
     WiFiManagerParameter custom_mqttPassword("mqttPassword", "MQTT Password (optional)", mqttPassword, 127, " maxlength=127 type='password'");
     WiFiManagerParameter custom_mqttTlsLabel("MQTT TLS enabled:");
+    String mqttTlsEnabled_value = "F";
+    if (mqttTlsEnabled)
+    {
+      mqttTlsEnabled_value = "T";
+    }
     String mqttTlsEnabled_checked = "type=\"checkbox\"";
     if (mqttTlsEnabled)
     {
       mqttTlsEnabled_checked = "type=\"checkbox\" checked=\"true\"";
     }
-    WiFiManagerParameter custom_mqttTlsEnabled("mqttTlsEnabled", "MQTT TLS enabled:", "T", 2, mqttTlsEnabled_checked.c_str());
+    WiFiManagerParameter custom_mqttTlsEnabled("mqttTlsEnabled", "MQTT TLS enabled:", mqttTlsEnabled_value.c_str(), 2, mqttTlsEnabled_checked.c_str());
     WiFiManagerParameter custom_mqttFingerprint("mqttFingerprint", "MQTT TLS Fingerprint (optional)", mqttFingerprint, 60, " min length=59 maxlength=59 type='number'");
     WiFiManagerParameter custom_configHeader("<br/><br/><b>Admin access</b>");
     WiFiManagerParameter custom_configUser("configUser", "Config User", configUser, 15, " maxlength=31'");
@@ -1626,6 +1634,7 @@ void espWifiSetup()
       }
     }
   }
+
   // If you get here you have connected to WiFi
   nextionSetAttr("p[0].b[1].font", "6");
   nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\"");
