@@ -65,7 +65,6 @@ byte nextionReturnBuffer[128];                        // Byte array to pass arou
 uint8_t nextionReturnIndex = 0;                       // Index for nextionReturnBuffer
 uint8_t nextionActivePage = 0;                        // Track active LCD page
 bool lcdConnected = false;                            // Set to true when we've heard something from the LCD
-unsigned long debugSerialBaud = 115200;               // Desired baud rate for serial debug output
 const char wifiConfigPass[9] = "hasplate";            // First-time config WPA2 password
 const char wifiConfigAP[14] = "HASwitchPlate";        // First-time config SSID
 bool shouldSaveConfig = false;                        // Flag to save json config to SPIFFS
@@ -77,8 +76,8 @@ float updateEspAvailableVersion;                      // Float to hold the new E
 bool updateLcdAvailable = false;                      // Flag for update check to report new LCD FW version
 unsigned long debugTimer = 0;                         // Clock for debug performance profiling
 bool debugSerialEnabled = true;                       // Enable USB serial debug output
+const unsigned long debugSerialBaud = 115200;         // Desired baud rate for serial debug output
 bool debugTelnetEnabled = false;                      // Enable telnet debug output
-bool debugSerialD8Enabled = true;                     // Enable hardware serial debug output on pin D8
 const unsigned long telnetInputMax = 128;             // Size of user input buffer for user telnet session
 bool motionEnabled = false;                           // Motion sensor is enabled
 bool mdnsEnabled = true;                              // mDNS enabled
@@ -1181,8 +1180,8 @@ void nextionParseJson(const String &strPayload)
     for (uint8_t i = 0; i < nextionCommands.size(); i++)
     {
       nextionSendCmd(nextionCommands[i]);
-      delayMicroseconds(750); // Larger JSON objects can take a while to run through over serial,
-    }                         // give the ESP and Nextion a moment to deal with life
+      delayMicroseconds(1000); // Larger JSON objects can take a while to run through over serial,
+    }                          // give the ESP and Nextion a moment to deal with life
   }
 }
 
@@ -2175,11 +2174,17 @@ void webHandleRoot()
     webServer.sendContent(String(mqttClient.returnCode()));
   }
   webServer.sendContent(F("<br/><b>MQTT ClientID: </b>"));
-  webServer.sendContent(mqttClientId);
+  if (mqttClientId != "")
+  {
+    webServer.sendContent(mqttClientId);
+  }
   webServer.sendContent(F("<br/><b>HASP Version: </b>"));
   webServer.sendContent(String(haspVersion));
   webServer.sendContent(F("<br/><b>LCD Model: </b>"));
-  webServer.sendContent(nextionModel);
+  if (nextionModel != "")
+  {
+    webServer.sendContent(nextionModel);
+  }
   webServer.sendContent(F("<br/><b>LCD Version: </b>"));
   webServer.sendContent(String(lcdVersion));
   webServer.sendContent(F("<br/><b>LCD Active Page: </b>"));
