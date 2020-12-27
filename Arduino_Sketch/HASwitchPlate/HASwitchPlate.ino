@@ -162,14 +162,14 @@ void setup()
   pinMode(nextionResetPin, OUTPUT);    // Take control over the power switch for the LCD
   digitalWrite(nextionResetPin, HIGH); // Power on the LCD
 
+  Serial.begin(atoi(nextionBaud));  // Serial - LCD RX (after swap), debug TX
+  Serial1.begin(atoi(nextionBaud)); // Serial1 - LCD TX, no RX
+  Serial.swap();                    // Swap to allow hardware UART comms to LCD
+
   debugPrintln(String(F("SYSTEM: Starting HASwitchPlate v")) + String(haspVersion));
   debugPrintln(String(F("SYSTEM: Last reset reason: ")) + String(ESP.getResetInfo()));
 
   configRead(); // Check filesystem for a saved config.json
-
-  Serial.begin(atoi(nextionBaud));  // Serial - LCD RX (after swap), debug TX
-  Serial1.begin(atoi(nextionBaud)); // Serial1 - LCD TX, no RX
-  Serial.swap();                    // Swap to allow hardware UART comms to LCD
 
   if (!nextionConnect())
   {
