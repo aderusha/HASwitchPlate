@@ -164,7 +164,9 @@ void setup()
   debugPrintln(String(F("SYSTEM: Last reset reason: ")) + String(ESP.getResetInfo()));
   debugPrint(String(F("================================================================================\n\n")));
 
+  delay(10);    // give flash a moment to sort itself out before reading SPIFFS
   configRead(); // Check filesystem for a saved config.json
+  delay(10);    // give SPIFFS a moment to sort itself out after reading SPIFFS
 
   pinMode(nextionResetPin, OUTPUT);    // Take control over the power switch for the LCD
   digitalWrite(nextionResetPin, HIGH); // Power on the LCD
@@ -1531,7 +1533,6 @@ void espWifiSetup()
 
     // id/name, placeholder/prompt, default value, length, extra tags
 
-
     WiFiManagerParameter custom_haspNodeHeader("<br/><br/><b>HASP Node Name</b>");
     WiFiManagerParameter custom_haspNode("haspNode", "HASP Node (required. lowercase letters, numbers, and _ only)", haspNode, 15, " maxlength=15 required pattern='[a-z0-9_]*'");
     WiFiManagerParameter custom_groupName("groupName", "Group Name (required)", groupName, 15, " maxlength=15 required");
@@ -1541,9 +1542,10 @@ void espWifiSetup()
     WiFiManagerParameter custom_mqttUser("mqttUser", "MQTT User (optional)", mqttUser, 127, " maxlength=127");
     WiFiManagerParameter custom_mqttPassword("mqttPassword", "MQTT Password (optional)", mqttPassword, 127, " maxlength=127 type='password'");
     WiFiManagerParameter custom_mqttTlsLabel("MQTT TLS enabled:");
-    String mqttTlsEnabled_checked="type=\"checkbox\"";
-    if (mqttTlsEnabled) {
-      mqttTlsEnabled_checked="type=\"checkbox\" checked=\"true\"";
+    String mqttTlsEnabled_checked = "type=\"checkbox\"";
+    if (mqttTlsEnabled)
+    {
+      mqttTlsEnabled_checked = "type=\"checkbox\" checked=\"true\"";
     }
     WiFiManagerParameter custom_mqttTlsEnabled("mqttTlsEnabled", "MQTT TLS enabled:", "T", 2, mqttTlsEnabled_checked.c_str());
     WiFiManagerParameter custom_mqttFingerprint("mqttFingerprint", "MQTT TLS Fingerprint (optional)", mqttFingerprint, 60, " min length=59 maxlength=59 type='number'");
@@ -1588,10 +1590,12 @@ void espWifiSetup()
     strcpy(mqttPort, custom_mqttPort.getValue());
     strcpy(mqttUser, custom_mqttUser.getValue());
     strcpy(mqttPassword, custom_mqttPassword.getValue());
-    if (strcmp(custom_mqttTlsEnabled.getValue(), "T") == 0) {
+    if (strcmp(custom_mqttTlsEnabled.getValue(), "T") == 0)
+    {
       mqttTlsEnabled = true;
     }
-    else {
+    else
+    {
       mqttTlsEnabled = false;
     }
     strcpy(mqttFingerprint, custom_mqttFingerprint.getValue());
