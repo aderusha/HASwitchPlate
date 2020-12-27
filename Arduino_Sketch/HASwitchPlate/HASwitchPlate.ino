@@ -162,8 +162,8 @@ void setup()
   debugPrint(String(F("\n\n================================================================================\n")));
   debugPrintln(String(F("SYSTEM: Starting HASwitchPlate v")) + String(haspVersion));
   debugPrintln(String(F("SYSTEM: Last reset reason: ")) + String(ESP.getResetInfo()));
-  debugPrint(String(F("\n\n================================================================================\n")));
-  
+  debugPrint(String(F("================================================================================\n\n")));
+
   configRead(); // Check filesystem for a saved config.json
 
   pinMode(nextionResetPin, OUTPUT);    // Take control over the power switch for the LCD
@@ -1530,16 +1530,23 @@ void espWifiSetup()
   { // If the sketch has not defined a static wifiSSID use WiFiManager to collect required information from the user.
 
     // id/name, placeholder/prompt, default value, length, extra tags
+
+
     WiFiManagerParameter custom_haspNodeHeader("<br/><br/><b>HASP Node Name</b>");
     WiFiManagerParameter custom_haspNode("haspNode", "HASP Node (required. lowercase letters, numbers, and _ only)", haspNode, 15, " maxlength=15 required pattern='[a-z0-9_]*'");
     WiFiManagerParameter custom_groupName("groupName", "Group Name (required)", groupName, 15, " maxlength=15 required");
     WiFiManagerParameter custom_mqttHeader("<br/><br/><b>MQTT Broker</b>");
     WiFiManagerParameter custom_mqttServer("mqttServer", "MQTT Server", mqttServer, 63, " maxlength=63");
     WiFiManagerParameter custom_mqttPort("mqttPort", "MQTT Port", mqttPort, 5, " maxlength=5 type='number'");
-
-    // id/name, placeholder/prompt, default value, length, custom-attributes
-    WiFiManagerParameter custom_mqttUser("mqttUser", "MQTT User", mqttUser, 127, " maxlength=127");
-    WiFiManagerParameter custom_mqttPassword("mqttPassword", "MQTT Password", mqttPassword, 127, " maxlength=127 type='password'");
+    WiFiManagerParameter custom_mqttUser("mqttUser", "MQTT User (optional)", mqttUser, 127, " maxlength=127");
+    WiFiManagerParameter custom_mqttPassword("mqttPassword", "MQTT Password (optional)", mqttPassword, 127, " maxlength=127 type='password'");
+    WiFiManagerParameter custom_mqttTlsLabel("MQTT TLS enabled:");
+    String mqttTlsEnabled_checked="type=\"checkbox\"";
+    if (mqttTlsEnabled) {
+      mqttTlsEnabled_checked="type=\"checkbox\" checked=\"true\"";
+    }
+    WiFiManagerParameter custom_mqttTlsEnabled("mqttTlsEnabled", "MQTT TLS enabled:", "T", 2, mqttTlsEnabled_checked.c_str());
+    WiFiManagerParameter custom_mqttFingerprint("mqttFingerprint", "MQTT TLS Fingerprint (optional)", mqttFingerprint, 60, " min length=59 maxlength=59 type='number'");
     WiFiManagerParameter custom_configHeader("<br/><br/><b>Admin access</b>");
     WiFiManagerParameter custom_configUser("configUser", "Config User", configUser, 15, " maxlength=31'");
     WiFiManagerParameter custom_configPassword("configPassword", "Config Password", configPassword, 31, " maxlength=31 type='password'");
@@ -1555,6 +1562,9 @@ void espWifiSetup()
     wifiManager.addParameter(&custom_mqttPort);
     wifiManager.addParameter(&custom_mqttUser);
     wifiManager.addParameter(&custom_mqttPassword);
+    wifiManager.addParameter(&custom_mqttTlsLabel);
+    wifiManager.addParameter(&custom_mqttTlsEnabled);
+    wifiManager.addParameter(&custom_mqttFingerprint);
     wifiManager.addParameter(&custom_configHeader);
     wifiManager.addParameter(&custom_configUser);
     wifiManager.addParameter(&custom_configPassword);
@@ -1578,6 +1588,13 @@ void espWifiSetup()
     strcpy(mqttPort, custom_mqttPort.getValue());
     strcpy(mqttUser, custom_mqttUser.getValue());
     strcpy(mqttPassword, custom_mqttPassword.getValue());
+    if (strcmp(custom_mqttTlsEnabled.getValue(), "T") == 0) {
+      mqttTlsEnabled = true;
+    }
+    else {
+      mqttTlsEnabled = false;
+    }
+    strcpy(mqttFingerprint, custom_mqttFingerprint.getValue());
     strcpy(haspNode, custom_haspNode.getValue());
     strcpy(groupName, custom_groupName.getValue());
     strcpy(configUser, custom_configUser.getValue());
