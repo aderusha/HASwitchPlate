@@ -158,18 +158,20 @@ String lcdFirmwareUrl = "https://raw.githubusercontent.com/aderusha/HASwitchPlat
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void setup()
-{                                      // System setup
+{ // System setup
+  debugPrint(String(F("\n\n================================================================================\n")));
+  debugPrintln(String(F("SYSTEM: Starting HASwitchPlate v")) + String(haspVersion));
+  debugPrintln(String(F("SYSTEM: Last reset reason: ")) + String(ESP.getResetInfo()));
+  debugPrint(String(F("\n\n================================================================================\n")));
+  
+  configRead(); // Check filesystem for a saved config.json
+
   pinMode(nextionResetPin, OUTPUT);    // Take control over the power switch for the LCD
   digitalWrite(nextionResetPin, HIGH); // Power on the LCD
 
   Serial.begin(atoi(nextionBaud));  // Serial - LCD RX (after swap), debug TX
   Serial1.begin(atoi(nextionBaud)); // Serial1 - LCD TX, no RX
   Serial.swap();                    // Swap to allow hardware UART comms to LCD
-
-  debugPrintln(String(F("SYSTEM: Starting HASwitchPlate v")) + String(haspVersion));
-  debugPrintln(String(F("SYSTEM: Last reset reason: ")) + String(ESP.getResetInfo()));
-
-  configRead(); // Check filesystem for a saved config.json
 
   if (!nextionConnect())
   {
