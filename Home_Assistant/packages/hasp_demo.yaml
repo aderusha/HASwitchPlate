@@ -3,6 +3,12 @@
 # these and/or replace with your own devices, but remember to change
 # any other automations here which reference them.
 
+# Pull weather reports from NWS, probably only useful in North America
+# weather:
+#   - platform: nws
+#     api_key: haspuser@haswitchplate.com
+#     name: nws
+
 # create a demo alarm panel with secure code.  also usable on my luggage.
 alarm_control_panel:
   - platform: manual
@@ -38,6 +44,18 @@ input_number:
     max: 9
     step: 1
     initial: -1
+
+# Hide the input_numbers created above by default
+homeassistant:
+  customize:
+    input_number.hasp_alarmcode1:
+      hidden: true
+    input_number.hasp_alarmcode2:
+      hidden: true
+    input_number.hasp_alarmcode3:
+      hidden: true
+    input_number.hasp_alarmcode4:
+      hidden: true
 
 # Create a demo HVAC device
 climate:
@@ -111,59 +129,59 @@ group:
       - light.light_3
 
 scene:
-- name: Lights On
-  entities:
-    light.light_1:
-      state: "on"
-      brightness: 255
-    light.light_2:
-      state: "on"
-      brightness: 255
-    light.light_3:
-      state: "on"
-      brightness: 255
-    light.plate01_backlight:
-      state: "on"
-      brightness: 255
+  - name: Lights On
+    entities:
+      light.light_1:
+        state: "on"
+        brightness: 255
+      light.light_2:
+        state: "on"
+        brightness: 255
+      light.light_3:
+        state: "on"
+        brightness: 255
+      light.plate01_backlight:
+        state: "on"
+        brightness: 255
 
-- name: Daylight
-  entities:
-    light.light_1:
-      state: "on"
-      brightness: 150
-    light.light_2:
-      state: "on"
-      brightness: 150
-    light.light_3:
-      state: "on"
-      brightness: 150
-    light.plate01_backlight:
-      state: "on"
-      brightness: 150
+  - name: Daylight
+    entities:
+      light.light_1:
+        state: "on"
+        brightness: 150
+      light.light_2:
+        state: "on"
+        brightness: 150
+      light.light_3:
+        state: "on"
+        brightness: 150
+      light.plate01_backlight:
+        state: "on"
+        brightness: 150
 
-- name: Night
-  entities:
-    light.light_1:
-      state: "on"
-      brightness: 50
-    light.light_2:
-      state: "on"
-      brightness: 50
-    light.light_3:
-      state: "on"
-      brightness: 50
-    light.plate01_backlight:
-      state: "on"
-      brightness: 50
+  - name: Night
+    entities:
+      light.light_1:
+        state: "on"
+        brightness: 50
+      light.light_2:
+        state: "on"
+        brightness: 50
+      light.light_3:
+        state: "on"
+        brightness: 50
+      light.plate01_backlight:
+        state: "on"
+        brightness: 50
 
-- name: Lights Off
-  entities:
-    light.light_1:
-      state: "off"
-    light.light_2:
-      state: "off"
-    light.light_3:
-      state: "off"
-    light.plate01_backlight:
-      state: "on"
-      brightness: 20
+  - name: Lights Off
+    entities:
+      light.light_1:
+        state: "off"
+      light.light_2:
+        state: "off"
+      light.light_3:
+        state: "off"
+      light.plate01_backlight:
+        state: "on"
+        brightness: 20

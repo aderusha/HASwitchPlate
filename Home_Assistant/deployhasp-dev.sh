@@ -35,7 +35,8 @@ fi
 # Check for write access to configuration.yaml
 if [ ! -w configuration.yaml ]
 then
-  echo "ERROR: Cannot write to 'configuration.yaml'.  Exiting."
+  echo "ERROR: Cannot write to 'configuration.yaml'.  Check that you are"
+  echo "       running as user 'homeassistant'.  Exiting."
   exit 1
 fi
 
@@ -70,7 +71,7 @@ then
   then
     echo "==========================================================================="
     echo "WARNING: Conflicting packages definition found in 'configuration.yaml'."
-    echo "         Please add the following lines to your configuration:"
+    echo "         Please add the following statement to your configuration:"
     echo ""
     echo "homeassistant:"
     echo "  packages: !include_dir_named packages"
@@ -85,10 +86,8 @@ then
     else
       echo "==========================================================================="
       echo "WARNING: Could not add package declaration to 'configuration.yaml'."
-      echo "         Please add the following lines to your configuration:"
-      echo ""
+      echo "         Please add the following statement to your configuration:"
       echo "default_config:"
-      echo "homeassistant:"
       echo "  packages: !include_dir_named packages"
       echo "==========================================================================="
     fi
@@ -99,14 +98,14 @@ fi
 if ! grep "^recorder:" configuration.yaml > /dev/null
 then
   echo >> configuration.yaml
-  echo "\nrecorder:" >> configuration.yaml
+  echo "recorder:" >> configuration.yaml
 fi
 
 # Create a temp dir
 hasp_temp_dir=`mktemp -d`
 
 # Download latest packages
-wget -q -P $hasp_temp_dir https://github.com/aderusha/HASwitchPlate/raw/master/Home_Assistant/hasppackages.tar.gz
+wget -q -P $hasp_temp_dir https://github.com/aderusha/HASwitchPlate/raw/dev/Home_Assistant/hasppackages.tar.gz
 tar -zxf $hasp_temp_dir/hasppackages.tar.gz -C $hasp_temp_dir
 rm $hasp_temp_dir/hasppackages.tar.gz
 

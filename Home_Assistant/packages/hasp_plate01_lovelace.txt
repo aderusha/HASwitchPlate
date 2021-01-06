@@ -22,6 +22,7 @@
         state_color: true
         entities:
           - entity: input_select.hasp_plate01_theme
+          - type: divider
           - entity: light.hasp_plate01_selected_foreground_color
             icon: 'mdi:palette'
             name: Selected Foreground Color
@@ -35,11 +36,11 @@
             icon: 'mdi:palette'
             name: Unselected Background Color
       - type: entities
-        title: plate01 Page Selection
+        title: plate01 Page Button Configuration
         show_header_toggle: false
         entities:
           - entity: input_number.hasp_plate01_activepage
-            name: Current Active Page
+            name: Current active page
           - type: divider
           - entity: input_number.hasp_plate01_pagebutton1page
             name: Page Button 1 Page
