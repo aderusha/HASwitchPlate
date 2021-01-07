@@ -576,22 +576,24 @@ void mqttCallback(String &strTopic, String &strPayload)
     nextionSetAttr("dim", strPayload);
     nextionSetAttr("dims", "dim");
     lcdBacklight = strPayload.toInt();
-    mqttClient.publish(mqttLightBrightStateTopic, strPayload);
+    mqttClient.publish(mqttLightBrightStateTopic, strPayload, true, 1);
     debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : '")) + strPayload + String(F("'")));
   }
   else if (strTopic == mqttLightCommandTopic && strPayload == "OFF")
   { // set the panel dim OFF from the light topic, saving current dim level first
     nextionSetAttr("dims", "dim");
     nextionSetAttr("dim", "0");
-    mqttClient.publish(mqttLightStateTopic, "OFF");
+    mqttClient.publish(mqttLightStateTopic, "OFF", true, 1);
     debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
   }
   else if (strTopic == mqttLightCommandTopic && strPayload == "ON")
   { // set the panel dim ON from the light topic, restoring saved dim level
     nextionSetAttr("dim", "dims");
     nextionSetAttr("sleep", "0");
-    mqttClient.publish(mqttLightStateTopic, "ON");
+    mqttClient.publish(mqttLightStateTopic, "ON", true, 1);
     debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
+    mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklight), true, 1);
+    debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : ")) + String(lcdBacklight));
   }
   else if (strTopic == mqttStatusTopic && strPayload == "OFF")
   { // catch a dangling LWT from a previous connection if it appears
@@ -684,6 +686,8 @@ void nextionProcessInput()
 { // Process complete incoming serial command from the Nextion panel
   // Command reference: https://www.itead.cc/wiki/Nextion_Instruction_Set#Format_of_Device_Return_Data
   // tl;dr: command byte, command data, 0xFF 0xFF 0xFF
+
+  debugPrintln(String(F("HMI IN: [")) + String(nextionReturnIndex) + String(F(" bytes]: ")) + printHex8(nextionReturnBuffer, nextionReturnIndex));
 
   if (nextionReturnBuffer[0] == 0x00 && nextionReturnBuffer[1] == 0x00 && nextionReturnBuffer[2] == 0x00)
   { // Nextion Startup
@@ -1117,7 +1121,7 @@ void nextionProcessInput()
     // 0x86+End
     if (mqttClient.connected())
     {
-      mqttClient.publish(mqttLightStateTopic, "OFF");
+      mqttClient.publish(mqttLightStateTopic, "OFF", true, 1);
       debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
     }
   }
@@ -1126,9 +1130,9 @@ void nextionProcessInput()
     // 0x87+End
     if (mqttClient.connected())
     {
-      mqttClient.publish(mqttLightStateTopic, "ON");
+      mqttClient.publish(mqttLightStateTopic, "ON", true, 1);
       debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
-      mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklight));
+      mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklight), true, 1);
     }
   }
   else if (nextionReturnBuffer[0] == 0x88)
@@ -3259,6 +3263,6 @@ String printHex8(byte *data, uint8_t length)
       hex8String += " ";
     }
   }
-  hex8String.toUpperCase();
+  // hex8String.toUpperCase();
   return hex8String;
 }
