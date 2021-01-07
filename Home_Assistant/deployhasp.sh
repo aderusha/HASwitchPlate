@@ -102,6 +102,42 @@ then
   echo "\nrecorder:" >> configuration.yaml
 fi
 
+# Check if we have a scenes.yaml and create some simple examples if the file is empty
+if [ -f scenes.yaml ]
+then
+  if [[ $(< scenes.yaml) == "[]" ]]
+  then
+    echo "INFO: empty scenes.yaml found, creating demonstration scenes"
+    echo "- id: '"$(( ${EPOCHREALTIME/./} / 1000 ))"'" > scenes.yaml
+    echo "  name: ${hasp_device} Backlight 100%" >> scenes.yaml
+    echo "  entities:" >> scenes.yaml
+    echo "    light.${hasp_device}_backlight:" >> scenes.yaml
+    echo "      state: 'on'" >> scenes.yaml
+    echo "      brightness: 255" >> scenes.yaml
+    sleep 0.01
+    echo "- id: '"$(( ${EPOCHREALTIME/./} / 1000 ))"'" >> scenes.yaml
+    echo "  name: ${hasp_device} Backlight 75%" >> scenes.yaml
+    echo "  entities:" >> scenes.yaml
+    echo "    light.${hasp_device}_backlight:" >> scenes.yaml
+    echo "      state: 'on'" >> scenes.yaml
+    echo "      brightness: 191" >> scenes.yaml
+    sleep 0.01
+    echo "- id: '"$(( ${EPOCHREALTIME/./} / 1000 ))"'" >> scenes.yaml
+    echo "  name: ${hasp_device} Backlight 50%" >> scenes.yaml
+    echo "  entities:" >> scenes.yaml
+    echo "    light.${hasp_device}_backlight:" >> scenes.yaml
+    echo "      state: 'on'" >> scenes.yaml
+    echo "      brightness: 128" >> scenes.yaml
+    sleep 0.01
+    echo "- id: '"$(( ${EPOCHREALTIME/./} / 1000 ))"'" >> scenes.yaml
+    echo "  name: ${hasp_device} Backlight 25%" >> scenes.yaml
+    echo "  entities:" >> scenes.yaml
+    echo "    light.${hasp_device}_backlight:" >> scenes.yaml
+    echo "      state: 'on'" >> scenes.yaml
+    echo "      brightness: 64" >> scenes.yaml
+  fi
+fi
+
 # Create a temp dir
 hasp_temp_dir=`mktemp -d`
 

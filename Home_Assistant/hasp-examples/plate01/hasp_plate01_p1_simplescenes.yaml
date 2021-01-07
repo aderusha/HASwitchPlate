@@ -1,0 +1,155 @@
+##############################################################################
+# Automations for handling Scene select buttons on page 1
+
+automation:
+  ############################################################################
+  # Set font and text labels for scene buttons on device connection.
+  # Here you can see commands mixing FontAwesome icons and text
+  # being sent to individual buttons. Before that is a JSON object
+  # being sent to set the correct font for several buttons in one
+  # message.
+  - alias: hasp_plate01_p1_ScenesInit
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: '["p[1].b[4].font=7","p[1].b[5].font=7","p[1].b[6].font=7","p[1].b[7].font=7"]'
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/p[1].b[4].txt"
+          payload: '"     Lights On "'
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/p[1].b[5].txt"
+          payload: '"     Daylight "'
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/p[1].b[6].txt"
+          payload: '"          Night "'
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/p[1].b[7].txt"
+          payload: '"  Lights Off "'
+
+  ############################################################################
+  # These next 4 automations capture a button press, then trigger
+  # a scene in response.  Modify these to trigger your own scenes.
+  # You can find these HASP demo scenes in ../hasp_demo.yaml
+
+  # Trigger scene.lights_on when p[1].b[4] pressed
+  - alias: hasp_plate01_p1_SceneButton4
+    trigger:
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[1].b[4]"
+        payload: "ON"
+    action:
+      - service: scene.turn_on
+        entity_id: scene.lights_on
+
+  # Trigger scene.daylight when p[1].b[5] pressed
+  - alias: hasp_plate01_p1_SceneButton5
+    trigger:
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[1].b[5]"
+        payload: "ON"
+    action:
+      - service: scene.turn_on
+        entity_id: scene.daylight
+
+  # Trigger scene.night when p[1].b[6] pressed
+  - alias: hasp_plate01_p1_SceneButton6
+    trigger:
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[1].b[6]"
+        payload: "ON"
+    action:
+      - service: scene.turn_on
+        entity_id: scene.night
+
+  # Trigger lights_off.night when p[1].b[7] pressed
+  - alias: hasp_plate01_p1_SceneButton7
+    trigger:
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[1].b[7]"
+        payload: "ON"
+    action:
+      - service: scene.turn_on
+        entity_id: scene.lights_off
+
+  ##############################################################################
+  # Automations to set colors on HASP Page 1
+  #
+  # These automations are a little more advanced.  Feel free to ignore if you're
+  # just starting to dig into this project.
+  #
+  # Here we've swapped selected/unselected as these buttons will always be
+  # unselected (unless actively being pressed).
+  - alias: hasp_plate01_p1_ColorConfig_selectedforegroundcolor
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedforegroundcolor
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{%- for i in range(4,8) -%}"p[1].b[{{i}}].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+
+  - alias: hasp_plate01_p1_ColorConfig_selectedbackgroundcolor
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{%- for i in range(4,8) -%}"p[1].b[{{i}}].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+
+  - alias: hasp_plate01_p1_ColorConfig_unselectedforegroundcolor
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{%- for i in range(4,8) -%}"p[1].b[{{i}}].pco2={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
+
+  - alias: hasp_plate01_p1_ColorConfig_unselectedbackgroundcolor
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            [{%- for i in range(4,8) -%}"p[1].b[{{i}}].bco2={{ states('input_number.hasp_plate01_unselectedbackgroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]

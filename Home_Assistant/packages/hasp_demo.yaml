@@ -120,68 +120,68 @@ light:
 
 ##############################################################################
 # Create a group for the lights
-group:
-  light_toggle_group:
-    name: Light Toggle Group
-    entities:
-      - light.light_1
-      - light.light_2
-      - light.light_3
+# group:
+#   light_toggle_group:
+#     name: Light Toggle Group
+#     entities:
+#       - light.light_1
+#       - light.light_2
+#       - light.light_3
 
-scene:
-  - name: Lights On
-    entities:
-      light.light_1:
-        state: "on"
-        brightness: 255
-      light.light_2:
-        state: "on"
-        brightness: 255
-      light.light_3:
-        state: "on"
-        brightness: 255
-      light.plate01_backlight:
-        state: "on"
-        brightness: 255
+# scene:
+#   - name: Lights On
+#     entities:
+#       light.light_1:
+#         state: "on"
+#         brightness: 255
+#       light.light_2:
+#         state: "on"
+#         brightness: 255
+#       light.light_3:
+#         state: "on"
+#         brightness: 255
+#       light.plate01_backlight:
+#         state: "on"
+#         brightness: 255
 
-  - name: Daylight
-    entities:
-      light.light_1:
-        state: "on"
-        brightness: 150
-      light.light_2:
-        state: "on"
-        brightness: 150
-      light.light_3:
-        state: "on"
-        brightness: 150
-      light.plate01_backlight:
-        state: "on"
-        brightness: 150
+#   - name: Daylight
+#     entities:
+#       light.light_1:
+#         state: "on"
+#         brightness: 150
+#       light.light_2:
+#         state: "on"
+#         brightness: 150
+#       light.light_3:
+#         state: "on"
+#         brightness: 150
+#       light.plate01_backlight:
+#         state: "on"
+#         brightness: 150
 
-  - name: Night
-    entities:
-      light.light_1:
-        state: "on"
-        brightness: 50
-      light.light_2:
-        state: "on"
-        brightness: 50
-      light.light_3:
-        state: "on"
-        brightness: 50
-      light.plate01_backlight:
-        state: "on"
-        brightness: 50
+#   - name: Night
+#     entities:
+#       light.light_1:
+#         state: "on"
+#         brightness: 50
+#       light.light_2:
+#         state: "on"
+#         brightness: 50
+#       light.light_3:
+#         state: "on"
+#         brightness: 50
+#       light.plate01_backlight:
+#         state: "on"
+#         brightness: 50
 
-  - name: Lights Off
-    entities:
-      light.light_1:
-        state: "off"
-      light.light_2:
-        state: "off"
-      light.light_3:
-        state: "off"
-      light.plate01_backlight:
-        state: "on"
-        brightness: 20
+#   - name: Lights Off
+#     entities:
+#       light.light_1:
+#         state: "off"
+#       light.light_2:
+#         state: "off"
+#       light.light_3:
+#         state: "off"
+#       light.plate01_backlight:
+#         state: "on"
+#         brightness: 20

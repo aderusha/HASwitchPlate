@@ -1,86 +1,308 @@
 ##############################################################################
 # Automations for handling Scene select buttons on page 1
 
+input_select:
+  hasp_plate01_p1_b4_font:
+    name: plate01 p[1].b[4] Font
+    icon: mdi:format-font
+    options:
+      - 0 Consolas 24
+      - 1 Consolas 32
+      - 2 Consolas 48
+      - 3 Consolas Bold 80
+      - 4 Webdings 56
+      - 5 Noto Sans 24
+      - 6 Noto Sans 32
+      - 7 Noto Sans 48
+      - 8 Noto Sans 64
+      - 9 Noto Sans 80
+      - 10 Noto Sans Bold 80
+  hasp_plate01_p1_b5_font:
+    name: plate01 p[1].b[5] Font
+    icon: mdi:format-font
+    options:
+      - 0 Consolas 24
+      - 1 Consolas 32
+      - 2 Consolas 48
+      - 3 Consolas Bold 80
+      - 4 Webdings 56
+      - 5 Noto Sans 24
+      - 6 Noto Sans 32
+      - 7 Noto Sans 48
+      - 8 Noto Sans 64
+      - 9 Noto Sans 80
+      - 10 Noto Sans Bold 80
+  hasp_plate01_p1_b6_font:
+    name: plate01 p[1].b[6] Font
+    icon: mdi:format-font
+    options:
+      - 0 Consolas 24
+      - 1 Consolas 32
+      - 2 Consolas 48
+      - 3 Consolas Bold 80
+      - 4 Webdings 56
+      - 5 Noto Sans 24
+      - 6 Noto Sans 32
+      - 7 Noto Sans 48
+      - 8 Noto Sans 64
+      - 9 Noto Sans 80
+      - 10 Noto Sans Bold 80
+  hasp_plate01_p1_b7_font:
+    name: plate01 p[1].b[7] Font
+    icon: mdi:format-font
+    options:
+      - 0 Consolas 24
+      - 1 Consolas 32
+      - 2 Consolas 48
+      - 3 Consolas Bold 80
+      - 4 Webdings 56
+      - 5 Noto Sans 24
+      - 6 Noto Sans 32
+      - 7 Noto Sans 48
+      - 8 Noto Sans 64
+      - 9 Noto Sans 80
+      - 10 Noto Sans Bold 80
+
+  hasp_plate01_p1_b4_scene:
+    name: plate01 p[1].b[4] Scene
+    options:
+      - No scenes defined
+  hasp_plate01_p1_b5_scene:
+    name: plate01 p[1].b[5] Scene
+    options:
+      - No scenes defined
+  hasp_plate01_p1_b6_scene:
+    name: plate01 p[1].b[6] Scene
+    options:
+      - No scenes defined
+  hasp_plate01_p1_b7_scene:
+    name: plate01 p[1].b[7] Scene
+    options:
+      - No scenes defined
+
+input_text:
+  hasp_plate01_p1_b4_text:
+    name: plate01 p[1].b[4] Text
+  hasp_plate01_p1_b5_text:
+    name: plate01 p[1].b[5] Text
+  hasp_plate01_p1_b6_text:
+    name: plate01 p[1].b[6] Text
+  hasp_plate01_p1_b7_text:
+    name: plate01 p[1].b[7] Text
+  hasp_plate01_p1_b4_scene:
+  hasp_plate01_p1_b5_scene:
+  hasp_plate01_p1_b6_scene:
+  hasp_plate01_p1_b7_scene:
+
 automation:
-  ############################################################################
-  # Set font and text labels for scene buttons on device connection.
-  # Here you can see commands mixing FontAwesome icons and text
-  # being sent to individual buttons. Before that is a JSON object
-  # being sent to set the correct font for several buttons in one
-  # message.
-  - alias: hasp_plate01_p1_ScenesInit
+  # populate input_selects with available scenes
+  - alias: hasp_plate01_p1_scene_populate
+    trigger:
+      - platform: homeassistant
+        event: start
+    action:
+      - service: homeassistant.turn_off
+        entity_id: 
+          - automation.hasp_plate01_p1_b4_scene_save
+          - automation.hasp_plate01_p1_b5_scene_save
+          - automation.hasp_plate01_p1_b6_scene_save
+          - automation.hasp_plate01_p1_b7_scene_save
+      - service: input_select.set_options
+        data_template:
+          entity_id: input_select.hasp_plate01_p1_b4_scene
+          options: >-
+            {{ states.scene | map(attribute='entity_id') | list }}
+      - service: input_select.set_options
+        data_template:
+          entity_id: input_select.hasp_plate01_p1_b5_scene
+          options: >-
+            {{ states.scene | map(attribute='entity_id') | list }}
+      - service: input_select.set_options
+        data_template:
+          entity_id: input_select.hasp_plate01_p1_b6_scene
+          options: >-
+            {{ states.scene | map(attribute='entity_id') | list }}
+      - service: input_select.set_options
+        data_template:
+          entity_id: input_select.hasp_plate01_p1_b7_scene
+          options: >-
+            {{ states.scene | map(attribute='entity_id') | list }}
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.hasp_plate01_p1_b4_scene
+          option: "{{ states('input_text.hasp_plate01_p1_b4_scene') }}"
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.hasp_plate01_p1_b5_scene
+          option: "{{ states('input_text.hasp_plate01_p1_b5_scene') }}"
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.hasp_plate01_p1_b6_scene
+          option: "{{ states('input_text.hasp_plate01_p1_b6_scene') }}"
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.hasp_plate01_p1_b7_scene
+          option: "{{ states('input_text.hasp_plate01_p1_b7_scene') }}"
+      - service: homeassistant.turn_on
+        entity_id: 
+          - automation.hasp_plate01_p1_b4_scene_save
+          - automation.hasp_plate01_p1_b5_scene_save
+          - automation.hasp_plate01_p1_b6_scene_save
+          - automation.hasp_plate01_p1_b7_scene_save
+
+  # save current scene to input_text for safe keeping
+  - alias: hasp_plate01_p1_b4_scene_save
+    trigger:
+      - platform: state
+        entity_id: input_select.hasp_plate01_p1_b4_scene
+    action:
+      - service: input_text.set_value
+        data_template:
+          entity_id: input_text.hasp_plate01_p1_b4_scene
+          value: "{{ states('input_select.hasp_plate01_p1_b4_scene') }}"
+  - alias: hasp_plate01_p1_b5_scene_save
+    trigger:
+      - platform: state
+        entity_id: input_select.hasp_plate01_p1_b5_scene
+    action:
+      - service: input_text.set_value
+        data_template:
+          entity_id: input_text.hasp_plate01_p1_b5_scene
+          value: "{{ states('input_select.hasp_plate01_p1_b5_scene') }}"
+  - alias: hasp_plate01_p1_b6_scene_save
+    trigger:
+      - platform: state
+        entity_id: input_select.hasp_plate01_p1_b6_scene
+    action:
+      - service: input_text.set_value
+        data_template:
+          entity_id: input_text.hasp_plate01_p1_b6_scene
+          value: "{{ states('input_select.hasp_plate01_p1_b6_scene') }}"
+  - alias: hasp_plate01_p1_b7_scene_save
+    trigger:
+      - platform: state
+        entity_id: input_select.hasp_plate01_p1_b7_scene
+    action:
+      - service: input_text.set_value
+        data_template:
+          entity_id: input_text.hasp_plate01_p1_b7_scene
+          value: "{{ states('input_select.hasp_plate01_p1_b7_scene') }}"
+
+  # Apply text labels and font to scene buttons
+  - alias: hasp_plate01_p1_b4_scene_label
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
         to: "on"
       - platform: homeassistant
         event: start
+      - platform: state
+        entity_id: input_select.hasp_plate01_p1_b4_scene
+      - platform: state
+        entity_id: input_text.hasp_plate01_p1_b4_text
+      - platform: state
+        entity_id: input_select.hasp_plate01_p1_b4_font
     action:
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/json"
-          payload_template: '["p[1].b[4].font=7","p[1].b[5].font=7","p[1].b[6].font=7","p[1].b[7].font=7"]'
+          payload_template: >-
+            ["p[1].b[4].font={{states('input_select.hasp_plate01_p1_b4_font').split(" ")[0]|int}}","p[1].b[4].txt=\"{{states('input_text.hasp_plate01_p1_b4_text')}}\""]
+  - alias: hasp_plate01_p1_b5_scene_label
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_select.hasp_plate01_p1_b5_scene
+      - platform: state
+        entity_id: input_text.hasp_plate01_p1_b5_text
+      - platform: state
+        entity_id: input_select.hasp_plate01_p1_b5_font
+    action:
       - service: mqtt.publish
         data:
-          topic: "hasp/plate01/command/p[1].b[4].txt"
-          payload: '"     Lights On "'
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            ["p[1].b[5].font={{states('input_select.hasp_plate01_p1_b5_font').split(" ")[0]|int}}","p[1].b[5].txt=\"{{states('input_text.hasp_plate01_p1_b5_text')}}\""]
+  - alias: hasp_plate01_p1_b6_scene_label
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_select.hasp_plate01_p1_b6_scene
+      - platform: state
+        entity_id: input_text.hasp_plate01_p1_b6_text
+      - platform: state
+        entity_id: input_select.hasp_plate01_p1_b6_font
+    action:
       - service: mqtt.publish
         data:
-          topic: "hasp/plate01/command/p[1].b[5].txt"
-          payload: '"     Daylight "'
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            ["p[1].b[6].font={{states('input_select.hasp_plate01_p1_b6_font').split(" ")[0]|int}}","p[1].b[6].txt=\"{{states('input_text.hasp_plate01_p1_b6_text')}}\""]
+  - alias: hasp_plate01_p1_b7_scene_label
+    trigger:
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+        to: "on"
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: input_select.hasp_plate01_p1_b7_scene
+      - platform: state
+        entity_id: input_text.hasp_plate01_p1_b7_text
+      - platform: state
+        entity_id: input_select.hasp_plate01_p1_b7_font
+    action:
       - service: mqtt.publish
         data:
-          topic: "hasp/plate01/command/p[1].b[6].txt"
-          payload: '"          Night "'
-      - service: mqtt.publish
-        data:
-          topic: "hasp/plate01/command/p[1].b[7].txt"
-          payload: '"  Lights Off "'
+          topic: "hasp/plate01/command/json"
+          payload_template: >-
+            ["p[1].b[7].font={{states('input_select.hasp_plate01_p1_b7_font').split(" ")[0]|int}}","p[1].b[7].txt=\"{{states('input_text.hasp_plate01_p1_b7_text')}}\""]
 
-  ############################################################################
-  # These next 4 automations capture a button press, then trigger
-  # a scene in response.  Modify these to trigger your own scenes.
-  # You can find these HASP demo scenes in ../hasp_demo.yaml
-
-  # Trigger scene.lights_on when p[1].b[4] pressed
-  - alias: hasp_plate01_p1_SceneButton4
+  # Trigger scene.lights_on when p[1] buttons are pressed
+  - alias: hasp_plate01_p1_b4_scene_select
     trigger:
       - platform: mqtt
         topic: "hasp/plate01/state/p[1].b[4]"
         payload: "ON"
     action:
       - service: scene.turn_on
-        entity_id: scene.lights_on
-
-  # Trigger scene.daylight when p[1].b[5] pressed
-  - alias: hasp_plate01_p1_SceneButton5
+        data_template:
+          entity_id: "{{ states('input_select.hasp_plate01_p1_b4_scene') }}"
+  - alias: hasp_plate01_p1_b5_scene_select
     trigger:
       - platform: mqtt
         topic: "hasp/plate01/state/p[1].b[5]"
         payload: "ON"
     action:
       - service: scene.turn_on
-        entity_id: scene.daylight
-
-  # Trigger scene.night when p[1].b[6] pressed
-  - alias: hasp_plate01_p1_SceneButton6
+        data_template:
+          entity_id: "{{ states('input_select.hasp_plate01_p1_b5_scene') }}"
+  - alias: hasp_plate01_p1_b6_scene_select
     trigger:
       - platform: mqtt
         topic: "hasp/plate01/state/p[1].b[6]"
         payload: "ON"
     action:
       - service: scene.turn_on
-        entity_id: scene.night
-
-  # Trigger lights_off.night when p[1].b[7] pressed
-  - alias: hasp_plate01_p1_SceneButton7
+        data_template:
+          entity_id: "{{ states('input_select.hasp_plate01_p1_b6_scene') }}"
+  - alias: hasp_plate01_p1_b7_scene_select
     trigger:
       - platform: mqtt
         topic: "hasp/plate01/state/p[1].b[7]"
         payload: "ON"
     action:
       - service: scene.turn_on
-        entity_id: scene.lights_off
+        data_template:
+          entity_id: "{{ states('input_select.hasp_plate01_p1_b7_scene') }}"
 
   ##############################################################################
   # Automations to set colors on HASP Page 1
