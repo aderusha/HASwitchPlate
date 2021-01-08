@@ -94,8 +94,9 @@ unsigned long lcdVersion = 0;                         // Int to hold current LCD
 unsigned long updateLcdAvailableVersion;              // Int to hold the new LCD FW version number
 bool lcdVersionQueryFlag = false;                     // Flag to set if we've queried lcdVersion
 const String lcdVersionQuery = "p[0].b[2].val";       // Object ID for lcdVersion in HMI
-uint8_t lcdBacklight = 0;                             // Backlight dimmer value
-bool lcdBacklightQueryFlag = false;                   // Flag to set if we've queried lcdBacklight
+uint8_t lcdBacklightDim = 0;                          // Backlight dimmer value
+bool lcdBacklightOn = 0;                              // Backlight on/off
+bool lcdBacklightQueryFlag = false;                   // Flag to set if we've queried lcdBacklightDim
 bool startupCompleteFlag = false;                     // Startup process has completed
 const long statusUpdateInterval = 300000;             // Time in msec between publishing MQTT status updates (5 minutes)
 long statusUpdateTimer = 0;                           // Timer for update check
@@ -354,8 +355,8 @@ void mqttConnect()
 
   const String mqttCommandSubscription = mqttCommandTopic + "/#";
   const String mqttGroupCommandSubscription = mqttGroupCommandTopic + "/#";
-  const String mqttLightSubscription = "hasp/" + String(haspNode) + "/light/#";
-  const String mqttLightBrightSubscription = "hasp/" + String(haspNode) + "/brightness/#";
+  const String mqttLightSubscription = mqttLightCommandTopic + "/#";
+  const String mqttLightBrightSubscription = mqttLightBrightCommandTopic + "/#";
 
   // Loop until we're reconnected to MQTT
   while (!mqttClient.connected())
@@ -423,6 +424,17 @@ void mqttConnect()
 
       mqttReconnectCount = 0;
 
+      if (lcdBacklightOn) {
+        mqttClient.publish(mqttLightStateTopic, "ON", true, 1);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
+      }
+      else {
+        mqttClient.publish(mqttLightStateTopic, "OFF", true, 1);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'"))); 
+      }
+      mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklightDim), true, 1);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : ")) + String(lcdBacklightDim));
+
       // Update panel with MQTT status
       nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connected:\\r " + String(mqttServer) + "\"");
       debugPrintln(F("MQTT: connected"));
@@ -468,14 +480,16 @@ void mqttCallback(String &strTopic, String &strPayload)
   // '[...]/device/command' -m '' = No command requested, respond with mqttStatusUpdate()
   // '[...]/device/command' -m 'dim=50' = nextionSendCmd("dim=50")
   // '[...]/device/command/json' -m '["dim=5", "page 1"]' = nextionSendCmd("dim=50"), nextionSendCmd("page 1")
+  // '[...]/device/command/p[1].b[4].txt' -m '' = nextionGetAttr("p[1].b[4].txt")
+  // '[...]/device/command/p[1].b[4].txt' -m '"Lights On"' = nextionSetAttr("p[1].b[4].txt", "\"Lights On\"")
+  // '[...]/device/brightness/set' -m '50' = nextionSendCmd("dims=50")
+  // '[...]/device/light/switch' -m 'OFF' = nextionSendCmd("sleep 1")
   // '[...]/device/command/page' -m '1' = nextionSendCmd("page 1")
   // '[...]/device/command/statusupdate' -m '' = mqttStatusUpdate()
   // '[...]/device/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' = nextionOtaStartDownload("http://192.168.0.10/local/HASwitchPlate.tft")
   // '[...]/device/command/lcdupdate' -m '' = nextionOtaStartDownload("lcdFirmwareUrl")
   // '[...]/device/command/espupdate' -m 'http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin' = espStartOta("http://192.168.0.10/local/HASwitchPlate.ino.d1_mini.bin")
   // '[...]/device/command/espupdate' -m '' = espStartOta("espFirmwareUrl")
-  // '[...]/device/command/p[1].b[4].txt' -m '' = nextionGetAttr("p[1].b[4].txt")
-  // '[...]/device/command/p[1].b[4].txt' -m '"Lights On"' = nextionSetAttr("p[1].b[4].txt", "\"Lights On\"")
 
   debugPrintln(String(F("MQTT IN: '")) + strTopic + String(F("' : '")) + strPayload + String(F("'")));
 
@@ -575,7 +589,7 @@ void mqttCallback(String &strTopic, String &strPayload)
   { // change the brightness from the light topic
     nextionSetAttr("dim", strPayload);
     nextionSetAttr("dims", "dim");
-    lcdBacklight = strPayload.toInt();
+    lcdBacklightDim = strPayload.toInt();
     mqttClient.publish(mqttLightBrightStateTopic, strPayload, true, 1);
     debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : '")) + strPayload + String(F("'")));
   }
@@ -583,6 +597,7 @@ void mqttCallback(String &strTopic, String &strPayload)
   { // set the panel dim OFF from the light topic, saving current dim level first
     nextionSetAttr("dims", "dim");
     nextionSetAttr("dim", "0");
+    lcdBacklightOn = 0;
     mqttClient.publish(mqttLightStateTopic, "OFF", true, 1);
     debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
   }
@@ -590,10 +605,11 @@ void mqttCallback(String &strTopic, String &strPayload)
   { // set the panel dim ON from the light topic, restoring saved dim level
     nextionSetAttr("dim", "dims");
     nextionSetAttr("sleep", "0");
+    lcdBacklightOn = 1;
     mqttClient.publish(mqttLightStateTopic, "ON", true, 1);
     debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
-    mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklight), true, 1);
-    debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : ")) + String(lcdBacklight));
+    mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklightDim), true, 1);
+    debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : ")) + String(lcdBacklightDim));
   }
   else if (strTopic == mqttStatusTopic && strPayload == "OFF")
   { // catch a dangling LWT from a previous connection if it appears
@@ -1065,9 +1081,15 @@ void nextionProcessInput()
     }
     else if (lcdBacklightQueryFlag)
     {
-      lcdBacklight = getInt;
+      lcdBacklightDim = getInt;
       lcdBacklightQueryFlag = false;
-      debugPrintln(String(F("HMI IN: lcdBacklight '")) + String(lcdBacklight) + String(F("'")));
+      if (lcdBacklightDim > 0) {
+        lcdBacklightOn = 1;
+      }
+      else {
+        lcdBacklightOn = 0;
+      }
+      debugPrintln(String(F("HMI IN: lcdBacklightDim '")) + String(lcdBacklightDim) + String(F("'")));
     }
     else if (mqttGetSubtopic == "")
     {
@@ -1121,6 +1143,7 @@ void nextionProcessInput()
     // 0x86+End
     if (mqttClient.connected())
     {
+      lcdBacklightOn = 0;
       mqttClient.publish(mqttLightStateTopic, "OFF", true, 1);
       debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
     }
@@ -1130,9 +1153,10 @@ void nextionProcessInput()
     // 0x87+End
     if (mqttClient.connected())
     {
+      lcdBacklightOn = 1;
       mqttClient.publish(mqttLightStateTopic, "ON", true, 1);
       debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
-      mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklight), true, 1);
+      mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklightDim), true, 1);
     }
   }
   else if (nextionReturnBuffer[0] == 0x88)
