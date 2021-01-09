@@ -416,24 +416,6 @@ void mqttConnect()
         debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + "' : 'OFF'");
         mqttFirstConnect = false;
       }
-      else
-      {
-        mqttClient.publish(mqttStatusTopic, "ON", true, 1);
-        debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + "' : 'ON'");
-      }
-
-      mqttReconnectCount = 0;
-
-      if (lcdBacklightOn) {
-        mqttClient.publish(mqttLightStateTopic, "ON", true, 1);
-        debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
-      }
-      else {
-        mqttClient.publish(mqttLightStateTopic, "OFF", true, 1);
-        debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'"))); 
-      }
-      mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklightDim), true, 1);
-      debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : ")) + String(lcdBacklightDim));
 
       // Update panel with MQTT status
       nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connected:\\r " + String(mqttServer) + "\"");
@@ -442,6 +424,8 @@ void mqttConnect()
       {
         nextionSendCmd("page " + String(nextionActivePage));
       }
+      // Publish device status to MQTT
+      mqttStatusUpdate();
     }
     else
     { // Retry until we give up and restart after connectTimeout seconds
@@ -483,7 +467,7 @@ void mqttCallback(String &strTopic, String &strPayload)
   // '[...]/device/command/p[1].b[4].txt' -m '' = nextionGetAttr("p[1].b[4].txt")
   // '[...]/device/command/p[1].b[4].txt' -m '"Lights On"' = nextionSetAttr("p[1].b[4].txt", "\"Lights On\"")
   // '[...]/device/brightness/set' -m '50' = nextionSendCmd("dims=50")
-  // '[...]/device/light/switch' -m 'OFF' = nextionSendCmd("sleep 1")
+  // '[...]/device/light/switch' -m 'OFF' = nextionSendCmd("dims=0")
   // '[...]/device/command/page' -m '1' = nextionSendCmd("page 1")
   // '[...]/device/command/statusupdate' -m '' = mqttStatusUpdate()
   // '[...]/device/command/lcdupdate' -m 'http://192.168.0.10/local/HASwitchPlate.tft' = nextionOtaStartDownload("http://192.168.0.10/local/HASwitchPlate.tft")
@@ -620,7 +604,7 @@ void mqttCallback(String &strTopic, String &strPayload)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void mqttStatusUpdate()
-{ // Periodically publish a JSON string indicating system status
+{ // Periodically publish system status
   String mqttStatusPayload = "{";
   mqttStatusPayload += String(F("\"status\":\"available\","));
   mqttStatusPayload += String(F("\"espVersion\":")) + String(haspVersion) + String(F(","));
@@ -658,8 +642,35 @@ void mqttStatusUpdate()
   mqttStatusPayload += String(F("\"espCore\":\"")) + String(ESP.getCoreVersion()) + String(F("\""));
   mqttStatusPayload += "}";
 
+  // Publish status JSON
   mqttClient.publish(mqttSensorTopic, mqttStatusPayload, true, 1);
   debugPrintln(String(F("MQTT OUT: '")) + mqttSensorTopic + String(F("' : '")) + mqttStatusPayload + String(F("'")));
+
+  // Publish backlight status
+  if (lcdBacklightOn)
+  {
+    mqttClient.publish(mqttLightStateTopic, "ON", true, 1);
+    debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
+  }
+  else
+  {
+    mqttClient.publish(mqttLightStateTopic, "OFF", true, 1);
+    debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
+  }
+  mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklightDim), true, 1);
+  debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : ")) + String(lcdBacklightDim));
+
+  // Publish current page IF ( (it's not "0") OR (we've set the flag to report 0 anyway) )
+  if ((nextionActivePage == 0) || nextionReportPage0)
+  {
+    String mqttPageTopic = mqttStateTopic + "/page";
+    mqttClient.publish(mqttPageTopic, String(nextionActivePage));
+    debugPrintln(String(F("MQTT OUT: '")) + mqttPageTopic + String(F("' : '")) + String(nextionActivePage) + String(F("'")));
+  }
+
+  // Publish connection status
+  mqttClient.publish(mqttStatusTopic, "ON", true, 1);
+  debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + "' : 'ON'");
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1083,10 +1094,12 @@ void nextionProcessInput()
     {
       lcdBacklightDim = getInt;
       lcdBacklightQueryFlag = false;
-      if (lcdBacklightDim > 0) {
+      if (lcdBacklightDim > 0)
+      {
         lcdBacklightOn = 1;
       }
-      else {
+      else
+      {
         lcdBacklightOn = 0;
       }
       debugPrintln(String(F("HMI IN: lcdBacklightDim '")) + String(lcdBacklightDim) + String(F("'")));
