@@ -2,42 +2,115 @@
 # Automations to display status information like clock, calendar, and weather
 # on page 2
 
+input_select:
+  hasp_plate01_p2_weather_provider:
+    name: plate01 Weather Provider
+    options:
+      - No weather integrations defined
+  hasp_plate01_p2_clock_format:
+    name: plate01 Clock Format
+    options:
+      - 12 hour
+      - 24 hour      
+  hasp_plate01_p2_calendar_format:
+    name: plate01 Calendar Format
+    options:
+      - Month + Date
+      - Day of week
+  hasp_plate01_p2_temperature_humidity:
+    name: plate01 Temperature and Humidity
+    options:
+      - Current Temperature
+      - Current Humidity
+
+input_text:
+  hasp_plate01_p2_weather_provider:
+
+sensor:
+  - platform: template
+    sensors:
+      hasp_plate01_p2_weather_provider_condition:
+        value_template: '{%set provider=states("input_text.hasp_plate01_p2_weather_provider")%}{{states(provider)|replace("windy-variant","windy")|replace("partlycloudy","partly cloudy")|title}}'
+      hasp_plate01_p2_weather_provider_temperature:
+        value_template: '{%set provider=states("input_text.hasp_plate01_p2_weather_provider")%}{{state_attr(provider,"temperature")|int}}'
+        unit_of_measurement: 'degrees'
+      hasp_plate01_p2_weather_provider_humidity:
+        value_template: '{%set provider=states("input_text.hasp_plate01_p2_weather_provider")%}{{state_attr(provider,"humidity")|int}}'
+        unit_of_measurement: '%'
+        
 automation:
+  # Toggle 12/24 hour on p[2].b[4]
+  - alias: hasp_plate01_p2_b4_clock_format_toggle
+    trigger:
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[2].b[4]"
+        payload: "ON"
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.hasp_plate01_p2_clock_format
+          option: '{%if "24" in states("input_select.hasp_plate01_p2_clock_format")%}12 hour{% else %}24 hour{% endif %}'
+
+  # Toggle calendar format on p[2].b[5]
+  - alias: hasp_plate01_p2_b4_calendar_format_toggle
+    trigger:
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[2].b[5]"
+        payload: "ON"
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.hasp_plate01_p2_calendar_format
+          option: '{%if "Month" in states("input_select.hasp_plate01_p2_calendar_format")%}Day of week{% else %}Month + Date{% endif %}'
+
+  # Toggle temperature or humidity on p[2].b[6]
+  - alias: hasp_plate01_p2_b4_temperature_humidity_toggle
+    trigger:
+      - platform: mqtt
+        topic: "hasp/plate01/state/p[2].b[6]"
+        payload: "ON"
+    action:
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.hasp_plate01_p2_temperature_humidity
+          option: '{%if "Temperature" in states("input_select.hasp_plate01_p2_temperature_humidity")%}Current Humidity{% else %}Current Temperature{% endif %}'
+
+
   # Set appropriate font for the time and date and send intial values on HASP init
   - alias: hasp_plate01_p2_ClockInit
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
         to: "on"
       - platform: homeassistant
         event: start
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
-          topic: "hasp/plate01/command/p[2].b[4].font"
-          payload: "10"
-      - service: mqtt.publish
-        data:
-          topic: "hasp/plate01/command/p[2].b[4].xcen"
-          payload: "2"
+          topic: "hasp/plate01/command/json"
+          payload_template: '["p[2].b[4].font=10","p[2].b[4].xcen=2","p[2].b[5].xcen=2"]'
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[4].txt"
-          payload_template: '"{{(now().strftime(''%I'')|int)~now().strftime('':%M'')}} "'
+          payload_template: '{%if "24" in states("input_select.hasp_plate01_p2_clock_format")%}{%set format="%-H"%}{% else %}{%set format="%I"%}{% endif %}"{{(now().strftime(format)|int)~now().strftime(":%M")}} "'
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[5].font"
-          payload: "8"
-      - service: mqtt.publish
-        data:
-          topic: "hasp/plate01/command/p[2].b[5].xcen"
-          payload: "2"
+          payload_template: '{%if "Month" in states("input_select.hasp_plate01_p2_calendar_format")%}8{% else %}7{% endif %}'
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[5].txt"
-          payload_template: '"{{now().strftime(''%b '') ~ now().day}} "'
+          payload_template: '"{%if "Month" in states("input_select.hasp_plate01_p2_calendar_format")%}{{(now().strftime("%b "))~now().day}}{% else %}{{(now().strftime("%A "))}}{% endif %} "'
 
   - alias: hasp_plate01_p2_WeatherInit
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
@@ -50,35 +123,29 @@ automation:
     action:
       - service: mqtt.publish
         data:
-          topic: "hasp/plate01/command/p[2].b[6].font"
-          payload: "10"
-      - service: mqtt.publish
-        data:
-          topic: "hasp/plate01/command/p[2].b[6].xcen"
-          payload: "2"
+          topic: "hasp/plate01/command/json"
+          payload_template: '["p[2].b[6].font=10","p[2].b[6].xcen=2","p[2].b[7].xcen=2"]'
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[6].txt"
-          payload_template: '"{{state_attr("weather.home","temperature")|int}}°"'
+          payload_template: '"{%if "Temperature" in states("input_select.hasp_plate01_p2_temperature_humidity")%}{{states("sensor.hasp_plate01_p2_weather_provider_temperature")}}°{% else %}{{states("sensor.hasp_plate01_p2_weather_provider_humidity")}}%{% endif %}"'
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[7].font"
-          payload_template: '{% set weatherlength = states.weather.home.state|replace("windy-variant","windy")|replace("partlycloudy","partly cloudy")|length %}{% if weatherlength < 7 -%}8{% elif weatherlength < 10 %}7{% else %}6{%- endif %}'
-      - service: mqtt.publish
-        data:
-          topic: "hasp/plate01/command/p[2].b[7].xcen"
-          payload: "2"
+          payload_template: '{%set weatherlength=states("sensor.hasp_plate01_p2_weather_provider_condition")|length %}{% if weatherlength < 7 -%}8{% elif weatherlength < 10 %}7{% else %}6{%- endif %}'
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[7].txt"
-          payload_template: '"{{states.weather.home.state|replace("-"," ")|replace("windy-variant","windy")|replace("partlycloudy","partly cloudy")|title}} "'
+          payload_template: '"{{states("sensor.hasp_plate01_p2_weather_provider_condition")}} "'
 
   # Send the current time every minute
   - alias: hasp_plate01_p2_ClockUpdate
     trigger:
-      platform: time_pattern
-      # Matches every minute
-      seconds: 0
+      - platform: time_pattern
+        # Matches every minute
+        seconds: 0
+      - platform: state
+        entity_id: input_select.hasp_plate01_p2_clock_format
     condition:
       - condition: state
         entity_id: "binary_sensor.plate01_connected"
@@ -87,13 +154,15 @@ automation:
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[4].txt"
-          payload_template: '"{{(now().strftime(''%I'')|int)~now().strftime('':%M'')}} "'
+          payload_template: '{%if "24" in states("input_select.hasp_plate01_p2_clock_format")%}{%set format="%-H"%}{% else %}{%set format="%I"%}{% endif %}"{{(now().strftime(format)|int)~now().strftime(":%M")}} "'
 
   # Send "Day, Month Date" every day at midnight
   - alias: hasp_plate01_p2_CalendarUpdate
     trigger:
-      platform: time
-      at: "00:00:00"
+      - platform: time
+        at: "00:00:00"
+      - platform: state
+        entity_id: input_select.hasp_plate01_p2_calendar_format
     condition:
       - condition: state
         entity_id: "binary_sensor.plate01_connected"
@@ -101,16 +170,21 @@ automation:
     action:
       - service: mqtt.publish
         data:
+          topic: "hasp/plate01/command/p[2].b[5].font"
+          payload_template: '{%if "Month" in states("input_select.hasp_plate01_p2_calendar_format")%}8{% else %}7{% endif %}'
+      - service: mqtt.publish
+        data:
           topic: "hasp/plate01/command/p[2].b[5].txt"
-          payload_template: '"{{now().strftime(''%b '') ~ now().day}} "'
+          payload_template: '"{%if "Month" in states("input_select.hasp_plate01_p2_calendar_format")%}{{(now().strftime("%b "))~now().day}}{% else %}{{(now().strftime("%A "))}}{% endif %} "'
 
-  # Display weather details on page 2 when weather updates
-  # Conditions are manually handled based on the list here:
-  # https://www.home-assistant.io/integrations/weather/#condition-mapping
-  - alias: hasp_plate01_p2_WeatherUpdate
+  - alias: hasp_plate01_p2_TemperatureHumidityUpdate
     trigger:
       - platform: state
-        entity_id: weather.home
+        entity_id: sensor.hasp_plate01_p2_weather_provider_temperature
+      - platform: state
+        entity_id: sensor.hasp_plate01_p2_weather_provider_humidity
+      - platform: state
+        entity_id: input_select.hasp_plate01_p2_temperature_humidity
     condition:
       - condition: state
         entity_id: "binary_sensor.plate01_connected"
@@ -119,15 +193,92 @@ automation:
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[6].txt"
-          payload_template: '"{{state_attr("weather.home","temperature")|int}}°"'
+          payload_template: '"{%if "Temperature" in states("input_select.hasp_plate01_p2_temperature_humidity")%}{{states("sensor.hasp_plate01_p2_weather_provider_temperature")}}°{% else %}{{states("sensor.hasp_plate01_p2_weather_provider_humidity")}}%{% endif %}"'
+
+  # Display weather conditions on page 2 when weather updates
+  # Conditions are manually handled based on the list here:
+  # https://www.home-assistant.io/integrations/weather/#condition-mapping
+  - alias: hasp_plate01_p2_WeatherUpdate
+    trigger:
+      - platform: state
+        entity_id: sensor.hasp_plate01_p2_weather_provider_condition
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
+    action:
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[7].font"
-          payload_template: '{% set weatherlength = states.weather.home.state|replace("partlycloudy","partly cloudy")|length %}{% if weatherlength < 7 -%}8{% elif weatherlength < 10 %}7{% else %}6{%- endif %}'
+          payload_template: '{%set weatherlength=states("sensor.hasp_plate01_p2_weather_provider_condition")|length %}{% if weatherlength < 7 -%}8{% elif weatherlength < 10 %}7{% else %}6{%- endif %}'
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/p[2].b[7].txt"
-          payload_template: '"{{states.weather.home.state|replace("-"," ")|replace("partlycloudy","partly cloudy")|title}} "'
+          payload_template: '"{{states("sensor.hasp_plate01_p2_weather_provider_condition")}} "'
+
+  # Our template weather sensors won't ever update unless forced to do so, so force them to do so any time an event happens from a "weather." entity
+  - alias: hasp_plate01_p2_WeatherSensorUpdate
+    trigger:
+      - platform: event
+        event_type: state_changed
+    condition:
+      - condition: template
+        value_template: >
+          {{ trigger.event.data.entity_id.startswith('weather.') }}
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
+    action:
+      - service: homeassistant.update_entity
+        entity_id: sensor.hasp_plate01_p2_weather_provider_condition
+      - service: homeassistant.update_entity
+        entity_id: sensor.hasp_plate01_p2_weather_provider_temperature
+      - service: homeassistant.update_entity
+        entity_id: sensor.hasp_plate01_p2_weather_provider_humidity
+
+  # populate available weather providers
+  - alias: hasp_plate01_p2_provider_populate
+    trigger:
+      - platform: homeassistant
+        event: start
+    action:
+      - service: homeassistant.turn_off
+        entity_id: automation.hasp_plate01_p2_provider_save
+      - service: input_select.set_options
+        data_template:
+          entity_id: input_select.hasp_plate01_p2_weather_provider
+          options: >-
+            {{ states.weather | map(attribute='entity_id') | list }}
+      - service: input_select.select_option
+        data_template:
+          entity_id: input_select.hasp_plate01_p2_weather_provider
+          option: "{{ states('input_text.hasp_plate01_p2_weather_provider') }}"
+      - service: homeassistant.turn_on
+        entity_id: automation.hasp_plate01_p2_provider_save
+      - service: homeassistant.update_entity
+        entity_id: sensor.hasp_plate01_p2_weather_provider_condition
+      - service: homeassistant.update_entity
+        entity_id: sensor.hasp_plate01_p2_weather_provider_temperature
+      - service: homeassistant.update_entity
+        entity_id: sensor.hasp_plate01_p2_weather_provider_humidity
+
+  # save selected weather provider
+  - alias: hasp_plate01_p2_provider_save
+    trigger:
+      - platform: state
+        entity_id: input_select.hasp_plate01_p2_weather_provider
+    action:
+      - service: input_text.set_value
+        data_template:
+          entity_id: input_text.hasp_plate01_p2_weather_provider
+          value: "{{ states('input_select.hasp_plate01_p2_weather_provider') }}"
+      - service: homeassistant.update_entity
+        entity_id: sensor.hasp_plate01_p2_weather_provider_condition
+      - service: homeassistant.update_entity
+        entity_id: sensor.hasp_plate01_p2_weather_provider_temperature
+      - service: homeassistant.update_entity
+        entity_id: sensor.hasp_plate01_p2_weather_provider_humidity
+
 
   ##############################################################################
   # Automations to set colors on HASP Page 2
@@ -224,6 +375,8 @@ automation:
 
   # Overlay a clock icon on the left side of p[2].b[4]
   - alias: hasp_plate01_p2_IconOverlayClock
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
@@ -246,11 +399,14 @@ automation:
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
     condition:
-      condition: and
-      conditions:
-        - condition: template
-          value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
+      - condition: template
+        value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
     action:
+      - delay:
+          seconds: 0.2
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/json"
@@ -258,6 +414,8 @@ automation:
 
   # Overlay a calendar icon on the left side of p[2].b[5]
   - alias: hasp_plate01_p2_IconOverlayCalendar
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
@@ -280,11 +438,14 @@ automation:
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
     condition:
-      condition: and
-      conditions:
-        - condition: template
-          value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
+      - condition: template
+        value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
     action:
+      - delay:
+          seconds: 0.2
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/json"
@@ -297,6 +458,8 @@ automation:
   # < 90 thermometer-three-quarters
   # > 90 thermometer-full
   - alias: hasp_plate01_p2_IconOverlayThermometer
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
@@ -319,19 +482,21 @@ automation:
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
     condition:
-      condition: and
-      conditions:
-        - condition: template
-          value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
+      - condition: template
+        value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
     action:
+      - delay:
+          seconds: 0.2
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/json"
-          payload_template: '["delay=1","xstr 5,136,40,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"{% if state_attr("weather.home","temperature") <= 0 -%}{% elif state_attr("weather.home","temperature") < 32 %}{% elif state_attr("weather.home","temperature") < 65 %}{% elif state_attr("weather.home","temperature") < 90 %}{% else %}{%- endif %}\""]'
+          payload_template: '{%set temp=states("sensor.hasp_plate01_p2_weather_provider_temperature")|int%}["delay=1","xstr 5,136,40,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"{%if "Humidity" in states("input_select.hasp_plate01_p2_temperature_humidity")%}{% elif temp <= 0 -%}{% elif temp < 32 %}{% elif temp < 65 %}{% elif temp < 90 %}{% else %}{%- endif %}\""]'
 
   # Weather icons!  Check the current weather state against this list:  https://www.home-assistant.io/integrations/weather/#condition-mapping
   # and then map a FontAwesome icon for each of the possible conditions.
   - alias: hasp_plate01_p2_IconOverlayWeather
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
@@ -359,7 +524,9 @@ automation:
         - condition: template
           value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
     action:
+      - delay:
+          seconds: 0.2
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/json"
-          payload_template: '["delay=1","xstr 0,203,65,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"{% if states.weather.home.state == "clear-night" -%}{% elif states.weather.home.state == "cloudy" %}{% elif states.weather.home.state == "fog" %}{% elif states.weather.home.state == "hail" %}{% elif states.weather.home.state == "lightning" %}{% elif states.weather.home.state == "lightning-rainy" %}{% elif states.weather.home.state == "partlycloudy" %}{% elif states.weather.home.state == "pouring" %}{% elif states.weather.home.state == "rainy" %}{% elif states.weather.home.state == "snowy" %}{% elif states.weather.home.state == "snowy-rainy" %}{% elif states.weather.home.state == "sunny" %}{% elif states.weather.home.state == "windy" %}{% elif states.weather.home.state == "windy-variant" %}{% elif states.weather.home.state == "exceptional" %}{% else %}{%- endif %}\""]'
+          payload_template: '{%set provider=states("input_text.hasp_plate01_p2_weather_provider")%}{%set condition=states(provider)%}["delay=1","xstr 0,203,65,65,8,{{ states("input_number.hasp_plate01_selectedforegroundcolor")|int }},0,1,1,3,\"{% if condition == "clear-night" -%}{% elif condition == "cloudy" %}{% elif condition == "fog" %}{% elif condition == "hail" %}{% elif condition == "lightning" %}{% elif condition == "lightning-rainy" %}{% elif condition == "partlycloudy" %}{% elif condition == "pouring" %}{% elif condition == "rainy" %}{% elif condition == "snowy" %}{% elif condition == "snowy-rainy" %}{% elif condition == "sunny" %}{% elif condition == "windy" %}{% elif condition == "windy-variant" %}{% elif condition == "exceptional" %}{% else %}{%- endif %}\""]'

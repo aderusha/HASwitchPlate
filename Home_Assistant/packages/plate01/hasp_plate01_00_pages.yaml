@@ -241,6 +241,8 @@ automation:
   ##############################################################################
   # Set page button colors across selected pages to show active page button
   - alias: hasp_plate01_00_PageButtonColors_selectedforegroundcolor
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: input_number.hasp_plate01_pagebutton1page
@@ -256,6 +258,8 @@ automation:
       - platform: homeassistant
         event: start
     action:
+      - delay:
+          seconds: 0.2
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/json"
@@ -277,6 +281,8 @@ automation:
             {%- endfor -%}"delay=1"]
 
   - alias: hasp_plate01_00_PageButtonColors_selectedbackgroundcolor
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: input_number.hasp_plate01_pagebutton1page
@@ -292,6 +298,8 @@ automation:
       - platform: homeassistant
         event: start
     action:
+      - delay:
+          seconds: 0.2
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/json"
@@ -313,6 +321,8 @@ automation:
             {%- endfor -%}"delay=1"]
 
   - alias: hasp_plate01_00_PageButtonColors_unselectedforegroundcolor
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: input_number.hasp_plate01_pagebutton1page
@@ -328,6 +338,8 @@ automation:
       - platform: homeassistant
         event: start
     action:
+      - delay:
+          seconds: 0.2
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/json"
@@ -349,6 +361,8 @@ automation:
             {%- endfor -%}"delay=1"]
 
   - alias: hasp_plate01_00_PageButtonColors_unselectedbackgroundcolor
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: input_number.hasp_plate01_pagebutton1page
@@ -364,6 +378,8 @@ automation:
       - platform: homeassistant
         event: start
     action:
+      - delay:
+          seconds: 0.2
       - service: mqtt.publish
         data:
           topic: "hasp/plate01/command/json"

@@ -3,67 +3,157 @@
     badges:
       - entity: binary_sensor.plate01_connected
       - entity: sensor.plate01_status
+      - entity: sensor.hasp_plate01_p2_weather_provider_condition
+      - entity: sensor.hasp_plate01_p2_weather_provider_temperature
     cards:
       - type: entity-button
         name: Click here for HASP plate01 First-Time Setup
         entity: automation.hasp_plate01_00_firsttimesetup
         show_icon: false
         show_name: true
-        hold_action:
-          action: more-info
         tap_action:
           action: call-service
+          confirmation:
+            text: >-
+              This will reset all settings below to their default values. 
+              Continue?
           service: automation.trigger
           service_data:
             entity_id: automation.hasp_plate01_00_firsttimesetup
-      - type: entities
-        title: plate01 Colors
-        show_header_toggle: false
-        state_color: true
-        entities:
-          - entity: input_select.hasp_plate01_theme
-          - type: divider
-          - entity: light.hasp_plate01_selected_foreground_color
-            icon: 'mdi:palette'
-            name: Selected Foreground Color
-          - entity: light.hasp_plate01_selected_background_color
-            icon: 'mdi:palette'
-            name: Selected Background Color
-          - entity: light.hasp_plate01_unselected_foreground_color
-            icon: 'mdi:palette'
-            name: Unselected Foreground Color
-          - entity: light.hasp_plate01_unselected_background_color
-            icon: 'mdi:palette'
-            name: Unselected Background Color
-      - type: entities
-        title: plate01 Page Button Configuration
-        show_header_toggle: false
-        entities:
-          - entity: input_number.hasp_plate01_activepage
-            name: Current active page
-          - type: divider
-          - entity: input_number.hasp_plate01_pagebutton1page
-            name: Page Button 1 Page
-          - entity: input_text.hasp_plate01_pagebutton1label
-            name: Page Button 1 Text
-          - entity: input_select.hasp_plate01_pagebutton1font
-            name: Page Button 1 Font
-          - type: divider
-          - entity: input_number.hasp_plate01_pagebutton2page
-            name: Page Button 2 Page
-          - entity: input_text.hasp_plate01_pagebutton2label
-            name: Page Button 2 Text
-          - entity: input_select.hasp_plate01_pagebutton2font
-            name: Page Button 2 Font
-          - type: divider
-          - entity: input_number.hasp_plate01_pagebutton3page
-            name: Page Button 3 Page
-          - entity: input_text.hasp_plate01_pagebutton3label
-            name: Page Button 3 Text
-          - entity: input_select.hasp_plate01_pagebutton3font
-            name: Page Button 3 Font
-      - type: entities
-        title: plate01 Backlight
-        show_header_toggle: false
-        entities:
-          - light.plate01_backlight
+      - type: vertical-stack
+        cards:
+          - type: entities
+            title: plate01 Backlight and Themes
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - type: divider
+              - entity: light.plate01_backlight
+              - type: section
+              - entity: input_select.hasp_plate01_theme
+              - type: section
+                label: Click the icon to the left to customize each element
+              - entity: light.hasp_plate01_selected_foreground_color
+                icon: 'mdi:palette'
+                name: Selected Foreground Color
+              - entity: light.hasp_plate01_selected_background_color
+                icon: 'mdi:palette'
+                name: Selected Background Color
+              - entity: light.hasp_plate01_unselected_foreground_color
+                icon: 'mdi:palette'
+                name: Unselected Foreground Color
+              - entity: light.hasp_plate01_unselected_background_color
+                icon: 'mdi:palette'
+                name: Unselected Background Color
+              - type: section
+          - type: entities
+            title: plate01 Page Selection Buttons
+            show_header_toggle: false
+            entities:
+              - type: section
+              - entity: input_number.hasp_plate01_activepage
+                name: Current active page
+              - type: section
+              - entity: input_number.hasp_plate01_pagebutton1page
+                name: Page Button 1 Page
+              - entity: input_text.hasp_plate01_pagebutton1label
+                name: Page Button 1 Text
+              - entity: input_select.hasp_plate01_pagebutton1font
+                name: Page Button 1 Font
+              - type: divider
+              - entity: input_number.hasp_plate01_pagebutton2page
+                name: Page Button 2 Page
+              - entity: input_text.hasp_plate01_pagebutton2label
+                name: Page Button 2 Text
+              - entity: input_select.hasp_plate01_pagebutton2font
+                name: Page Button 2 Font
+              - type: divider
+              - entity: input_number.hasp_plate01_pagebutton3page
+                name: Page Button 3 Page
+              - entity: input_text.hasp_plate01_pagebutton3label
+                name: Page Button 3 Text
+              - entity: input_select.hasp_plate01_pagebutton3font
+                name: Page Button 3 Font
+              - type: section
+      - type: vertical-stack
+        cards:
+          - show_header_toggle: false
+            title: 'Page 1: Scene controller'
+            type: entities
+            entities:
+              - type: section
+              - entity: input_select.hasp_plate01_p1_b4_scene
+              - entity: input_text.hasp_plate01_p1_b4_text
+                name: Text to display
+              - entity: input_select.hasp_plate01_p1_b4_font
+                name: Text display font
+              - type: divider
+              - entity: input_select.hasp_plate01_p1_b5_scene
+              - entity: input_text.hasp_plate01_p1_b5_text
+                name: Text to display
+              - entity: input_select.hasp_plate01_p1_b5_font
+                name: Text display font
+              - type: divider
+              - entity: input_select.hasp_plate01_p1_b6_scene
+              - entity: input_text.hasp_plate01_p1_b6_text
+                name: Text to display
+              - entity: input_select.hasp_plate01_p1_b6_font
+                name: Text display font
+              - type: divider
+              - entity: input_select.hasp_plate01_p1_b7_scene
+              - entity: input_text.hasp_plate01_p1_b7_text
+                name: Text to display
+              - entity: input_select.hasp_plate01_p1_b7_font
+                name: Text display font
+              - type: section
+            footer:
+              type: buttons
+              entities:
+                - entity: automation.hasp_plate01_p1_scene_populate
+                  name: Refresh scenes
+                  icon: 'mdi:refresh'
+                  tap_action:
+                    action: call-service
+                    service: automation.trigger
+                    service_data:
+                      entity_id: automation.hasp_plate01_p1_scene_populate
+                - entity: automation.hasp_plate01_p1_scene_populate
+                  name: Create or edit scenes
+                  icon: 'mdi:circle-edit-outline'
+                  tap_action:
+                    action: navigate
+                    navigation_path: /config/scene
+                - entity: automation.hasp_plate01_p1_scene_populate
+                  name: Help
+                  icon: 'mdi:help-circle-outline'
+                  tap_action:
+                    action: url
+                    url_path: >-
+                      https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/02_Nextion_HMI.md#hasp-nextion-object-reference
+          - show_header_toggle: false
+            title: 'Page 2: Clock and Weather'
+            type: entities
+            entities:
+              - type: section
+              - entity: input_select.hasp_plate01_p2_clock_format
+              - entity: input_select.hasp_plate01_p2_calendar_format
+              - entity: input_select.hasp_plate01_p2_temperature_humidity
+              - entity: input_select.hasp_plate01_p2_weather_provider
+              - type: section
+            footer:
+              type: buttons
+              entities:
+                - entity: automation.hasp_plate01_p2_provider_populate
+                  name: Refresh weather providers
+                  icon: 'mdi:refresh'
+                  tap_action:
+                    action: call-service
+                    service: automation.trigger
+                    service_data:
+                      entity_id: automation.hasp_plate01_p2_provider_populate
+                - entity: automation.hasp_plate01_p2_provider_populate
+                  name: Manage weather providers
+                  icon: 'mdi:circle-edit-outline'
+                  tap_action:
+                    action: navigate
+                    navigation_path: /config/integrations

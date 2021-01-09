@@ -25,7 +25,7 @@ light:
   # These MQTT lights allow the user to select from a color wheel. Bitwise
   # math is done on the RGB-888 value selected by the user to convert to
   # RGB-565 and publish that value to MQTT to be picked up by the automations
-  # below.
+  # below and sent to the HASP.
   - platform: mqtt
     name: HASP plate01 Selected Foreground Color
     command_topic: "hasp/plate01/homeassistant/selectedforegroundcolor"
@@ -209,6 +209,21 @@ group:
       - automation.hasp_plate01_00_firsttimesetup
 
 automation:
+
+  ##############################################################################
+  # Request current status from device on Home Assistant start or when device connects
+  - alias: hasp_plate01_00_RequestStatus
+    trigger:
+      - platform: homeassistant
+        event: start
+      - platform: state
+        entity_id: "binary_sensor.plate01_connected"
+    action:
+      - service: mqtt.publish
+        data:
+          topic: "hasp/plate01/command"
+          payload: ''
+
   ##############################################################################
   # Run first time setup commands
   - alias: hasp_plate01_00_FirstTimeSetup
@@ -317,8 +332,6 @@ automation:
         data:
           entity_id: input_select.hasp_plate01_p1_b7_font
           option: "7 Noto Sans 48"
-
-
 
   ##############################################################################
   # Set automation group members on start - Thanks @Nightcat!

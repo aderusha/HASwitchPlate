@@ -77,7 +77,7 @@ The HASP also includes [Google's "Noto Sans"](https://github.com/googlefonts/not
 
 ## Using FontAwesome Icons
 
-FontAwesome ("FA") icons are now included with HASP in fonts 6-10 (`Noto Sans` fonts).  To use these, open the [FontAwesome Cheat Sheet](https://fontawesome.com/cheatsheet), browse to any of the "Solid", "Regular", or "Brands" pages, highlight the icon in your browser, and then paste the result into your automation or the Nextion editor.  The result in your editor should look like this: 
+FontAwesome ("FA") icons are now included with HASP in fonts 6-10 (`Noto Sans` fonts).  To use these, open the [FontAwesome Cheat Sheet](https://fontawesome.com/cheatsheet), browse to any of the "Solid", "Regular", or "Brands" pages, highlight the icon in your browser, right-click and select "copy", and then paste the result into your automation or the Nextion editor.  The result in your editor should look like this: 
 
 When sent to your LCD with the appropriate font selected (again, only fonts 6-10), the icon should show up as seen on the Cheat Sheet.  You can also mix text and icons in the same string.
 
