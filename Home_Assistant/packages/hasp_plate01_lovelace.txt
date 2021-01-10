@@ -157,3 +157,4 @@
                   tap_action:
                     action: navigate
                     navigation_path: /config/integrations
+
