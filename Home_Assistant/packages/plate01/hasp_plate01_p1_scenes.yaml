@@ -150,7 +150,7 @@ automation:
           - automation.hasp_plate01_p1_b6_scene_save
           - automation.hasp_plate01_p1_b7_scene_save
 
-  # save current scene to input_text for safe keeping
+  # save selected scene to input_text for safe keeping
   - alias: hasp_plate01_p1_b4_scene_save
     trigger:
       - platform: state
@@ -202,6 +202,10 @@ automation:
         entity_id: input_text.hasp_plate01_p1_b4_text
       - platform: state
         entity_id: input_select.hasp_plate01_p1_b4_font
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -221,6 +225,10 @@ automation:
         entity_id: input_text.hasp_plate01_p1_b5_text
       - platform: state
         entity_id: input_select.hasp_plate01_p1_b5_font
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -240,6 +248,10 @@ automation:
         entity_id: input_text.hasp_plate01_p1_b6_text
       - platform: state
         entity_id: input_select.hasp_plate01_p1_b6_font
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -259,6 +271,10 @@ automation:
         entity_id: input_text.hasp_plate01_p1_b7_text
       - platform: state
         entity_id: input_select.hasp_plate01_p1_b7_font
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -313,6 +329,8 @@ automation:
   # Here we've swapped selected/unselected as these buttons will always be
   # unselected (unless actively being pressed).
   - alias: hasp_plate01_p1_ColorConfig_selectedforegroundcolor
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
@@ -321,6 +339,10 @@ automation:
         event: start
       - platform: state
         entity_id: input_number.hasp_plate01_selectedforegroundcolor
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -329,6 +351,8 @@ automation:
             [{%- for i in range(4,8) -%}"p[1].b[{{i}}].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p1_ColorConfig_selectedbackgroundcolor
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
@@ -337,6 +361,10 @@ automation:
         event: start
       - platform: state
         entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -345,6 +373,8 @@ automation:
             [{%- for i in range(4,8) -%}"p[1].b[{{i}}].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p1_ColorConfig_unselectedforegroundcolor
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
@@ -353,6 +383,10 @@ automation:
         event: start
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -361,6 +395,8 @@ automation:
             [{%- for i in range(4,8) -%}"p[1].b[{{i}}].pco2={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p1_ColorConfig_unselectedbackgroundcolor
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
@@ -369,6 +405,10 @@ automation:
         event: start
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:

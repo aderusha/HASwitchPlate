@@ -287,6 +287,8 @@ automation:
   # unselected (unless actively being pressed).
 
   - alias: hasp_plate01_p2_ColorConfig_selectedforegroundcolor
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
@@ -295,6 +297,10 @@ automation:
         event: start
       - platform: state
         entity_id: input_number.hasp_plate01_selectedforegroundcolor
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -303,6 +309,8 @@ automation:
             [{%- for i in range(4,8) -%}"p[2].b[{{i}}].pco={{ states('input_number.hasp_plate01_selectedforegroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p2_ColorConfig_selectedbackgroundcolor
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
@@ -311,6 +319,10 @@ automation:
         event: start
       - platform: state
         entity_id: input_number.hasp_plate01_selectedbackgroundcolor
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -319,6 +331,8 @@ automation:
             [{%- for i in range(4,8) -%}"p[2].b[{{i}}].bco={{ states('input_number.hasp_plate01_selectedbackgroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p2_ColorConfig_unselectedforegroundcolor
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
@@ -327,6 +341,10 @@ automation:
         event: start
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -335,6 +353,8 @@ automation:
             [{%- for i in range(4,8) -%}"p[2].b[{{i}}].pco2={{ states('input_number.hasp_plate01_unselectedforegroundcolor')|int }}"{% if not loop.last %},{% endif %}{%- endfor -%}]
 
   - alias: hasp_plate01_p2_ColorConfig_unselectedbackgroundcolor
+    mode: single
+    max_exceeded: silent
     trigger:
       - platform: state
         entity_id: "binary_sensor.plate01_connected"
@@ -343,6 +363,10 @@ automation:
         event: start
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedbackgroundcolor
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -482,6 +506,9 @@ automation:
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
     condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
       - condition: template
         value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
     action:
@@ -519,10 +546,11 @@ automation:
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
     condition:
-      condition: and
-      conditions:
-        - condition: template
-          value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
+      - condition: template
+        value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 2 }}"
     action:
       - delay:
           seconds: 0.2
