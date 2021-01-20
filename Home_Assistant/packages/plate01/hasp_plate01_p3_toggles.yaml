@@ -84,6 +84,10 @@ automation:
         entity_id: input_number.hasp_plate01_selectedforegroundcolor
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -113,6 +117,10 @@ automation:
         entity_id: input_number.hasp_plate01_selectedforegroundcolor
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -142,6 +150,10 @@ automation:
         entity_id: input_number.hasp_plate01_selectedforegroundcolor
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -171,6 +183,10 @@ automation:
         entity_id: input_number.hasp_plate01_selectedforegroundcolor
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
+    condition:
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
     action:
       - service: mqtt.publish
         data:
@@ -222,10 +238,11 @@ automation:
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
     condition:
-      condition: and
-      conditions:
-        - condition: template
-          value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 3 }}"
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
+      - condition: template
+        value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 3 }}"
     action:
       - service: mqtt.publish
         data:
@@ -264,10 +281,11 @@ automation:
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
     condition:
-      condition: and
-      conditions:
-        - condition: template
-          value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 3 }}"
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
+      - condition: template
+        value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 3 }}"
     action:
       - service: mqtt.publish
         data:
@@ -306,10 +324,11 @@ automation:
       - platform: state
         entity_id: input_number.hasp_plate01_unselectedforegroundcolor
     condition:
-      condition: and
-      conditions:
-        - condition: template
-          value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 3 }}"
+      - condition: state
+        entity_id: "binary_sensor.plate01_connected"
+        state: "on"
+      - condition: template
+        value_template: "{{ (states('input_number.hasp_plate01_activepage')|int) == 3 }}"
     action:
       - service: mqtt.publish
         data:

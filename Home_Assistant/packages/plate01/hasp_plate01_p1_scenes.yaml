@@ -102,7 +102,7 @@ automation:
         event: start
     action:
       - service: homeassistant.turn_off
-        entity_id: 
+        entity_id:
           - automation.hasp_plate01_p1_b4_scene_save
           - automation.hasp_plate01_p1_b5_scene_save
           - automation.hasp_plate01_p1_b6_scene_save
@@ -144,7 +144,7 @@ automation:
           entity_id: input_select.hasp_plate01_p1_b7_scene
           option: "{{ states('input_text.hasp_plate01_p1_b7_scene') }}"
       - service: homeassistant.turn_on
-        entity_id: 
+        entity_id:
           - automation.hasp_plate01_p1_b4_scene_save
           - automation.hasp_plate01_p1_b5_scene_save
           - automation.hasp_plate01_p1_b6_scene_save

@@ -197,7 +197,7 @@ then
   echo "WARNING: This device already exists.  You have 3 options:"
   echo "  [r] Replace - Delete existing device and replace with new device [RECOMMENDED]"
   echo "  [u] Update  - Overwrite existing device with new configuration, retain any additional files created"
-  echo "  [c] Canel   - Cancel the process with no changes made"
+  echo "  [c] Cancel  - Cancel the process with no changes made"
   echo ""
   read -e -p "Enter overwrite action [r|u|c]: " -i "r" hasp_overwrite_action
   if [[ "$hasp_overwrite_action" == "r" ]] || [[ "$hasp_overwrite_action" == "R" ]]

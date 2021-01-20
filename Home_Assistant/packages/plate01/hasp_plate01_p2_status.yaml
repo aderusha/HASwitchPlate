@@ -11,7 +11,7 @@ input_select:
     name: plate01 Clock Format
     options:
       - 12 hour
-      - 24 hour      
+      - 24 hour
   hasp_plate01_p2_calendar_format:
     name: plate01 Calendar Format
     options:
@@ -37,7 +37,7 @@ sensor:
       hasp_plate01_p2_weather_provider_humidity:
         value_template: '{%set provider=states("input_text.hasp_plate01_p2_weather_provider")%}{{state_attr(provider,"humidity")|int}}'
         unit_of_measurement: '%'
-        
+
 automation:
   # Toggle 12/24 hour on p[2].b[4]
   - alias: hasp_plate01_p2_b4_clock_format_toggle

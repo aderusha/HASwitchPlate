@@ -1,0 +1,26 @@
+type: entities
+title: 'Page 4: Dimmers'
+show_header_toggle: false
+entities:
+  - type: section
+  - entity: input_select.hasp_plate01_p4_b4_light
+    name: 'Select light for the p[4].b[4] dimmer to control'
+  - entity: input_text.hasp_plate01_p4_b4_text
+    name: Dimmer label
+  - entity: input_select.hasp_plate01_p4_b4_font
+    name: Dimmer label font
+  - type: divider
+  - entity: input_select.hasp_plate01_p4_b5_light
+    name: 'Select light for the p[4].b[5] dimmer to control'
+  - entity: input_text.hasp_plate01_p4_b5_text
+    name: Dimmer label
+  - entity: input_select.hasp_plate01_p4_b5_font
+    name: Dimmer label font
+  - type: divider
+  - entity: input_select.hasp_plate01_p4_b6_light
+    name: 'Select light for the p[4].b[6] dimmer to control'
+  - entity: input_text.hasp_plate01_p4_b6_text
+    name: Dimmer label
+  - entity: input_select.hasp_plate01_p4_b6_font
+    name: Dimmer label font
+  - type: section
