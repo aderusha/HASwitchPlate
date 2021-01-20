@@ -152,6 +152,8 @@ then
   # rename text in contents of files
   sed -i -- 's/plate01/'"$hasp_device"'/g' $hasp_temp_dir/packages/plate01/hasp_plate01_*.yaml
   sed -i -- 's/plate01/'"$hasp_device"'/g' $hasp_temp_dir/hasp-examples/plate01/hasp_plate01_*.yaml
+  sed -i -- 's/plate01/'"$hasp_device"'/g' $hasp_temp_dir/packages/plate01/hasp_plate01_*.txt
+  sed -i -- 's/plate01/'"$hasp_device"'/g' $hasp_temp_dir/hasp-examples/plate01/hasp_plate01_*.txt
   sed -i -- 's/plate01/'"$hasp_device"'/g' $hasp_temp_dir/packages/hasp_plate01_lovelace.txt
 
   # rename files and folder - thanks to @cloggedDrain for this loop!
