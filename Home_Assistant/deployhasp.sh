@@ -97,7 +97,7 @@ fi
 # Enable recorder if not enabled to persist relevant values
 if ! grep "^recorder:" configuration.yaml > /dev/null
 then
-  echo "recorder:" >> configuration.yaml
+  echo "\nrecorder:" >> configuration.yaml
 fi
 
 # Warn if MQTT is not enabled
