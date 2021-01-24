@@ -1,0 +1,84 @@
+blueprint:
+  name: plate01 p[x].b[y] displays a clock
+  description: A HASP button displays a clock
+  domain: automation
+  input:
+    hasp_name:
+      name: HASP Device
+      description: "Select the HASP device"
+      selector:
+        entity:
+          integration: mqtt
+          domain: binary_sensor
+          device_class: connectivity
+    # hasp_name:
+    #   name: HASP Device
+    #   description: "Select the HASP device"
+    #   selector:
+    #     device:
+    #       manufacturer: "HASwitchPlate"
+    #       model: "HASP v1.0.0"
+    hasp_page:
+      name: HASP Page
+      description: "Select the HASP page (1-11) for the clock"
+      selector:
+        number:
+          min: 1
+          max: 11
+          mode: box
+    hasp_button:
+      name: HASP Button
+      description: "Select the HASP button for the clock"
+      selector:
+        number:
+          min: 4
+          max: 15
+          mode: box
+    hasp_font:
+      name: HASP Button Font
+      description: "Select the font for the clock"
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: slider
+    hasp_24h:
+      name: 24 hour clock
+      selector:
+        boolean:
+
+mode: restart
+max_exceeded: silent
+
+variables:
+  haspname: !input hasp_name
+  hasppage: !input hasp_page
+  haspbutton: !input hasp_button
+  haspfont: !input hasp_font
+  hasp24h: !input hasp_24h
+
+trigger:
+  - platform: state
+    entity_id: !input hasp_name
+    to: "on"
+  - platform: homeassistant
+    event: start
+  - platform: time_pattern
+    seconds: 0
+action:
+  - choose:
+    # Every minute, update the clock text
+    - conditions:
+      - condition: template
+        value_template: '{{ trigger.platform == "time_pattern" }}'
+      sequence:
+      - service: mqtt.publish
+        data_template:
+          topic: '{% set haspnode=haspname.split(".")[1].split("_connected")[0] %}hasp/{{haspnode}}/command/p[{{hasppage}}].b[{{haspbutton}}].txt'
+          payload: '{%if hasp_24h == "true" %}{%set format="%-H"%}{% else %}{%set format="%I"%}{% endif %}"{{(now().strftime(format)|int)~now().strftime(":%M")}} "'
+    # Otherwise, apply the font+clock to the button
+    default:
+    - service: mqtt.publish
+      data_template:
+        topic: '{% set haspnode=haspname.split(".")[1].split("_connected")[0] %}hasp/{{haspnode}}/command/json'
+        payload: '{%if hasp24h == true %}{%set format="%-H"%}{% else %}{%set format="%I"%}{% endif %}["p[{{hasppage}}].b[{{haspbutton}}].font={{haspfont}}","p[{{hasppage}}].b[{{haspbutton}}].txt=\"{{(now().strftime(format)|int)~now().strftime(":%M")}} \""]'
