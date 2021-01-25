@@ -56,6 +56,8 @@ variables:
   haspbutton: !input haspbutton
   hasplabel: !input hasplabel
   haspfont: !input haspfont
+  jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
+  haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
 
 trigger:
   - platform: state
@@ -87,7 +89,7 @@ action:
           - choose:
               - conditions:
                   - condition: template
-                    value_template: '{{ (trigger.topic == "hasp/" + haspname + "/state/json") and (trigger.payload_json.event == "p[" + hasppage + "].b[" + haspbutton + "]") and (trigger.payload_json.value == "ON") }}'
+                    value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == haspobject) and (trigger.payload_json.value == "ON") }}'
                 sequence:
                   - service: scene.turn_on
                     entity_id: !input haspscene
@@ -97,4 +99,4 @@ action:
       - service: mqtt.publish
         data_template:
           topic: "hasp/{{haspname}}/command/json"
-          payload: '["p[{{hasppage}}].b[{{haspbutton}}].font={{haspfont}}","p[{{hasppage}}].b[{{haspbutton}}].txt=\"{{hasplabel}}\""]'
+          payload: '["{{haspobject}}.font={{haspfont}}","{{haspobject}}.txt=\"{{hasplabel}}\""]'

@@ -1,7 +1,7 @@
 blueprint:
-  name: plate01 p[x].b[y] displays a clock with a clock icon
-  description: A HASP button displays a clock on the right with a clock icon on the left
-  source_url: https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Display_Clock_with_Icon.yaml
+  name: plate01 p[x].b[y] displays the month + date with a calendar icon
+  description: A HASP button displays month + date on the right with a calendar icon on the left
+  source_url: https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Display_Calendar_with_Icon.yaml
   domain: automation
   input:
     haspconnected:
@@ -14,7 +14,7 @@ blueprint:
           device_class: connectivity
     hasppage:
       name: HASP Page
-      description: "Select the HASP page (1-3) for the clock"
+      description: "Select the HASP page (1-3) for the calendar"
       selector:
         number:
           min: 1
@@ -22,16 +22,12 @@ blueprint:
           mode: box
     haspbutton:
       name: HASP Button
-      description: "Select the HASP button (4-7) for the clock.  Refer to the object map in the HASP documentation."
+      description: "Select the HASP button (4-7) for the calendar.  Refer to the object map in the HASP documentation."
       selector:
         number:
           min: 4
           max: 7
           mode: box
-    hour24:
-      name: 24 hour clock display
-      selector:
-        boolean:
 
 mode: single
 max_exceeded: silent
@@ -41,16 +37,15 @@ variables:
   haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
   hasppage: !input hasppage
   haspbutton: !input haspbutton
-  hour24: !input hour24
   jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
   activepage: '{% set activepage_entity = "input_number.hasp_" ~ haspname ~ "_activepage" %}{{ states(activepage_entity) | int }}'
   fgcolor: '{% set fgcolor_entity = "input_number.hasp_" ~ haspname ~ "_selectedforegroundcolor" %}{{ states(fgcolor_entity) | int }}'
   haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
-  textstring: '{%- if hour24 == true -%}{%- set hourformat="%-H" -%}{%- else %}{%- set hourformat="%I" -%}{%- endif -%}{{(now().strftime(hourformat)|int)~now().strftime(":%M")}}'
-  textfont: "10"
+  textstring: '{{(now().strftime("%b "))~now().day}}'
+  textfont: "8"
   ypos: "{{(haspbutton|int - 4) * 67 + 2}}" # calculate the top pixel position based on the selected button
   xpos: "0"
-  icon: ""
+  icon: ""
   iconwidth: "50"
   iconheight: "65"
   iconfont: "8"
@@ -61,8 +56,8 @@ trigger:
     to: "on"
   - platform: homeassistant
     event: start
-  - platform: time_pattern
-    seconds: 0
+  - platform: time
+    at: "00:00:00"
   - platform: mqtt
     topic: "hasp/+/state/json"
 
@@ -73,9 +68,9 @@ condition:
 
 action:
   - choose:
-      - conditions: # Every minute, update the clock text.  If the selected page is currently active, also place the icon.
+      - conditions: # Every day, update the calendar text.  If the selected page is currently active, also place the icon.
           - condition: template
-            value_template: '{{ trigger.platform == "time_pattern" }}'
+            value_template: '{{ trigger.platform == "time" }}'
         sequence:
           - service: mqtt.publish
             data_template:
