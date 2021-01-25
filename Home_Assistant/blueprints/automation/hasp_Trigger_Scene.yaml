@@ -1,9 +1,10 @@
 blueprint:
   name: plate01 p[x].b[y] triggers a scene
   description: Press a button on the HASP to trigger a scene
+  source_url: https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Trigger_Scene.yaml
   domain: automation
   input:
-    hasp_name:
+    haspconnected:
       name: HASP Device
       description: "Select the HASP device"
       selector:
@@ -11,14 +12,7 @@ blueprint:
           integration: mqtt
           domain: binary_sensor
           device_class: connectivity
-    # hasp_name:
-    #   name: HASP Device
-    #   description: "Select the HASP device"
-    #   selector:
-    #     device:
-    #       manufacturer: "HASwitchPlate"
-    #       model: "HASP v1.0.0"
-    hasp_page:
+    hasppage:
       name: HASP Page
       description: "Select the HASP page (1-11) for this scene button"
       selector:
@@ -26,7 +20,7 @@ blueprint:
           min: 1
           max: 11
           mode: box
-    hasp_button:
+    haspbutton:
       name: HASP Button
       description: "Select the HASP button for this scene"
       selector:
@@ -34,16 +28,16 @@ blueprint:
           min: 4
           max: 15
           mode: box
-    hasp_scene:
+    haspscene:
       name: Scene to trigger
       description: "Select a scene for this button to trigger"
       selector:
         entity:
           domain: scene
-    hasp_label:
+    hasplabel:
       name: HASP Button Label
       description: "Enter text to appear on the button"
-    hasp_font:
+    haspfont:
       name: HASP Button Font
       description: "Select the text font for this button label"
       selector:
@@ -52,41 +46,55 @@ blueprint:
           max: 10
           mode: slider
 
-mode: restart
+mode: single
 max_exceeded: silent
 
 variables:
-  haspname: !input hasp_name
-  hasppage: !input hasp_page
-  haspbutton: !input hasp_button
-  hasplabel: !input hasp_label
-  haspfont: !input hasp_font
+  haspconnected: !input haspconnected
+  haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
+  hasppage: !input hasppage
+  haspbutton: !input haspbutton
+  hasplabel: !input hasplabel
+  haspfont: !input haspfont
 
 trigger:
   - platform: state
-    entity_id: !input hasp_name
+    entity_id: !input haspconnected
     to: "on"
   - platform: homeassistant
     event: start
   - platform: mqtt
     topic: "hasp/+/state/json"
 
+condition:
+  - condition: state
+    entity_id: !input haspconnected
+    state: "on"
+
+# no {{ trigger }} is defined when the "EXECUTE" button is pressed when deploying this blueprint.  We can use this to
+# our advantage with the `default` choice, so use that sequence for setup tasks.
+#
+# Because our MQTT subscription is broad, we'll catch a lot of events.  If we condition on our specific event in the
+# first test, the "default" will be triggered when any other MQTT events come in that weren't meant for us, triggering
+# the setup tasks.  So, first just catch all MQTT events, then select just the events of interest.  This way, the
+# second-level "choose" will discard remaining MQTT traffic while allowing us to use the default for non-MQTT events.
 action:
   - choose:
-    # Catch the button press and trigger a scene in response
-    - conditions:
-      - condition: template
-        value_template: '{% set haspnode=haspname.split(".")[1].split("_connected")[0] %}{{ (trigger.platform == "mqtt") and (trigger.topic == "hasp/" + haspnode + "/state/json") and (trigger.payload_json.event == "p[" + hasppage + "].b[" + haspbutton + "]") and (trigger.payload_json.value == "ON") }}'
-      sequence:
-      - service: scene.turn_on
-        entity_id: !input hasp_scene
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger.platform == "mqtt" }}'
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: '{{ (trigger.topic == "hasp/" + haspname + "/state/json") and (trigger.payload_json.event == "p[" + hasppage + "].b[" + haspbutton + "]") and (trigger.payload_json.value == "ON") }}'
+                sequence:
+                  - service: scene.turn_on
+                    entity_id: !input haspscene
+
     # Catch our other triggers and apply the font+label to the button
-    - conditions:
-      - condition: template
-        value_template: '{{ trigger.platform != "mqtt" }}'
-      sequence:
+    default:
       - service: mqtt.publish
         data_template:
-          topic: '{% set haspnode=haspname.split(".")[1].split("_connected")[0] %}hasp/{{haspnode}}/command/json'
+          topic: "hasp/{{haspname}}/command/json"
           payload: '["p[{{hasppage}}].b[{{haspbutton}}].font={{haspfont}}","p[{{hasppage}}].b[{{haspbutton}}].txt=\"{{hasplabel}}\""]'
-

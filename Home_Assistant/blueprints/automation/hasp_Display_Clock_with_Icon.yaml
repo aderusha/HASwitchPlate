@@ -1,0 +1,107 @@
+blueprint:
+  name: plate01 p[x].b[y] displays a clock with a clock icon
+  description: A HASP button displays a clock on the right with a clock icon on the left
+  source_url: https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Display_Clock_with_Icon.yaml
+  domain: automation
+  input:
+    haspconnected:
+      name: HASP Device
+      description: "Select the HASP device"
+      selector:
+        entity:
+          integration: mqtt
+          domain: binary_sensor
+          device_class: connectivity
+    hasppage:
+      name: HASP Page
+      description: "Select the HASP page (1-3) for the clock"
+      selector:
+        number:
+          min: 1
+          max: 3
+          mode: box
+    haspbutton:
+      name: HASP Button
+      description: "Select the HASP button (4-7) for the clock.  Refer to the object map in the HASP documentation."
+      selector:
+        number:
+          min: 4
+          max: 7
+          mode: box
+    hour24:
+      name: 24 hour clock display
+      selector:
+        boolean:
+
+mode: single
+max_exceeded: silent
+
+variables:
+  haspconnected: !input haspconnected
+  haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
+  hasppage: !input hasppage
+  haspbutton: !input haspbutton
+  hour24: !input hour24
+  activepage: '{% set activepage_entity = "input_number.hasp_" ~ haspname ~ "_activepage" %}{{ states(activepage_entity) | int }}'
+  fgcolor: '{% set fgcolor_entity = "input_number.hasp_" ~ haspname ~ "_selectedforegroundcolor" %}{{ states(fgcolor_entity) | int }}'
+  haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
+  ytop: "{{(haspbutton|int - 4) * 67 + 2}}" # calculate the top pixel position based on the selected button
+  clocktime: '{%- if hour24 == true -%}{%- set hourformat="%-H" -%}{%- else %}{%- set hourformat="%I" -%}{%- endif -%}{{(now().strftime(hourformat)|int)~now().strftime(":%M")}}'
+  jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
+
+trigger:
+  - platform: state
+    entity_id: !input haspconnected
+    to: "on"
+  - platform: homeassistant
+    event: start
+  - platform: time_pattern
+    seconds: 0
+  - platform: mqtt
+    topic: "hasp/+/state/json"
+
+condition:
+  - condition: state
+    entity_id: !input haspconnected
+    state: "on"
+
+action:
+  - choose:
+      - conditions: # Every minute, update the clock text.  If the selected page is currently active, also place the icon.
+          - condition: template
+            value_template: '{{ trigger.platform == "time_pattern" }}'
+        sequence:
+          - service: mqtt.publish
+            data_template:
+              topic: "hasp/{{haspname}}/command/json"
+              payload: '["{{haspobject}}.txt=\"{{clocktime}} \""{%- if activepage|int == hasppage|int -%},"delay=1","xstr 0,{{ytop}},50,65,8,{{fgcolor}},0,1,1,3,\"\""{%- endif -%}]'
+
+      - conditions: # Catch MQTT events
+          - condition: template
+            value_template: '{{ trigger.platform == "mqtt" }}'
+        sequence:
+          - choose:
+              - conditions: # Somebody pressed our button which hides the overlaid icon.  Put it back.
+                  - condition: template
+                    value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == haspobject ) and (trigger.payload_json.value == "OFF") }}'
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "hasp/{{haspname}}/command/json"
+                      payload: '["xstr 0,{{ytop}},50,65,8,{{fgcolor}},0,1,1,3,\"\""]'
+              - conditions: # Page changed to our page, so place the icon on the screen.
+                  - condition: template
+                    value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == "page" ) and (trigger.payload_json.value == hasppage|int) }}'
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "hasp/{{haspname}}/command/json"
+                      payload: '["xstr 0,{{ytop}},50,65,8,{{fgcolor}},0,1,1,3,\"\""]'
+
+    # Otherwise, apply the font+clock to the button
+    default:
+      - service: mqtt.publish
+        data_template:
+          topic: "hasp/{{haspname}}/command/json"
+          payload: '["{{haspobject}}.font=10","{{haspobject}}.xcen=2","{{haspobject}}.ycen=2","{{haspobject}}.txt=\"{{clocktime}} \""{%- if activepage|int == hasppage|int -%},"delay=1","xstr 0,{{ytop}},50,65,8,{{fgcolor}},0,1,1,3,\"\""{%- endif -%}]'
+
