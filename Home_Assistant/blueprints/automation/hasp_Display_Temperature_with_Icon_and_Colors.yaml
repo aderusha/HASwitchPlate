@@ -178,13 +178,12 @@ action:
   - choose:
       - conditions: # Update temperature if our weather provider changed state
           - condition: template
-            value_template: '{{ trigger.platform == "state" }}'
+            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == weather_provider) }}'
         sequence:
           - service: mqtt.publish
             data_template:
               topic: "hasp/{{haspname}}/command/json"
               payload: '["{{haspobject}}.pco={{textcolor}}","{{haspobject}}.txt=\"{{textstring}} \""{%- if activepage|int == hasppage|int -%},"delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{tempcolor}},0,1,1,3,\"{{tempicon}}\""{%- endif -%}]'
-
       - conditions: # Catch MQTT events
           - condition: template
             value_template: '{{ trigger.platform == "mqtt" }}'
@@ -206,9 +205,7 @@ action:
                     data_template:
                       topic: "hasp/{{haspname}}/command/json"
                       payload: '["xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{tempcolor}},0,1,1,3,\"{{tempicon}}\""]'
-
-    # Otherwise send the text + icon to the button
-    default:
+    default: # Otherwise send the text + icon to the button
       - service: mqtt.publish
         data_template:
           topic: "hasp/{{haspname}}/command/json"
