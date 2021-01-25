@@ -1,11 +1,11 @@
 blueprint:
-  name: plate01 p[x].b[y] triggers a scene
-  description: Press a button on the HASP to trigger a scene
-  source_url: https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Trigger_Scene.yaml
+  name: "plate01 p[x].b[y] triggers a scene"
+  description: "Press a button on the HASP to trigger a scene"
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Trigger_Scene.yaml"
   domain: automation
   input:
     haspconnected:
-      name: HASP Device
+      name: "HASP Device"
       description: "Select the HASP device"
       selector:
         entity:
@@ -13,7 +13,7 @@ blueprint:
           domain: binary_sensor
           device_class: connectivity
     hasppage:
-      name: HASP Page
+      name: "HASP Page"
       description: "Select the HASP page (1-11) for this scene button"
       selector:
         number:
@@ -21,7 +21,7 @@ blueprint:
           max: 11
           mode: box
     haspbutton:
-      name: HASP Button
+      name: "HASP Button"
       description: "Select the HASP button for this scene"
       selector:
         number:
@@ -29,16 +29,16 @@ blueprint:
           max: 15
           mode: box
     haspscene:
-      name: Scene to trigger
+      name: "Scene to trigger"
       description: "Select a scene for this button to trigger"
       selector:
         entity:
           domain: scene
     hasplabel:
-      name: HASP Button Label
+      name: "HASP Button Label"
       description: "Enter text to appear on the button"
     haspfont:
-      name: HASP Button Font
+      name: "HASP Button Font"
       description: "Select the text font for this button label"
       selector:
         number:

@@ -1,7 +1,7 @@
 blueprint:
-  name: plate01 p[x].b[y] displays a clock
-  description: A HASP button displays a clock
-  source_url: https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Display_Clock.yaml
+  name: "plate01 p[x].b[y] displays a clock"
+  description: "A HASP button displays a clock"
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Display_Clock.yaml"
   domain: automation
   input:
     haspconnected:
@@ -74,6 +74,11 @@ variables:
   ycen: !input ycen
   hour24: !input hour24
   ampm: !input ampm
+  haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
+  commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
+  jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
+  textstring: '{%- if hour24 == true -%}{%- set hourformat="%-H" -%}{%- else %}{%- set hourformat="%I" -%}{%- endif -%}{{(now().strftime(hourformat)|int)~now().strftime(":%M")}} {% if ampm == true %}{{now().strftime("%p")|lower}}{% endif %}'
+  textfont: "10"
 
 trigger:
   - platform: state
@@ -98,11 +103,11 @@ action:
         sequence:
           - service: mqtt.publish
             data_template:
-              topic: "hasp/{{haspname}}/command/p[{{hasppage}}].b[{{haspbutton}}].txt"
-              payload: '{% if hour24 == true %}{% set format="%-H"%}{% else %}{% set format="%I"%}{% endif %}"{{(now().strftime(format)|int)~now().strftime(":%M")}} {% if ampm == true %}{{now().strftime("%p")|lower}}{% endif %}"'
+              topic: "{{commandtopic}}.txt"
+              payload: '"{{textstring}}"'
     # Otherwise, apply the font+clock to the button
     default:
       - service: mqtt.publish
         data_template:
-          topic: "hasp/{{haspname}}/command/json"
-          payload: '{% if hour24 == true %}{% set format="%-H"%}{% else %}{% set format="%I"%}{% endif %}["p[{{hasppage}}].b[{{haspbutton}}].font={{font}}","p[{{hasppage}}].b[{{haspbutton}}].xcen={{xcen}}","p[{{hasppage}}].b[{{haspbutton}}].ycen={{ycen}}","p[{{hasppage}}].b[{{haspbutton}}].txt=\"{{(now().strftime(format)|int)~now().strftime(":%M")}} {% if ampm == true %}{{now().strftime("%p")|lower}}{% endif %}\""]'
+          topic: "{{jsoncommandtopic}}"
+          payload: '["{{haspobject}}.font={{font}}","{{haspobject}}.xcen={{xcen}}","{{haspobject}}.ycen={{ycen}}","{{haspobject}}.txt=\"{{textstring}}\""]'

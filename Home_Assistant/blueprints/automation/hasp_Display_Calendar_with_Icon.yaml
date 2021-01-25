@@ -1,11 +1,11 @@
 blueprint:
-  name: plate01 p[x].b[y] displays the month + date with a calendar icon
-  description: A HASP button displays month + date on the right with a calendar icon on the left
-  source_url: https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Display_Calendar_with_Icon.yaml
+  name: "plate01 p[x].b[y] displays the month + date with a calendar icon"
+  description: "A HASP button displays month + date on the right with a calendar icon on the left"
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Display_Calendar_with_Icon.yaml"
   domain: automation
   input:
     haspconnected:
-      name: HASP Device
+      name: "HASP Device"
       description: "Select the HASP device"
       selector:
         entity:
@@ -13,7 +13,7 @@ blueprint:
           domain: binary_sensor
           device_class: connectivity
     hasppage:
-      name: HASP Page
+      name: "HASP Page"
       description: "Select the HASP page (1-3) for the calendar"
       selector:
         number:
@@ -21,7 +21,7 @@ blueprint:
           max: 3
           mode: box
     haspbutton:
-      name: HASP Button
+      name: "HASP Button"
       description: "Select the HASP button (4-7) for the calendar.  Refer to the object map in the HASP documentation."
       selector:
         number:
