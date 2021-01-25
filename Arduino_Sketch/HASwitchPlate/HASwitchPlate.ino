@@ -424,6 +424,8 @@ void mqttConnect()
       {
         nextionSendCmd("page " + String(nextionActivePage));
       }
+      // Publish discovery configuration
+      mqttDiscovery();
       // Publish device status to MQTT
       mqttStatusUpdate();
     }
@@ -671,6 +673,16 @@ void mqttStatusUpdate()
   // Publish connection status
   mqttClient.publish(mqttStatusTopic, "ON", true, 1);
   debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + "' : 'ON'");
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+void mqttDiscovery()
+{ // Publish Home Assistant discovery messages
+  // Start with the binary_sensor for connectivity
+  String mqttDiscoveryTopic = String(F("homeassistant/binary_sensor/")) + String(haspNode) + String(F("/config"));
+  String mqttDiscoveryPayload = String(F("{\"device_class\":\"connectivity\",\"name\":\"")) + String(haspNode) + String(F(" connected\",\"state_topic\":\"")) + String(mqttStatusTopic) + String(F("\",\"availability_topic\":\"")) + String(mqttStatusTopic) + String(F("\",\"unique_id\":\"")) + String(mqttClientId) + String(F("\",\"payload_on\":\"ON\",\"payload_off\":\"OFF\",\"payload_available\":\"ON\",\"payload_not_available\":\"OFF\",\"device\":{\"identifiers\":[\"")) + String(mqttClientId) + String(F("\"],\"name\":\"")) + String(haspNode) + String(F("\",\"manufacturer\":\"HASwitchPlate\",\"model\":\"HASP v1.0.0\",\"sw_version\":\"")) + String(haspVersion) + String(F("\"}}"));
+  mqttClient.publish(mqttDiscoveryTopic, mqttDiscoveryPayload, true, 1);
+  debugPrintln(String(F("MQTT OUT: '")) + mqttDiscoveryTopic + String(F("' : '")) + String(mqttDiscoveryPayload) + String(F("'")));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -986,6 +998,9 @@ void nextionProcessInput()
         String mqttPageTopic = mqttStateTopic + "/page";
         mqttClient.publish(mqttPageTopic, nextionPage);
         debugPrintln(String(F("MQTT OUT: '")) + mqttPageTopic + String(F("' : '")) + nextionPage + String(F("'")));
+        String mqttButtonJSONEvent = String(F("{\"event\":\"page\", \"value\":")) + nextionPage + String(F("}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
       }
     }
   }
@@ -1068,6 +1083,9 @@ void nextionProcessInput()
         String mqttReturnTopic = mqttStateTopic + mqttGetSubtopic;
         mqttClient.publish(mqttReturnTopic, getString);
         debugPrintln(String(F("MQTT OUT: '")) + mqttReturnTopic + String(F("' : '")) + getString + String(F("'")));
+        String mqttButtonJSONEvent = String(F("{\"event\":\"")) + mqttGetSubtopicJSON + String(F("\", \"value\":\"")) + getString + String(F("\"}"));
+        mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
         mqttGetSubtopic = "";
       }
     }
@@ -1159,6 +1177,9 @@ void nextionProcessInput()
       lcdBacklightOn = 0;
       mqttClient.publish(mqttLightStateTopic, "OFF", true, 1);
       debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"sleep\", \"value\":\"ON\""));
+      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
   }
   else if (nextionReturnBuffer[0] == 0x87)
@@ -1170,6 +1191,10 @@ void nextionProcessInput()
       mqttClient.publish(mqttLightStateTopic, "ON", true, 1);
       debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
       mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklightDim), true, 1);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : ")) + String(lcdBacklightDim));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"sleep\", \"value\":\"OFF\""));
+      mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
   }
   else if (nextionReturnBuffer[0] == 0x88)
