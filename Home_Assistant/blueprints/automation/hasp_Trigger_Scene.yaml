@@ -57,6 +57,7 @@ variables:
   hasplabel: !input hasplabel
   haspfont: !input haspfont
   jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
+  jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
   haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
 
 trigger:
@@ -98,5 +99,5 @@ action:
     default:
       - service: mqtt.publish
         data_template:
-          topic: "hasp/{{haspname}}/command/json"
+          topic: "{{jsoncommandtopic}}"
           payload: '["{{haspobject}}.font={{haspfont}}","{{haspobject}}.txt=\"{{hasplabel}}\""]'
