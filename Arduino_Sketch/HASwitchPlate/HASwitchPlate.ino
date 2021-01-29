@@ -382,7 +382,7 @@ void mqttConnect()
     mqttClient.setOptions(30, true, 5000);
 
     // declare LWT
-    mqttClient.setWill(mqttStatusTopic.c_str(), "OFF");
+    mqttClient.setWill(mqttStatusTopic.c_str(), "OFF", true, 1);
 
     if (mqttClient.connect(mqttClientId.c_str(), mqttUser, mqttPassword, false))
     { // Attempt to connect to broker, setting last will and testament
@@ -408,15 +408,6 @@ void mqttConnect()
         debugPrintln(String(F("MQTT: subscribed to ")) + mqttStatusTopic);
       }
 
-      if (mqttFirstConnect)
-      { // Force any subscribed clients to toggle OFF/ON when we first connect to
-        // make sure we get a full panel refresh at power on.  Sending OFF,
-        // "ON" will be sent by the mqttStatusTopic subscription action.
-        mqttClient.publish(mqttStatusTopic, "OFF", true, 1);
-        debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + "' : 'OFF'");
-        mqttFirstConnect = false;
-      }
-
       // Update panel with MQTT status
       nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connected:\\r " + String(mqttServer) + "\"");
       debugPrintln(F("MQTT: connected"));
@@ -426,8 +417,38 @@ void mqttConnect()
       }
       // Publish discovery configuration
       mqttDiscovery();
-      // Publish device status to MQTT
-      mqttStatusUpdate();
+
+      // Publish backlight status
+      if (lcdBacklightOn)
+      {
+        mqttClient.publish(mqttLightStateTopic, "ON", true, 1);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
+      }
+      else
+      {
+        mqttClient.publish(mqttLightStateTopic, "OFF", true, 1);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
+      }
+      mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklightDim), true, 1);
+      debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : ")) + String(lcdBacklightDim));
+
+      // Publish current page IF ( (it's not "0") OR (we've set the flag to report 0 anyway) )
+      if ((nextionActivePage != 0) || nextionReportPage0)
+      {
+        String mqttPageTopic = mqttStateTopic + "/page";
+        mqttClient.publish(mqttPageTopic, String(nextionActivePage));
+        debugPrintln(String(F("MQTT OUT: '")) + mqttPageTopic + String(F("' : '")) + String(nextionActivePage) + String(F("'")));
+      }
+
+      if (mqttFirstConnect)
+      { // Force any subscribed clients to toggle OFF/ON when we first connect to
+        // make sure we get a full panel refresh at power on.  Sending OFF,
+        // "ON" will be sent by the mqttStatusTopic subscription action.
+        mqttClient.publish(mqttStatusTopic, "OFF", true, 1);
+        debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + "' : 'OFF'");
+        mqttFirstConnect = false;
+      }
+      // Publish device status sensor to MQTT
     }
     else
     { // Retry until we give up and restart after connectTimeout seconds
@@ -594,12 +615,10 @@ void mqttCallback(String &strTopic, String &strPayload)
     lcdBacklightOn = 1;
     mqttClient.publish(mqttLightStateTopic, "ON", true, 1);
     debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
-    mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklightDim), true, 1);
-    debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : ")) + String(lcdBacklightDim));
   }
   else if (strTopic == mqttStatusTopic && strPayload == "OFF")
   { // catch a dangling LWT from a previous connection if it appears
-    mqttClient.publish(mqttStatusTopic, "ON");
+    mqttClient.publish(mqttStatusTopic, "ON", true, 1);
     debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + String(F("' : 'ON'")));
   }
 }
@@ -607,80 +626,72 @@ void mqttCallback(String &strTopic, String &strPayload)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void mqttStatusUpdate()
 { // Periodically publish system status
-  String mqttStatusPayload = "{";
-  mqttStatusPayload += String(F("\"status\":\"available\","));
-  mqttStatusPayload += String(F("\"espVersion\":")) + String(haspVersion) + String(F(","));
+  String mqttSensorPayload = "{";
+  mqttSensorPayload += String(F("\"espVersion\":")) + String(haspVersion) + String(F(","));
   if (updateEspAvailable)
   {
-    mqttStatusPayload += String(F("\"updateEspAvailable\":true,"));
+    mqttSensorPayload += String(F("\"updateEspAvailable\":true,"));
   }
   else
   {
-    mqttStatusPayload += String(F("\"updateEspAvailable\":false,"));
+    mqttSensorPayload += String(F("\"updateEspAvailable\":false,"));
   }
   if (lcdConnected)
   {
-    mqttStatusPayload += String(F("\"lcdConnected\":true,"));
+    mqttSensorPayload += String(F("\"lcdConnected\":true,"));
   }
   else
   {
-    mqttStatusPayload += String(F("\"lcdConnected\":false,"));
+    mqttSensorPayload += String(F("\"lcdConnected\":false,"));
   }
-  mqttStatusPayload += String(F("\"lcdVersion\":\"")) + String(lcdVersion) + String(F("\","));
+  mqttSensorPayload += String(F("\"lcdVersion\":\"")) + String(lcdVersion) + String(F("\","));
   if (updateLcdAvailable)
   {
-    mqttStatusPayload += String(F("\"updateLcdAvailable\":true,"));
+    mqttSensorPayload += String(F("\"updateLcdAvailable\":true,"));
   }
   else
   {
-    mqttStatusPayload += String(F("\"updateLcdAvailable\":false,"));
+    mqttSensorPayload += String(F("\"updateLcdAvailable\":false,"));
   }
-  mqttStatusPayload += String(F("\"espUptime\":")) + String(long(millis() / 1000)) + String(F(","));
-  mqttStatusPayload += String(F("\"signalStrength\":")) + String(WiFi.RSSI()) + String(F(","));
-  mqttStatusPayload += String(F("\"haspIP\":\"")) + WiFi.localIP().toString() + String(F("\","));
-  mqttStatusPayload += String(F("\"heapFree\":")) + String(ESP.getFreeHeap()) + String(F(","));
-  mqttStatusPayload += String(F("\"heapFragmentation\":")) + String(ESP.getHeapFragmentation()) + String(F(","));
-  mqttStatusPayload += String(F("\"heapMaxFreeBlockSize\":")) + String(ESP.getMaxFreeBlockSize()) + String(F(","));
-  mqttStatusPayload += String(F("\"espCore\":\"")) + String(ESP.getCoreVersion()) + String(F("\""));
-  mqttStatusPayload += "}";
+  mqttSensorPayload += String(F("\"espUptime\":")) + String(long(millis() / 1000)) + String(F(","));
+  mqttSensorPayload += String(F("\"signalStrength\":")) + String(WiFi.RSSI()) + String(F(","));
+  mqttSensorPayload += String(F("\"haspIP\":\"")) + WiFi.localIP().toString() + String(F("\","));
+  mqttSensorPayload += String(F("\"haspClientID\":\"")) + mqttClientId + String(F("\","));
+  mqttSensorPayload += String(F("\"haspMac\":\"")) + String(espMac[0], HEX) + String(F(":")) + String(espMac[1], HEX) + String(F(":")) + String(espMac[2], HEX) + String(F(":")) + String(espMac[3], HEX) + String(F(":")) + String(espMac[4], HEX) + String(F(":")) + String(espMac[5], HEX) + String(F("\","));
+  mqttSensorPayload += String(F("\"haspManufacturer\":\"HASwitchPlate\",\"haspModel\":\"HASP v1.0.0\","));
+  mqttSensorPayload += String(F("\"heapFree\":")) + String(ESP.getFreeHeap()) + String(F(","));
+  mqttSensorPayload += String(F("\"heapFragmentation\":")) + String(ESP.getHeapFragmentation()) + String(F(","));
+  mqttSensorPayload += String(F("\"heapMaxFreeBlockSize\":")) + String(ESP.getMaxFreeBlockSize()) + String(F(","));
+  mqttSensorPayload += String(F("\"espCore\":\"")) + String(ESP.getCoreVersion()) + String(F("\""));
+  mqttSensorPayload += "}";
 
-  // Publish status JSON
-  mqttClient.publish(mqttSensorTopic, mqttStatusPayload, true, 1);
-  debugPrintln(String(F("MQTT OUT: '")) + mqttSensorTopic + String(F("' : '")) + mqttStatusPayload + String(F("'")));
-
-  // Publish backlight status
-  if (lcdBacklightOn)
-  {
-    mqttClient.publish(mqttLightStateTopic, "ON", true, 1);
-    debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
-  }
-  else
-  {
-    mqttClient.publish(mqttLightStateTopic, "OFF", true, 1);
-    debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
-  }
-  mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklightDim), true, 1);
-  debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : ")) + String(lcdBacklightDim));
-
-  // Publish current page IF ( (it's not "0") OR (we've set the flag to report 0 anyway) )
-  if ((nextionActivePage == 0) || nextionReportPage0)
-  {
-    String mqttPageTopic = mqttStateTopic + "/page";
-    mqttClient.publish(mqttPageTopic, String(nextionActivePage));
-    debugPrintln(String(F("MQTT OUT: '")) + mqttPageTopic + String(F("' : '")) + String(nextionActivePage) + String(F("'")));
-  }
-
-  // Publish connection status
-  mqttClient.publish(mqttStatusTopic, "ON", true, 1);
-  debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + "' : 'ON'");
+  // Publish sensor JSON
+  mqttClient.publish(mqttSensorTopic, mqttSensorPayload, true, 1);
+  debugPrintln(String(F("MQTT OUT: '")) + mqttSensorTopic + String(F("' : '")) + mqttSensorPayload + String(F("'")));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void mqttDiscovery()
 { // Publish Home Assistant discovery messages
   // Start with the binary_sensor for connectivity
+  String macAddress = String(espMac[0], HEX) + String(F(":")) + String(espMac[1], HEX) + String(F(":")) + String(espMac[2], HEX) + String(F(":")) + String(espMac[3], HEX) + String(F(":")) + String(espMac[4], HEX) + String(F(":")) + String(espMac[5], HEX);
   String mqttDiscoveryTopic = String(F("homeassistant/binary_sensor/")) + String(haspNode) + String(F("/config"));
-  String mqttDiscoveryPayload = String(F("{\"device_class\":\"connectivity\",\"name\":\"")) + String(haspNode) + String(F(" connected\",\"state_topic\":\"")) + String(mqttStatusTopic) + String(F("\",\"availability_topic\":\"")) + String(mqttStatusTopic) + String(F("\",\"unique_id\":\"")) + String(mqttClientId) + String(F("\",\"payload_on\":\"ON\",\"payload_off\":\"OFF\",\"payload_available\":\"ON\",\"payload_not_available\":\"OFF\",\"device\":{\"identifiers\":[\"")) + String(mqttClientId) + String(F("\"],\"name\":\"")) + String(haspNode) + String(F("\",\"manufacturer\":\"HASwitchPlate\",\"model\":\"HASP v1.0.0\",\"sw_version\":\"")) + String(haspVersion) + String(F("\"}}"));
+  String mqttDiscoveryPayload = String(F("{\"device_class\":\"connectivity\",\"name\":\"")) + String(haspNode) + String(F(" connected\",\"state_topic\":\"")) + mqttStatusTopic + String(F("\",\"availability_topic\":\"")) + mqttStatusTopic + String(F("\",\"force_update\":false,\"unique_id\":\"")) + mqttClientId + String(F("\",\"payload_on\":\"ON\",\"payload_off\":\"OFF\",\"payload_available\":\"ON\",\"payload_not_available\":\"OFF\",\"device\":{\"identifiers\":[\"")) + mqttClientId + String(F("\"],\"connections\":[[\"mac\",\"")) + macAddress + String(F("\"]],\"name\":\"")) + String(haspNode) + String(F("\",\"manufacturer\":\"HASwitchPlate\",\"model\":\"HASP v1.0.0\",\"sw_version\":")) + String(haspVersion) + String(F("}}"));
+  mqttClient.publish(mqttDiscoveryTopic, mqttDiscoveryPayload, true, 1);
+  debugPrintln(String(F("MQTT OUT: '")) + mqttDiscoveryTopic + String(F("' : '")) + String(mqttDiscoveryPayload) + String(F("'")));
+  // light discovery for backlight
+  mqttDiscoveryTopic = String(F("homeassistant/light/")) + String(haspNode) + String(F("/config"));
+  mqttDiscoveryPayload = String(F("{\"name\":\"")) + String(haspNode) + String(F(" backlight\",\"command_topic\":\"")) + mqttLightCommandTopic + String(F("\",\"state_topic\":\"")) + mqttLightStateTopic + String(F("\",\"brightness_state_topic\":\"")) + mqttLightBrightStateTopic + String(F("\",\"brightness_command_topic\":\"")) + mqttLightBrightCommandTopic + String(F("\",\"availability_topic\":\"")) + mqttStatusTopic + String(F("\",\"brightness_scale\":100,\"unique_id\":\"")) + mqttClientId + String(F("-backlight\",\"payload_on\":\"ON\",\"payload_off\":\"OFF\",\"payload_available\":\"ON\",\"payload_not_available\":\"OFF\",\"device\":{\"identifiers\":[\"")) + mqttClientId + String(F("\"],\"connections\":[[\"mac\",\"")) + macAddress + String(F("\"]],\"name\":\"")) + String(haspNode) + String(F("\",\"manufacturer\":\"HASwitchPlate\",\"model\":\"HASP v1.0.0\",\"sw_version\":")) + String(haspVersion) + String(F("}}"));
+  mqttClient.publish(mqttDiscoveryTopic, mqttDiscoveryPayload, true, 1);
+  debugPrintln(String(F("MQTT OUT: '")) + mqttDiscoveryTopic + String(F("' : '")) + String(mqttDiscoveryPayload) + String(F("'")));
+  // sensor discovery for device telemetry
+  mqttDiscoveryTopic = String(F("homeassistant/sensor/")) + String(haspNode) + String(F("/config"));
+  mqttDiscoveryPayload = String(F("{\"name\":\"")) + String(haspNode) + String(F(" sensor\",\"json_attributes_topic\":\"")) + mqttSensorTopic + String(F("\",\"state_topic\":\"")) + mqttStatusTopic + String(F("\",\"availability_topic\":\"")) + mqttStatusTopic + String(F("\",\"unique_id\":\"")) + mqttClientId + String(F("-sensor\",\"payload_available\":\"ON\",\"payload_not_available\":\"OFF\",\"device\":{\"identifiers\":[\"")) + mqttClientId + String(F("\"],\"connections\":[[\"mac\",\"")) + macAddress + String(F("\"]],\"name\":\"")) + String(haspNode) + String(F("\",\"manufacturer\":\"HASwitchPlate\",\"model\":\"HASP v1.0.0\",\"sw_version\":")) + String(haspVersion) + String(F("}}"));
+  mqttClient.publish(mqttDiscoveryTopic, mqttDiscoveryPayload, true, 1);
+  debugPrintln(String(F("MQTT OUT: '")) + mqttDiscoveryTopic + String(F("' : '")) + String(mqttDiscoveryPayload) + String(F("'")));
+  // number discovery for active page
+  mqttDiscoveryTopic = String(F("homeassistant/number/")) + String(haspNode) + String(F("/config"));
+  mqttDiscoveryPayload = String(F("{\"name\":\"")) + String(haspNode) + String(F(" active page\",\"command_topic\":\"")) + mqttCommandTopic + String(F("/page\",\"state_topic\":\"")) + mqttStateTopic + String(F("/page\",\"retain\":\"true\",\"unique_id\":\"")) + mqttClientId + String(F("-page\",\"device\":{\"identifiers\":[\"")) + mqttClientId + String(F("\"],\"connections\":[[\"mac\",\"")) + macAddress + String(F("\"]],\"name\":\"")) + String(haspNode) + String(F("\",\"manufacturer\":\"HASwitchPlate\",\"model\":\"HASP v1.0.0\",\"sw_version\":")) + String(haspVersion) + String(F("}}"));
   mqttClient.publish(mqttDiscoveryTopic, mqttDiscoveryPayload, true, 1);
   debugPrintln(String(F("MQTT OUT: '")) + mqttDiscoveryTopic + String(F("' : '")) + String(mqttDiscoveryPayload) + String(F("'")));
 }
@@ -992,7 +1003,7 @@ void nextionProcessInput()
     // if ((nextionActivePage != nextionPage.toInt()) && ((nextionPage != "0") || nextionReportPage0))
     if ((nextionPage != "0") || nextionReportPage0)
     { // If we have a new page AND ( (it's not "0") OR (we've set the flag to report 0 anyway) )
-      nextionActivePage = nextionPage.toInt();
+
       if (mqttClient.connected())
       {
         String mqttPageTopic = mqttStateTopic + "/page";
@@ -1253,7 +1264,7 @@ void nextionParseJson(const String &strPayload)
     for (uint8_t i = 0; i < nextionCommands.size(); i++)
     {
       nextionSendCmd(nextionCommands[i]);
-      delayMicroseconds(1000); // Larger JSON objects can take a while to run through over serial,
+      delayMicroseconds(2500); // Larger JSON objects can take a while to run through over serial,
     }                          // give the ESP and Nextion a moment to deal with life
   }
 }
@@ -1310,9 +1321,6 @@ void nextionOtaStartDownload(const String &lcdOtaUrl)
         debugPrintln(F("LCDOTA: LCD firmware upload starting, closing MQTT connection."));
         mqttClient.publish(mqttStatusTopic, "OFF", true, 1);
         debugPrintln(String(F("MQTT OUT: '")) + mqttStatusTopic + String(F("' : 'OFF'")));
-        String mqttSensorPayload = "{\"status\": \"unavailable\"}";
-        mqttClient.publish(mqttSensorTopic, mqttSensorPayload, true, 1);
-        debugPrintln(String(F("MQTT OUT: '")) + mqttSensorTopic + String(F("' : '")) + mqttSensorPayload + String(F("'")));
         mqttClient.disconnect();
       }
 
