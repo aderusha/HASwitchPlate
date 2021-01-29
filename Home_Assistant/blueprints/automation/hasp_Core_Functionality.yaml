@@ -1,0 +1,444 @@
+blueprint:
+  name: "plate01 Core HASP functionality"
+  description: "Provides core HASP functionality. Deploy one copy of this blueprint for each HASP device"
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Core_Functionality.yaml"
+  domain: automation
+  input:
+    haspconnected:
+      name: "HASP Device"
+      description: "Select the HASP device"
+      selector:
+        entity:
+          integration: mqtt
+          domain: binary_sensor
+          device_class: connectivity
+    page1text:
+      name: "Page select button 1 text"
+      description: "Enter text to appear on the left-most page select button #1.  It's a small button, so keep it short.  6 character (or shorter) words are crisp and legible."
+    page1font:
+      name: "Page select button 1 font"
+      description: "Select the font for page select button #1.  Font 6 might be a good starting point."
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: slider
+    page1page:
+      name: "Page select button 1 page"
+      description: "Select the destination page for page select button #1.  When you click the left-most page button on the HASP, the HASP will flip to the page number you select here.  If this is your first time here, try page 1."
+      selector:
+        number:
+          min: 0
+          max: 11
+          mode: slider
+    page2text:
+      name: "Page select button 2 text"
+      description: "Enter text to appear on the center page select button #2"
+    page2font:
+      name: "Page select button 2 font"
+      description: "Select the font for page select button #2."
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: slider
+    page2page:
+      name: "Page select button 2 page"
+      description: "Select the destination page for page select button #2"
+      selector:
+        number:
+          min: 0
+          max: 11
+          mode: slider
+    page3text:
+      name: "Page select button 3 text"
+      description: "Enter text to appear on the right-most page select button #3"
+    page3font:
+      name: "Page select button 3 font"
+      description: "Select the font for page select button #3"
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: slider
+    page3page:
+      name: "Page select button 3 page"
+      description: "Select the destination page for page select button #3"
+      selector:
+        number:
+          min: 0
+          max: 11
+          mode: slider
+    reset_hasp:
+      name: "First-time HASP setup or reset"
+      description: "Select this if this is a brand-new HASP (or you'd like to reset some default theme settings). Turn it on, hit save, and click EXECUTE to setup your HASP.  After the first run, toggle this back off."
+      selector:
+        boolean:
+
+mode: parallel
+max_exceeded: silent
+
+variables:
+  haspconnected: !input haspconnected
+  page1text: !input page1text
+  page1font: !input page1font
+  page1page: !input page1page
+  page2text: !input page2text
+  page2font: !input page2font
+  page2page: !input page2page
+  page3text: !input page3text
+  page3font: !input page3font
+  page3page: !input page3page
+  reset_hasp: !input reset_hasp
+  haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
+  statustopic: '{{ "hasp/" ~ haspname ~ "/status" }}'
+  commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
+  jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
+  jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
+  haspClientId: '{{state_attr("sensor." ~ haspname ~ "_sensor", "haspClientID")}}'
+  haspMac: '{{state_attr("sensor." ~ haspname ~ "_sensor", "haspMac")}}'
+  haspManufacturer: '{{state_attr("sensor." ~ haspname ~ "_sensor", "haspManufacturer")}}'
+  haspModel: '{{state_attr("sensor." ~ haspname ~ "_sensor", "haspModel")}}'
+  sw_version: '{{state_attr("sensor." ~ haspname ~ "_sensor", "espVersion")}}'
+  default_selected_foreground_brightness: "1"
+  default_selected_foreground_color: "[0, 0, 0]"
+  default_selected_background_brightness: "255"
+  default_selected_background_color: "[255, 255, 255]"
+  default_unselected_foreground_brightness: "224"
+  default_unselected_foreground_color: "[255, 255, 255]"
+  default_unselected_background_brightness: "64"
+  default_unselected_background_color: "[255, 255, 255]"
+  selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
+  selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
+  unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
+  unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
+
+trigger:
+  - platform: state
+    entity_id: !input haspconnected
+    to: "on"
+  - platform: homeassistant
+    event: start
+  - platform: mqtt
+    topic: "hasp/+/state/json"
+  - platform: mqtt
+    topic: "hasp/+/light/selectedforegroundcolor/rgb"
+  - platform: mqtt
+    topic: "hasp/+/light/selectedbackgroundcolor/rgb"
+  - platform: mqtt
+    topic: "hasp/+/light/unselectedforegroundcolor/rgb"
+  - platform: mqtt
+    topic: "hasp/+/light/unselectedbackgroundcolor/rgb"
+
+condition:
+  - condition: state
+    entity_id: !input haspconnected
+    state: "on"
+
+action:
+  - choose:
+      #########################################################################
+      # Create required helpers and apply HASP defaults when "EXECUTE" is pressed by the user
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger is not defined }}"
+        sequence:
+          # Push discovery messages for RGB lights used to configure themes
+          - service: mqtt.publish
+            data_template:
+              topic: "homeassistant/light/{{haspname}}/selectedforegroundcolor/config"
+              payload: >-
+                {"name":"{{haspname}} selected foreground color",
+                "command_topic":"hasp/{{haspname}}/light/selectedforegroundcolor/switch",
+                "state_topic":"hasp/{{haspname}}/status",
+                "availability_topic":"hasp/{{haspname}}/status",
+                "rgb_command_topic":"hasp/{{haspname}}/light/selectedforegroundcolor/rgb",
+                "rgb_command_template": {% raw %}"{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}",{% endraw %}
+                "retain":true,
+                "unique_id":"{{haspClientId}}-selectedforegroundcolor",
+                "payload_on":"ON",
+                "payload_off":"OFF",
+                "payload_available":"ON",
+                "payload_not_available":"OFF",
+                "device":{"identifiers":["{{haspClientId}}"],
+                "connections":[["mac","{{haspMac}}"]],
+                "name":"{{haspname}}",
+                "manufacturer":"{{haspManufacturer}}",
+                "model":"{{haspModel}}",
+                "sw_version":{{sw_version}}
+                }}
+              retain: true
+          - service: mqtt.publish
+            data_template:
+              topic: "homeassistant/light/{{haspname}}/selectedbackgroundcolor/config"
+              payload: >-
+                {"name":"{{haspname}} selected background color",
+                "command_topic":"hasp/{{haspname}}/light/selectedbackgroundcolor/switch",
+                "state_topic":"hasp/{{haspname}}/status",
+                "availability_topic":"hasp/{{haspname}}/status",
+                "rgb_command_topic":"hasp/{{haspname}}/light/selectedbackgroundcolor/rgb",
+                "rgb_command_template": {% raw %}"{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}",{% endraw %}
+                "retain":true,
+                "unique_id":"{{haspClientId}}-selectedbackgroundcolor",
+                "payload_on":"ON",
+                "payload_off":"OFF",
+                "payload_available":"ON",
+                "payload_not_available":"OFF",
+                "device":{
+                "identifiers":["{{haspClientId}}"],
+                "connections":[["mac","{{haspMac}}"]],
+                "name":"{{haspname}}",
+                "manufacturer":"{{haspManufacturer}}",
+                "model":"{{haspModel}}",
+                "sw_version":{{sw_version}}
+                }}
+              retain: true
+          - service: mqtt.publish
+            data_template:
+              topic: "homeassistant/light/{{haspname}}/unselectedforegroundcolor/config"
+              payload: >-
+                {"name":"{{haspname}} unselected foreground color",
+                "command_topic":"hasp/{{haspname}}/light/unselectedforegroundcolor/switch",
+                "state_topic":"hasp/{{haspname}}/status",
+                "availability_topic":"hasp/{{haspname}}/status",
+                "rgb_command_topic":"hasp/{{haspname}}/light/unselectedforegroundcolor/rgb",
+                "rgb_command_template": {% raw %}"{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}",{% endraw %}
+                "retain":true,
+                "unique_id":"{{haspClientId}}-unselectedforegroundcolor",
+                "payload_on":"ON",
+                "payload_off":"OFF",
+                "payload_available":"ON",
+                "payload_not_available":"OFF",
+                "device":{"identifiers":["{{haspClientId}}"],
+                "connections":[["mac","{{haspMac}}"]],
+                "name":"{{haspname}}",
+                "manufacturer":"{{haspManufacturer}}",
+                "model":"{{haspModel}}",
+                "sw_version":{{sw_version}}
+                }}
+              retain: true
+          - service: mqtt.publish
+            data_template:
+              topic: "homeassistant/light/{{haspname}}/unselectedbackgroundcolor/config"
+              payload: >-
+                {"name":"{{haspname}} unselected background color",
+                "command_topic":"hasp/{{haspname}}/light/unselectedbackgroundcolor/switch",
+                "state_topic":"hasp/{{haspname}}/status",
+                "availability_topic":"hasp/{{haspname}}/status",
+                "rgb_command_topic":"hasp/{{haspname}}/light/unselectedbackgroundcolor/rgb",
+                "rgb_command_template": {% raw %}"{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}",{% endraw %}
+                "retain":true,
+                "unique_id":"{{haspClientId}}-unselectedbackgroundcolor",
+                "payload_on":"ON",
+                "payload_off":"OFF",
+                "payload_available":"ON",
+                "payload_not_available":"OFF",
+                "device":{"identifiers":["{{haspClientId}}"],
+                "connections":[["mac","{{haspMac}}"]],
+                "name":"{{haspname}}",
+                "manufacturer":"{{haspManufacturer}}",
+                "model":"{{haspModel}}",
+                "sw_version":{{sw_version}}
+                }}
+              retain: true
+          # Send page select button config
+          - service: mqtt.publish
+            data_template:
+              topic: "{{jsoncommandtopic}}"
+              payload_template: >-
+                [{% for p in range(1,12) %}"p[{{p}}].b[1].font={{page1font}}","p[{{p}}].b[1].txt=\"{{page1text}}\"",{% endfor %}"delay=1",
+                {% for p in range(1,12) %}"p[{{p}}].b[2].font={{page2font}}","p[{{p}}].b[2].txt=\"{{page2text}}\"",{% endfor %}"delay=1",
+                {% for p in range(1,12) %}"p[{{p}}].b[3].font={{page3font}}","p[{{p}}].b[3].txt=\"{{page3text}}\"",{% endfor %}"delay=1"]
+
+          #########################################################################
+          # Check if reset_hasp is enabled, then push some defaults to the device
+          - condition: template
+            value_template: "{{ reset_hasp }}"
+          - service: light.turn_on
+            data_template:
+              entity_id: "light.{{haspname}}_selected_foreground_color"
+              rgb_color: "{{default_selected_foreground_color}}"
+          - service: light.turn_on
+            data_template:
+              entity_id: "light.{{haspname}}_selected_foreground_color"
+              brightness: "{{default_selected_foreground_brightness}}"
+          - service: light.turn_on
+            data_template:
+              entity_id: "light.{{haspname}}_selected_background_color"
+              rgb_color: "{{default_selected_background_color}}"
+          - service: light.turn_on
+            data_template:
+              entity_id: "light.{{haspname}}_selected_background_color"
+              brightness: "{{default_selected_background_brightness}}"
+          - service: light.turn_on
+            data_template:
+              entity_id: "light.{{haspname}}_unselected_foreground_color"
+              rgb_color: "{{default_unselected_foreground_color}}"
+          - service: light.turn_on
+            data_template:
+              entity_id: "light.{{haspname}}_unselected_foreground_color"
+              brightness: "{{default_unselected_foreground_brightness}}"
+          - service: light.turn_on
+            data_template:
+              entity_id: "light.{{haspname}}_unselected_background_color"
+              rgb_color: "{{default_unselected_background_color}}"
+          - service: light.turn_on
+            data_template:
+              entity_id: "light.{{haspname}}_unselected_background_color"
+              brightness: "{{default_unselected_background_brightness}}"
+          - service: mqtt.publish
+            data_template:
+              topic: "hasp/{{haspname}}/command/page"
+              payload: "{{page1page}}"
+              retain: false
+
+      #########################################################################
+      # Push configuration to device when it connects
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger.platform == "state" and trigger.entity_id == haspconnected }}'
+        sequence:
+          - service: mqtt.publish # send page button text
+            data_template:
+              topic: "{{jsoncommandtopic}}"
+              payload_template: >-
+                [{% for p in range(1,12) %}"p[{{p}}].b[1].font={{page1font}}","p[{{p}}].b[1].txt=\"{{page1text}}\"",{% endfor %}"delay=1",
+                {% for p in range(1,12) %}"p[{{p}}].b[2].font={{page2font}}","p[{{p}}].b[2].txt=\"{{page2text}}\"",{% endfor %}"delay=1",
+                {% for p in range(1,12) %}"p[{{p}}].b[3].font={{page3font}}","p[{{p}}].b[3].txt=\"{{page3text}}\"",{% endfor %}"delay=1"]
+          - service: mqtt.publish # apply selected foreground color to page select buttons
+            data_template:
+              topic: "{{jsoncommandtopic}}"
+              payload: >-
+                {%- set colorsource="light." ~ haspname ~ "_selected_foreground_color" -%}
+                {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+                {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+                {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+                {%- set colorcode = (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int -%}
+                [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].pco={{colorcode}}"{%- else -%}"p[{{p}}].b[1].pco2={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
+                {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].pco={{colorcode}}"{%- else -%}"p[{{p}}].b[2].pco2={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
+                {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco={{colorcode}}"{%- else -%}"p[{{p}}].b[3].pco2={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1"]
+          - service: mqtt.publish # apply selected background color to page select buttons
+            data_template:
+              topic: "{{jsoncommandtopic}}"
+              payload: >-
+                {%- set colorsource="light." ~ haspname ~ "_selected_background_color" -%}
+                {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+                {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+                {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+                {%- set colorcode = (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int -%}
+                [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].bco={{colorcode}}"{%- else -%}"p[{{p}}].b[1].bco2={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
+                {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].bco={{colorcode}}"{%- else -%}"p[{{p}}].b[2].bco2={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
+                {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].bco={{colorcode}}"{%- else -%}"p[{{p}}].b[3].bco2={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1"]
+          - service: mqtt.publish # apply unselected foreground color to page select buttons
+            data_template:
+              topic: "{{jsoncommandtopic}}"
+              payload: >-
+                {%- set colorsource="light." ~ haspname ~ "_unselected_foreground_color" -%}
+                {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+                {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+                {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+                {%- set colorcode = (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int -%}
+                [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].pco2={{colorcode}}"{%- else -%}"p[{{p}}].b[1].pco={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
+                {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].pco2={{colorcode}}"{%- else -%}"p[{{p}}].b[2].pco={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
+                {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco2={{colorcode}}"{%- else -%}"p[{{p}}].b[3].pco={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1"]
+          - service: mqtt.publish # apply unselected background color to page select buttons
+            data_template:
+              topic: "{{jsoncommandtopic}}"
+              payload: >-
+                {%- set colorsource="light." ~ haspname ~ "_unselected_background_color" -%}
+                {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+                {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+                {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+                {%- set colorcode = (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int -%}
+                [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].bco2={{colorcode}}"{%- else -%}"p[{{p}}].b[1].bco={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
+                {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].bco2={{colorcode}}"{%- else -%}"p[{{p}}].b[2].bco={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
+                {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].bco2={{colorcode}}"{%- else -%}"p[{{p}}].b[3].bco={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1"]
+
+          - service: mqtt.publish # restore active page
+            data_template:
+              topic: "hasp/{{haspname}}/command/page"
+              payload_template: '{{states("number." ~ haspname ~ "_active_page")|int}}'
+          - service: mqtt.publish # request sensor update
+            data:
+              topic: "hasp/{{haspname}}/command"
+              payload: ""
+
+      #########################################################################
+      # Handle MQTT message triggers
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger.platform == "mqtt" }}'
+        sequence:
+          - choose:
+              #########################################################################
+              # Page control buttons
+              - conditions: # catch p[x].b[1] and send the command to switch to the selected page
+                  - condition: template
+                    value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event | regex_match("p\[\d+\].b\[1\]")) and (trigger.payload_json.value == "OFF") }}'
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "hasp/{{haspname}}/command/page"
+                      payload: !input page1page
+              - conditions: # catch p[x].b[2]
+                  - condition: template
+                    value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event | regex_match("p\[\d+\].b\[2\]")) and (trigger.payload_json.value == "OFF") }}'
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "hasp/{{haspname}}/command/page"
+                      payload: !input page2page
+              - conditions: # catch p[x].b[3]
+                  - condition: template
+                    value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event | regex_match("p\[\d+\].b\[3\]")) and (trigger.payload_json.value == "OFF") }}'
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "hasp/{{haspname}}/command/page"
+                      payload: !input page3page
+              #########################################################################
+              # Apply selected theme colors when they change
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: >-
+                        [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].pco={{trigger.payload}}"{%- else -%}"p[{{p}}].b[1].pco2={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].pco={{trigger.payload}}"{%- else -%}"p[{{p}}].b[2].pco2={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco={{trigger.payload}}"{%- else -%}"p[{{p}}].b[3].pco2={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1"]
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == selectedbackgroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: >-
+                        [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].bco={{trigger.payload}}"{%- else -%}"p[{{p}}].b[1].bco2={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].bco={{trigger.payload}}"{%- else -%}"p[{{p}}].b[2].bco2={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].bco={{trigger.payload}}"{%- else -%}"p[{{p}}].b[3].bco2={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1"]
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == unselectedforegroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: >-
+                        [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].pco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[1].pco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].pco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[2].pco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[3].pco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1"]
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == unselectedbackgroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: >-
+                        [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].bco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[1].bco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].bco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[2].bco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].bco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[3].bco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1"]

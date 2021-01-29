@@ -1,6 +1,6 @@
 blueprint:
   name: "plate01 p[x].b[y] displays a clock"
-  description: "A HASP button displays a clock"
+  description: "A HASP button displays a clock with configurable text options"
   source_url: "https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Display_Clock.yaml"
   domain: automation
   input:
@@ -38,7 +38,7 @@ blueprint:
           mode: box
     xcen:
       name: Text horizontal alignment
-      description: "Horizontal text alignment 0:Left 1:Center 2:Right"
+      description: "Horizontal text alignment: 0=Left 1=Center 2=Right"
       selector:
         number:
           min: 0
@@ -46,7 +46,7 @@ blueprint:
           mode: box
     ycen:
       name: Text vertical alignment
-      description: "Vertical text alignment 0:Top 1:Center 2:Bottom"
+      description: "Vertical text alignment: 0=Top 1=Center 2=Bottom"
       selector:
         number:
           min: 0
@@ -60,8 +60,13 @@ blueprint:
       name: AM/PM suffix
       selector:
         boolean:
+    wrap:
+      name: "Text wrap"
+      description: "Enable line-wrapping text if too long to fit in the button."
+      selector:
+        boolean:
 
-mode: single
+mode: parallel
 max_exceeded: silent
 
 variables:
@@ -74,11 +79,16 @@ variables:
   ycen: !input ycen
   hour24: !input hour24
   ampm: !input ampm
+  wrap: !input wrap
+  isbr: "{% if wrap == true %}1{% else %}0{% endif %}"
   haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
   commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
   jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
-  textstring: '{%- if hour24 == true -%}{%- set hourformat="%-H" -%}{%- else %}{%- set hourformat="%I" -%}{%- endif -%}{{(now().strftime(hourformat)|int)~now().strftime(":%M")}} {% if ampm == true %}{{now().strftime("%p")|lower}}{% endif %}'
-  textfont: "10"
+  text: '{%- if hour24 == true -%}{%- set hourformat="%-H" -%}{%- else %}{%- set hourformat="%I" -%}{%- endif -%}{{(now().strftime(hourformat)|int)~now().strftime(":%M")}} {% if ampm == true %}{{now().strftime("%p")|lower}}{% endif %}'
+  selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
+  selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
+  unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
+  unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
 
 trigger:
   - platform: state
@@ -88,6 +98,14 @@ trigger:
     event: start
   - platform: time_pattern
     seconds: 0
+  - platform: mqtt
+    topic: "hasp/+/light/selectedforegroundcolor/rgb"
+  - platform: mqtt
+    topic: "hasp/+/light/selectedbackgroundcolor/rgb"
+  - platform: mqtt
+    topic: "hasp/+/light/unselectedforegroundcolor/rgb"
+  - platform: mqtt
+    topic: "hasp/+/light/unselectedbackgroundcolor/rgb"
 
 condition:
   - condition: state
@@ -96,18 +114,91 @@ condition:
 
 action:
   - choose:
+      #########################################################################
+      # Display clock and apply text style when "EXECUTE" is pressed by the user
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger is not defined }}"
+        sequence:
+          - service: mqtt.publish
+            data:
+              topic: "{{jsoncommandtopic}}"
+              payload: >-
+                [
+                "{{haspobject}}.font={{font}}",
+                "{{haspobject}}.xcen={{xcen}}",
+                "{{haspobject}}.ycen={{ycen}}",
+                "{{haspobject}}.isbr={{isbr}}",
+                "{{haspobject}}.txt=\"{{text}}\""
+                ]
+      #########################################################################
       # Every minute, update the clock text
       - conditions:
           - condition: template
             value_template: '{{ trigger.platform == "time_pattern" }}'
         sequence:
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "{{commandtopic}}.txt"
-              payload: '"{{textstring}}"'
-    # Otherwise, apply the font+clock to the button
+              payload: '"{{text}}"'
+      #########################################################################
+      # Catch triggers fired by incoming MQTT messages
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger.platform == "mqtt" }}'
+        sequence:
+          - choose:
+              #########################################################################
+              # Theme: Apply selected foreground color on change
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{commandtopic}}.pco"
+                      payload: "{{trigger.payload}}"
+              #########################################################################
+              # Theme: Apply selected background color on change
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == selectedbackgroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{commandtopic}}.bco"
+                      payload: "{{trigger.payload}}"
+              #########################################################################
+              # Theme: Apply unselected foreground color on change
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == unselectedforegroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{commandtopic}}.pco2"
+                      payload: "{{trigger.payload}}"
+              #########################################################################
+              # Theme: Apply unselected background color on change
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == unselectedbackgroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{commandtopic}}.bco2"
+                      payload: "{{trigger.payload}}"
+    #########################################################################
+    # Catch remaining triggers to display clock and apply text style
     default:
       - service: mqtt.publish
-        data_template:
+        data:
           topic: "{{jsoncommandtopic}}"
-          payload: '["{{haspobject}}.font={{font}}","{{haspobject}}.xcen={{xcen}}","{{haspobject}}.ycen={{ycen}}","{{haspobject}}.txt=\"{{textstring}}\""]'
+          payload: >-
+            [
+            "{{haspobject}}.font={{font}}",
+            "{{haspobject}}.xcen={{xcen}}",
+            "{{haspobject}}.ycen={{ycen}}",
+            "{{haspobject}}.isbr={{isbr}}",
+            "{{haspobject}}.txt=\"{{text}}\""
+            ]
