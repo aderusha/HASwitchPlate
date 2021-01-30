@@ -1,7 +1,7 @@
 blueprint:
-  name: "plate01 p[x].b[y] displays a clock"
-  description: "A HASP button displays a clock with configurable text options"
-  source_url: "https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Display_Clock.yaml"
+  name: "plate01 p[x].b[y] displays the state of an entity"
+  description: "A HASP button displays the current state of a selected entity"
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Display_Entity_State.yaml"
   domain: automation
   input:
     haspconnected:
@@ -14,7 +14,7 @@ blueprint:
           device_class: connectivity
     hasppage:
       name: "HASP Page"
-      description: "Select the HASP page (1-11) for the clock"
+      description: "Select the HASP page (1-11)"
       selector:
         number:
           min: 1
@@ -22,15 +22,25 @@ blueprint:
           mode: box
     haspbutton:
       name: "HASP Button"
-      description: "Select the HASP button (4-15) for the clock.  Not all pages will have all buttons, refer to the object map in the HASP documentation."
+      description: "Select the HASP button (4-15) for the state display.  Refer to the object map in the HASP documentation."
       selector:
         number:
           min: 4
           max: 15
           mode: box
+    selected_entity:
+      name: "Select an entity to display state"
+      selector:
+        entity:
+    prefix:
+      name: "State display prefix"
+      description: 'Prefix for state display, enter "none" for no prefix'
+    suffix:
+      name: "State display suffix"
+      description: 'Suffix for state display, enter "none" for no suffix'
     font:
-      name: "Clock Font"
-      description: "Select the font for the clock:"
+      name: "State display font"
+      description: "Select the font for the state display:"
       selector:
         number:
           min: 0
@@ -52,14 +62,6 @@ blueprint:
           min: 0
           max: 2
           mode: box
-    hour24:
-      name: "24 hour clock display"
-      selector:
-        boolean:
-    ampm:
-      name: "AM/PM suffix"
-      selector:
-        boolean:
     wrap:
       name: "Text wrap"
       description: "Enable line-wrapping text if too long to fit in the button."
@@ -74,17 +76,19 @@ variables:
   haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
   hasppage: !input hasppage
   haspbutton: !input haspbutton
+  selected_entity: !input selected_entity
+  prefix: !input prefix
+  suffix: !input suffix
   font: !input font
   xcen: !input xcen
   ycen: !input ycen
-  hour24: !input hour24
-  ampm: !input ampm
   wrap: !input wrap
-  isbr: "{% if wrap == true %}1{% else %}0{% endif %}"
   haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
   commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
   jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
-  text: '{%- if hour24 == true -%}{%- set hourformat="%-H" -%}{%- else %}{%- set hourformat="%I" -%}{%- endif -%}{{(now().strftime(hourformat)|int)~now().strftime(":%M")}} {% if ampm == true %}{{now().strftime("%p")|lower}}{% endif %}'
+  selected_entity_state: "{{states(selected_entity)}}"
+  text: '{% if prefix|lower != "none" %}{{prefix}}{% endif %}{{selected_entity_state}}{% if suffix|lower != "none" %}{{suffix}}{% endif %}'
+  isbr: "{% if wrap == true %}1{% else %}0{% endif %}"
   selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
   selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
   unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
@@ -120,8 +124,8 @@ trigger:
     to: "on"
   - platform: homeassistant
     event: start
-  - platform: time_pattern
-    seconds: 0
+  - platform: state
+    entity_id: !input selected_entity
   - platform: mqtt
     topic: "hasp/+/light/selectedforegroundcolor/rgb"
   - platform: mqtt
@@ -139,7 +143,7 @@ condition:
 action:
   - choose:
       #########################################################################
-      # Display clock and apply text style when "EXECUTE" is pressed by the user
+      # Display state and apply text style when "EXECUTE" is pressed by the user
       - conditions:
           - condition: template
             value_template: "{{ trigger is not defined }}"
@@ -160,13 +164,13 @@ action:
                 "{{haspobject}}.txt=\"{{text}}\""
                 ]
       #########################################################################
-      # Every minute, update the clock text
-      - conditions:
+      # Update display if our entity has changed state
+      - conditions: # Update display if our entity has changed state
           - condition: template
-            value_template: '{{ trigger.platform == "time_pattern" }}'
+            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == selected_entity) }}'
         sequence:
           - service: mqtt.publish
-            data:
+            data_template:
               topic: "{{commandtopic}}.txt"
               payload: '"{{text}}"'
       #########################################################################
@@ -175,6 +179,10 @@ action:
           - condition: template
             value_template: '{{ trigger.platform == "mqtt" }}'
         sequence:
+          - service: mqtt.publish
+            data_template:
+              topic: "debug"
+              payload: '"trigger: {{trigger}}"'
           - choose:
               #########################################################################
               # Theme: Apply selected foreground color on change
@@ -217,7 +225,7 @@ action:
                       topic: "{{commandtopic}}.bco2"
                       payload: "{{trigger.payload}}"
     #########################################################################
-    # Catch remaining triggers to display clock and apply text style
+    # Catch remaining triggers to display state and apply text style
     default:
       - service: mqtt.publish
         data:
