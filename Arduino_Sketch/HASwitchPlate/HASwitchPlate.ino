@@ -1258,7 +1258,7 @@ void nextionParseJson(const String &strPayload)
   if (jsonError)
   { // Couldn't parse incoming JSON command
     debugPrintln(String(F("MQTT: [ERROR] Failed to parse incoming JSON command with error: ")) + String(jsonError.c_str()));
-    mqttClient.publish(mqttStateJSONTopic, String(F("{\"event\":\"jsonError\",\"event_source\":\"nextionParseJson()\",\"event_description\":\"Failed to parse incoming JSON command with error\"")) + String(jsonError.c_str()));
+    mqttClient.publish(mqttStateJSONTopic, String(F("{\"event\":\"jsonError\",\"event_source\":\"nextionParseJson()\",\"event_description\":\"Failed to parse incoming JSON command with error\"")) + String(jsonError.c_str()) + String(F("\"}")));
   }
   else
   {
@@ -3080,7 +3080,7 @@ bool updateCheck()
   if (jsonError)
   { // Couldn't parse the returned JSON, so bail
     debugPrintln(String(F("UPDATE: JSON parsing failed: ")) + String(jsonError.c_str()));
-    mqttClient.publish(mqttStateJSONTopic, String(F("{\"event\":\"jsonError\",\"event_source\":\"updateCheck()\",\"event_description\":\"Failed to parse incoming JSON command with error\"")) + String(jsonError.c_str()));
+    mqttClient.publish(mqttStateJSONTopic, String(F("{\"event\":\"jsonError\",\"event_source\":\"updateCheck()\",\"event_description\":\"Failed to parse incoming JSON command with error: ")) + String(jsonError.c_str()) + String(F("\"}")));
     return false;
   }
   else
