@@ -78,6 +78,7 @@ unsigned long debugTimer = 0;                         // Clock for debug perform
 bool debugSerialEnabled = true;                       // Enable USB serial debug output
 const unsigned long debugSerialBaud = 115200;         // Desired baud rate for serial debug output
 bool debugTelnetEnabled = false;                      // Enable telnet debug output
+const unsigned long nextionCommandDelay = 5000;       // Time in μsec between submitting each command in a large JSON to prevent buffer overruns
 const unsigned long telnetInputMax = 128;             // Size of user input buffer for user telnet session
 bool motionEnabled = false;                           // Motion sensor is enabled
 bool mdnsEnabled = true;                              // mDNS enabled
@@ -1007,7 +1008,7 @@ void nextionProcessInput()
       if (mqttClient.connected())
       {
         String mqttPageTopic = mqttStateTopic + "/page";
-        mqttClient.publish(mqttPageTopic, nextionPage);
+        mqttClient.publish(mqttPageTopic, nextionPage, true, 1);
         debugPrintln(String(F("MQTT OUT: '")) + mqttPageTopic + String(F("' : '")) + nextionPage + String(F("'")));
         String mqttButtonJSONEvent = String(F("{\"event\":\"page\", \"value\":")) + nextionPage + String(F("}"));
         mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
@@ -1264,8 +1265,8 @@ void nextionParseJson(const String &strPayload)
     for (uint8_t i = 0; i < nextionCommands.size(); i++)
     {
       nextionSendCmd(nextionCommands[i]);
-      delayMicroseconds(2500); // Larger JSON objects can take a while to run through over serial,
-    }                          // give the ESP and Nextion a moment to deal with life
+      delayMicroseconds(nextionCommandDelay); // Larger JSON objects can take a while to run through over serial,
+    }                                         // give the ESP and Nextion a moment to deal with life
   }
 }
 
