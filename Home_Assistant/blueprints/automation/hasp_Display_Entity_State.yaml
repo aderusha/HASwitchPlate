@@ -1,6 +1,71 @@
 blueprint:
   name: "plate01 p[x].b[y] displays the state of an entity"
-  description: "A HASP button displays the current state of a selected entity"
+  description: |
+
+    # Description
+
+    A HASP button displays the current state of a selected entity
+
+    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Entity_State.png?raw=true)
+
+    ## Examples
+
+    <details>
+
+    ### Show current weather condition
+
+    **Entity:** Select a weather provider of your choice
+    **Title Case:** `true`
+
+    </details>
+
+    ## HASP Page and Button reference
+
+    <details>
+
+    | Page 0 | Pages 1-3 | Pages 4-5 |
+    |--------|-----------|-----------|
+    | ![Page 0](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p0_Init_Screen.png?raw=true) | ![Pages 1-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p1-p3_4buttons.png?raw=true) | ![Pages 4-5](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p4-p5_3sliders.png?raw=true) |
+
+    | Page 6 | Page 7 | Page 8 |
+    |--------|--------|--------|
+    | ![Page 6](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p6_8buttons.png?raw=true) | ![Page 7](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p7_12buttons.png?raw=true) | ![Page 8](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p8_5buttons+1slider.png?raw=true) |
+
+    | Page 9 | Page 10 | Page 11 |
+    |--------|---------|---------|
+    | ![Page 9](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p9_9buttons.png?raw=true) | ![Page 10](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p10_5buttons.png?raw=true) | ![Page 11](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p11_1button.png?raw=true)
+
+    </details>
+
+    ## HASP Font reference
+
+    <details>
+
+    The Nextion display supports monospaced and proportional fonts.  For proportional fonts, the HASP project includes [Consolas](https://docs.microsoft.com/en-us/typography/font-list/consolas) in 4 sizes and [Webdings](https://en.wikipedia.org/wiki/Webdings#Character_set) in 1 size.
+
+    | Number | Font              | Characters per line | Lines per button |
+    |--------|-------------------|---------------------|------------------|
+    | 0      | Consolas 24 point | 20 characters       | 2 lines          |
+    | 1      | Consolas 32 point | 15 characters       | 2 lines          |
+    | 2      | Consolas 48 point | 10 characters       | 1 lines          |
+    | 3      | Consolas 80 point | 6 characters        | 1 lines          |
+    | 4      | Webdings 56 point | 8 characters        | 1 lines          |
+
+    The HASP also includes [Google's "Noto Sans"](https://github.com/googlefonts/noto-fonts) proportional font in 5 sizes.  These fonts also include [1400+ icons which you can copy and paste from here](https://htmlpreview.github.io/?https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/hasp-fontawesome5.html)
+
+    | Number | Font                       |
+    |--------|----------------------------|
+    | 5      | Noto Sans Regular 24 point |
+    | 6      | Noto Sans Regular 32 point |
+    | 7      | Noto Sans Regular 48 point |
+    | 8      | Noto Sans Regular 64 point |
+    | 9      | Noto Sans Regular 80 point |
+    | 10     | Noto Sans Bold 80 point    |
+
+    ![HASP Fonts 0-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_0-3.png?raw=true) ![HASP Fonts 4-7](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_4-7.png?raw=true) ![HASP Fonts 8-10](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_8-10.png?raw=true)
+
+    </details>
+
   source_url: "https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Display_Entity_State.yaml"
   domain: automation
   input:
@@ -14,7 +79,8 @@ blueprint:
           device_class: connectivity
     hasppage:
       name: "HASP Page"
-      description: "Select the HASP page (1-11)"
+      description: "Select the HASP page (1-11). Refer to the HASP Page and Button reference above."
+      default: 1
       selector:
         number:
           min: 1
@@ -22,7 +88,8 @@ blueprint:
           mode: box
     haspbutton:
       name: "HASP Button"
-      description: "Select the HASP button (4-15) for the state display.  Refer to the object map in the HASP documentation."
+      description: "Select the HASP button (4-15) for the state display. Refer to the HASP Page and Button reference above."
+      default: 4
       selector:
         number:
           min: 4
@@ -35,12 +102,15 @@ blueprint:
     prefix:
       name: "State display prefix"
       description: 'Prefix for state display, enter "none" for no prefix'
+      default: "none"
     suffix:
       name: "State display suffix"
       description: 'Suffix for state display, enter "none" for no suffix'
+      default: "none"
     font:
       name: "State display font"
       description: "Select the font for the state display:"
+      default: 7
       selector:
         number:
           min: 0
@@ -49,6 +119,7 @@ blueprint:
     xcen:
       name: "Text horizontal alignment"
       description: "Horizontal text alignment: 0=Left 1=Center 2=Right"
+      default: 1
       selector:
         number:
           min: 0
@@ -57,6 +128,7 @@ blueprint:
     ycen:
       name: "Text vertical alignment"
       description: "Vertical text alignment: 0=Top 1=Center 2=Bottom"
+      default: 1
       selector:
         number:
           min: 0
@@ -65,6 +137,13 @@ blueprint:
     wrap:
       name: "Text wrap"
       description: "Enable line-wrapping text if too long to fit in the button."
+      default: false
+      selector:
+        boolean:
+    title_case:
+      name: "Title Case"
+      description: "Apply The Title Case Filter To Capitalize The First Character Of Each Word In The Result"
+      default: false
       selector:
         boolean:
 
@@ -83,11 +162,12 @@ variables:
   xcen: !input xcen
   ycen: !input ycen
   wrap: !input wrap
+  title_case: !input title_case
   haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
   commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
   jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
   selected_entity_state: "{{states(selected_entity)}}"
-  text: '{% if prefix|lower != "none" %}{{prefix}}{% endif %}{{selected_entity_state}}{% if suffix|lower != "none" %}{{suffix}}{% endif %}'
+  text: '{% if prefix|lower != "none" %}{{prefix}}{% endif %}{% if title_case %}{{selected_entity_state|title}}{% else %}{{selected_entity_state}}{% endif %}{% if suffix|lower != "none" %}{{suffix}}{% endif %}'
   isbr: "{% if wrap == true %}1{% else %}0{% endif %}"
   selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
   selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
@@ -179,10 +259,6 @@ action:
           - condition: template
             value_template: '{{ trigger.platform == "mqtt" }}'
         sequence:
-          - service: mqtt.publish
-            data_template:
-              topic: "debug"
-              payload: '"trigger: {{trigger}}"'
           - choose:
               #########################################################################
               # Theme: Apply selected foreground color on change

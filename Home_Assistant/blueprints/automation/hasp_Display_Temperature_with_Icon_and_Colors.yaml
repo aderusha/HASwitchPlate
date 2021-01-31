@@ -1,12 +1,11 @@
 blueprint:
-  name: "plate01 p[x].b[y] displays a clock with a clock icon"
+  name: "plate01 p[x].b[y] displays the current temperature with icon and colors"
   description: |
-
     # Description
 
-    A HASP button displays a clock on the right with a clock icon on the left.
+    A HASP button displays the current temperature on the right with a dynamic thermometer icon on the left and (optional) colors.
 
-    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Clock_with_Icon.png?raw=true)
+    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Temperature_with_Icon_and_Colors.png?raw=true)
 
     ## HASP Page and Button reference
 
@@ -20,7 +19,7 @@ blueprint:
 
     </details>
 
-  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Clock_with_Icon.yaml"
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Temperature_with_Icon_and_Colors.yaml"
   domain: automation
   input:
     haspconnected:
@@ -33,7 +32,7 @@ blueprint:
           device_class: connectivity
     hasppage:
       name: "HASP Page"
-      description: "Select the HASP page (1-3) for the clock. Refer to the HASP Page and Button reference above."
+      description: "Select the HASP page (1-3) for the temperature. Refer to the HASP Page and Button reference above."
       default: 1
       selector:
         number:
@@ -42,15 +41,112 @@ blueprint:
           mode: box
     haspbutton:
       name: "HASP Button"
-      description: "Select the HASP button (4-7) for the clock. Refer to the HASP Page and Button reference above."
+      description: "Select the HASP button (4-7) for the temperature. Refer to the HASP Page and Button reference above."
       default: 4
       selector:
         number:
           min: 4
           max: 7
           mode: box
-    hour24:
-      name: "24 hour clock display"
+    weather_provider:
+      name: "Weather provider"
+      description: "Select the weather provider to obtain the temperature"
+      selector:
+        entity:
+          domain: weather
+    suffix:
+      name: "Temperature display suffix"
+      description: 'Suffix for temperature display - 0:"", 1:"°", 2:"°F", 3:"°C"'
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 3
+          mode: box
+    thermometer_empty_color:
+      name: "Thermometer empty color"
+      description: "Icon color for an empty thermometer in Nextion RGB565 format. -1 = Current theme foreground color, or 2047 = Ice blue"
+      default: 2047
+      selector:
+        number:
+          min: -1
+          max: 65535
+          mode: box
+    thermometer_quarter_threshold:
+      name: "Thermometer one quarter threshold"
+      description: "Temperatures above this threshold will show a one-quarter full thermometer.  Below, show an empty thermometer."
+      default: 0
+      selector:
+        number:
+          min: -20
+          max: 125
+          mode: box
+    thermometer_quarter_color:
+      name: "Thermometer one quarter color"
+      description: "Icon color for a one-quarter full thermometer in Nextion RGB565 format. -1 = Current theme foreground color, or 31 = Blue"
+      default: 31
+      selector:
+        number:
+          min: -1
+          max: 65535
+          mode: box
+    thermometer_half_threshold:
+      name: "Thermometer half threshold"
+      description: "Temperatures above this threshold will show a half full thermometer.  This value must be higher than the value selected above."
+      default: 32
+      selector:
+        number:
+          min: -10
+          max: 125
+          mode: box
+    thermometer_half_color:
+      name: "Thermometer half color"
+      description: "Icon color for a half full thermometer in Nextion RGB565 format. -1 = Current theme foreground color, or 1536 = Green"
+      default: 1536
+      selector:
+        number:
+          min: -1
+          max: 65535
+          mode: box
+    thermometer_three_quarter_threshold:
+      name: "Thermometer three quarter threshold"
+      description: "Temperatures above this threshold will show a three-quarters full thermometer.  This value must be higher than the value selected above."
+      default: 80
+      selector:
+        number:
+          min: 0
+          max: 125
+          mode: box
+    thermometer_three_quarter_color:
+      name: "Thermometer three quarter color"
+      description: "Icon color for a three-quarter full thermometer in Nextion RGB565 format. -1 = Current theme foreground color, or 64512 = Orange"
+      default: 64512
+      selector:
+        number:
+          min: -1
+          max: 65535
+          mode: box
+    thermometer_full_threshold:
+      name: "Thermometer full threshold"
+      description: "Temperatures above this threshold will show a full thermometer.  This value must be higher than the value selected above."
+      default: 95
+      selector:
+        number:
+          min: 10
+          max: 125
+          mode: box
+    thermometer_full_color:
+      name: "Thermometer full color"
+      description: "Icon color for a full thermometer in Nextion RGB565 format. -1 = Current theme foreground color, or 63488 = Red"
+      default: 63488
+      selector:
+        number:
+          min: -1
+          max: 65535
+          mode: box
+    colortemp:
+      name: "Colorize temperature text"
+      description: "Also apply icon colors to text"
       default: false
       selector:
         boolean:
@@ -63,16 +159,39 @@ variables:
   haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
   hasppage: !input hasppage
   haspbutton: !input haspbutton
-  hour24: !input hour24
+  weather_provider: !input weather_provider
+  suffix: !input suffix
+  thermometer_empty_color: !input thermometer_empty_color
+  thermometer_quarter_threshold: !input thermometer_quarter_threshold
+  thermometer_quarter_color: !input thermometer_quarter_color
+  thermometer_half_threshold: !input thermometer_half_threshold
+  thermometer_half_color: !input thermometer_half_color
+  thermometer_three_quarter_threshold: !input thermometer_three_quarter_threshold
+  thermometer_three_quarter_color: !input thermometer_three_quarter_color
+  thermometer_full_threshold: !input thermometer_full_threshold
+  thermometer_full_color: !input thermometer_full_color
+  colortemp: !input colortemp
   haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
   commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
-  jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
   jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
+  jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
+  temperature: '{{state_attr(weather_provider, "temperature")}}'
+  icon: "{% set temp = temperature|int %}{% if temp <= thermometer_quarter_threshold|int -%}{% elif temp < thermometer_half_threshold|int %}{% elif temp < thermometer_three_quarter_threshold|int %}{% elif temp < thermometer_full_threshold|int %}{% else %}{%- endif %}"
+  suffixstring: '{% if suffix|int == 1 %}°{% elif suffix|int == 2 %}°F{% elif suffix|int == 3 %}°C{% endif %}'
+  text: "{{temperature}}{{suffixstring}}"
+  font: 10
+  ypos: "{{(haspbutton|int - 4) * 67 + 2}}"
+  xpos: 0
+  iconwidth: 40
+  iconheight: 65
+  iconfont: 8
+  xcen: 2
+  ycen: 1
+  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{{ states(activepage_entity) | int }}'
   selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
   selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
   unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
   unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
-  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{{ states(activepage_entity) | int }}'
   selectedfg: >-
     {%- set colorsource="light." ~ haspname ~ "_selected_foreground_color" -%}
     {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
@@ -97,14 +216,8 @@ variables:
     {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
     {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
-  text: '{%- if hour24 == true -%}{%- set hourformat="%-H" -%}{%- else %}{%- set hourformat="%I" -%}{%- endif -%}{{(now().strftime(hourformat)|int)~now().strftime(":%M")}}'
-  font: 10
-  ypos: "{{(haspbutton|int - 4) * 67 + 2}}" # calculate the top pixel position based on the selected button
-  xpos: 0
-  icon: ""
-  iconwidth: 50
-  iconheight: 65
-  iconfont: 8
+  tempcolor: "{% set temp = temperature|int %}{% if temp <= thermometer_quarter_threshold|int -%}{% set color = thermometer_empty_color%}{% elif temp < thermometer_half_threshold|int %}{% set color = thermometer_quarter_color %}{% elif temp < thermometer_three_quarter_threshold|int %}{% set color = thermometer_half_color %}{% elif temp < thermometer_full_threshold|int %}{% set color = thermometer_three_quarter_color %}{% else %}{% set color = thermometer_full_color%}{% endif %}{% if color|int < 0 -%}{{selectedfg}}{% else %}{{color}}{% endif %}"
+  textcolor: "{%- if colortemp == true -%}{{tempcolor}}{% else %}{{selectedfg}}{% endif %}"
 
 trigger:
   - platform: state
@@ -112,8 +225,8 @@ trigger:
     to: "on"
   - platform: homeassistant
     event: start
-  - platform: time_pattern
-    seconds: 0
+  - platform: state
+    entity_id: !input weather_provider
   - platform: mqtt
     topic: "hasp/+/state/json"
   - platform: mqtt
@@ -143,29 +256,33 @@ action:
               topic: "{{jsoncommandtopic}}"
               payload: >-
                 ["{{haspobject}}.font={{font}}",
-                "{{haspobject}}.xcen=2",
-                "{{haspobject}}.ycen=1",
-                "{{haspobject}}.pco={{selectedfg}}",
+                "{{haspobject}}.xcen={{xcen}}",
+                "{{haspobject}}.ycen={{ycen}}",
+                "{{haspobject}}.pco={{textcolor}}",
                 "{{haspobject}}.bco={{selectedbg}}",
                 "{{haspobject}}.pco2={{unselectedfg}}",
                 "{{haspobject}}.bco2={{unselectedbg}}",
                 "{{haspobject}}.txt=\"{{text}} \""
                 {%- if activepage|int == hasppage|int -%}
-                ,"delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""
+                ,"delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{tempcolor}},0,1,1,3,\"{{icon}}\""
                 {%- endif -%}]
       #########################################################################
-      # Every minute, update the clock text.  If the selected page is currently active, also place the icon.
+      # Update temperature if our weather provider changed state
       - conditions:
           - condition: template
-            value_template: '{{ trigger.platform == "time_pattern" }}'
+            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == weather_provider) }}'
         sequence:
           - service: mqtt.publish
             data_template:
-              topic: "hasp/{{haspname}}/command/json"
-              payload: '["{{haspobject}}.txt=\"{{text}} \""{%- if activepage|int == hasppage|int -%},"delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""{%- endif -%}]'
-
+              topic: "{{jsoncommandtopic}}"
+              payload: >-
+                ["{{haspobject}}.pco={{textcolor}}",
+                "{{haspobject}}.txt=\"{{text}} \""
+                {%- if activepage|int == hasppage|int -%}
+                ,"delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{tempcolor}},0,1,1,3,\"{{icon}}\""
+                {%- endif -%}]
       #########################################################################
-      # Catch MQTT events
+      # Catch triggers fired by incoming MQTT messages
       - conditions:
           - condition: template
             value_template: '{{ trigger.platform == "mqtt" }}'
@@ -175,12 +292,12 @@ action:
               # Icon overlay
               - conditions: # Somebody pressed our button which hides the overlaid icon.  Put it back.
                   - condition: template
-                    value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == haspobject ) and (trigger.payload_json.value == "OFF") }}'
+                    value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == haspobject ) and (trigger.payload_json.value == "OFF") and (activepage|int == hasppage|int)}}'
                 sequence:
                   - service: mqtt.publish
                     data_template:
                       topic: "{{jsoncommandtopic}}"
-                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{tempcolor}},0,1,1,3,\"{{icon}}\""]'
               - conditions: # Page changed to our page, so place the icon on the screen.
                   - condition: template
                     value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == "page" ) and (trigger.payload_json.value == hasppage|int) }}'
@@ -188,11 +305,9 @@ action:
                   - service: mqtt.publish
                     data_template:
                       topic: "{{jsoncommandtopic}}"
-                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{tempcolor}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################
-              # Theme: Apply selected foreground color when it changes.
-              # If the page is currently active, delay a moment before applying the overlay
-              # so it will fire after any other theme elements being applied.
+              # Theme: Apply selected foreground color on change
               - conditions:
                   - condition: template
                     value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
@@ -201,14 +316,14 @@ action:
                   - service: mqtt.publish
                     data_template:
                       topic: "{{commandtopic}}.pco"
-                      payload: "{{trigger.payload}}"
+                      payload: "{{textcolor}}"
                   - condition: template
                     value_template: "{{ activepage|int == hasppage|int }}"
                   - delay: "00:00:00.5"
                   - service: mqtt.publish
                     data_template:
                       topic: "{{jsoncommandtopic}}"
-                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{trigger.payload}},0,1,1,3,\"{{icon}}\""]'
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{tempcolor}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################
               # Theme: Apply selected background color on change
               - conditions:
@@ -216,7 +331,7 @@ action:
                     value_template: "{{ trigger.topic == selectedbackgroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{commandtopic}}.bco"
                       payload: "{{trigger.payload}}"
               #########################################################################
@@ -226,7 +341,7 @@ action:
                     value_template: "{{ trigger.topic == unselectedforegroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{commandtopic}}.pco2"
                       payload: "{{trigger.payload}}"
               #########################################################################
@@ -236,24 +351,24 @@ action:
                     value_template: "{{ trigger.topic == unselectedbackgroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{commandtopic}}.bco2"
                       payload: "{{trigger.payload}}"
-
-    # Catch any other trigger conditions, apply styles, place text, and then place icon if our target page is currently active
+    #########################################################################
+    # Catch remaining triggers to display temperature and apply text style
     default:
       - service: mqtt.publish
-        data_template:
+        data:
           topic: "{{jsoncommandtopic}}"
           payload: >-
             ["{{haspobject}}.font={{font}}",
-            "{{haspobject}}.xcen=2",
-            "{{haspobject}}.ycen=1",
-            "{{haspobject}}.pco={{selectedfg}}",
+            "{{haspobject}}.xcen={{xcen}}",
+            "{{haspobject}}.ycen={{ycen}}",
+            "{{haspobject}}.pco={{textcolor}}",
             "{{haspobject}}.bco={{selectedbg}}",
             "{{haspobject}}.pco2={{unselectedfg}}",
             "{{haspobject}}.bco2={{unselectedbg}}",
             "{{haspobject}}.txt=\"{{text}} \""
             {%- if activepage|int == hasppage|int -%}
-            ,"delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""
+            ,"delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{tempcolor}},0,1,1,3,\"{{icon}}\""
             {%- endif -%}]

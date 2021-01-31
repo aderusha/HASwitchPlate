@@ -1,7 +1,7 @@
 blueprint:
   name: "plate01 Remove HASP MQTT discovery messages"
   description: "Press EXECUTE to remove retained MQTT discovery messages for a decommissioned HASP"
-  source_url: "https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Remove_MQTT_Discovery_Devices.yaml"
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Remove_MQTT_Discovery_Devices.yaml"
   domain: automation
   input:
     haspname:
@@ -20,6 +20,21 @@ action:
   - service: mqtt.publish
     data_template:
       topic: "hasp/{{haspname}}/status"
+      payload: ""
+      retain: true
+  - service: mqtt.publish
+    data_template:
+      topic: "hasp/{{haspname}}/command"
+      payload: ""
+      retain: true
+  - service: mqtt.publish
+    data_template:
+      topic: "hasp/{{haspname}}/command/page"
+      payload: ""
+      retain: true
+  - service: mqtt.publish
+    data_template:
+      topic: "hasp/{{haspname}}/state/page"
       payload: ""
       retain: true
   - service: mqtt.publish

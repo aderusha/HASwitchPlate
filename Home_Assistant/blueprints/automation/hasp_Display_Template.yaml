@@ -1,12 +1,24 @@
 blueprint:
-  name: "plate01 p[x].b[y] displays the current temperature"
+  name: "plate01 p[x].b[y] displays the output of a template"
   description: |
 
     # Description
 
-    A HASP button displays the current temperature from a selected weather provider
+    A button on the HASP will display the output of a template.  The template is updated when the state of a selected entity updates.
 
-    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Temperature.png?raw=true)
+    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Template.png?raw=true)
+
+    ## Examples
+
+    <details>
+
+    ### Show tomorrow's high/low temperature from Met.no
+
+    **Trigger entity:** The default Met.no provider from Home Assistant.  If you left your location named "Home", the entity should be `weather.home`
+    **Template:** `Tomorrow\\rHigh: {{state_attr(trigger_entity, "forecast")[0].temperature|int}} Low: {{state_attr(trigger_entity, "forecast")[0].templow|int}}`
+    **Font:** `6`
+
+    </details>
 
     ## HASP Page and Button reference
 
@@ -55,7 +67,7 @@ blueprint:
 
     </details>
 
-  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Temperature.yaml"
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Template.yaml"
   domain: automation
   input:
     haspconnected:
@@ -68,7 +80,7 @@ blueprint:
           device_class: connectivity
     hasppage:
       name: "HASP Page"
-      description: "Select the HASP page (1-11) for the temperature"
+      description: "Select the HASP page (1-11). Refer to the HASP Page and Button reference above."
       default: 1
       selector:
         number:
@@ -77,33 +89,28 @@ blueprint:
           mode: box
     haspbutton:
       name: "HASP Button"
-      description: "Select the HASP button (4-15) for the temperature.  Refer to the object map in the HASP documentation."
+      description: "Select the HASP button (4-15) for the template display. Refer to the HASP Page and Button reference above."
       default: 4
       selector:
         number:
           min: 4
           max: 15
           mode: box
-    weather_provider:
-      name: "Weather provider"
-      description: "Select the weather provider to obtain the temperature"
-      default: "weather.home"
+    trigger_entity:
+      name: "Select an entity to trigger template update"
+      description: "Update the displayed template when the state or attributes of the selected entity update."
       selector:
         entity:
-          domain: weather
-    suffix:
-      name: "Temperature display suffix"
-      description: 'Suffix for temperature display: 0="" 1="°" 2="°F" 3="°C"'
-      default: 1
+    template:
+      name: "Template to output"
+      description: "Enter a well-formed Home Assistant template string"
+      default: 'Forecast: {{state_attr("weather.home", "forecast")[0].condition|title}}'
       selector:
-        number:
-          min: 0
-          max: 3
-          mode: box
+        text:
     font:
-      name: "Temperature Font"
-      description: "Select the font for the temperature:"
-      default: 10
+      name: "Font"
+      description: "Select the font for the displayed text. Refer to the HASP Font reference above.:"
+      default: 7
       selector:
         number:
           min: 0
@@ -127,6 +134,12 @@ blueprint:
           min: 0
           max: 2
           mode: box
+    wrap:
+      name: "Text wrap"
+      description: "Enable line-wrapping text if too long to fit in the button."
+      default: false
+      selector:
+        boolean:
 
 mode: parallel
 max_exceeded: silent
@@ -136,16 +149,16 @@ variables:
   haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
   hasppage: !input hasppage
   haspbutton: !input haspbutton
-  weather_provider: !input weather_provider
-  suffix: !input suffix
+  trigger_entity: !input trigger_entity
+  text: !input template
   font: !input font
   xcen: !input xcen
   ycen: !input ycen
+  wrap: !input wrap
   haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
   commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
   jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
-  temperature: '{{state_attr(weather_provider, "temperature")}}'
-  text: '{{temperature}}{% if suffix == "1" %}°{% elif suffix == "2" %}°F{% elif suffix == "3" %}°C{% endif %}'
+  isbr: "{% if wrap == true %}1{% else %}0{% endif %}"
   selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
   selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
   unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
@@ -182,7 +195,7 @@ trigger:
   - platform: homeassistant
     event: start
   - platform: state
-    entity_id: !input weather_provider
+    entity_id: !input trigger_entity
   - platform: mqtt
     topic: "hasp/+/light/selectedforegroundcolor/rgb"
   - platform: mqtt
@@ -200,7 +213,7 @@ condition:
 action:
   - choose:
       #########################################################################
-      # Display attribute and apply text style when "EXECUTE" is pressed by the user
+      # Display template and apply text style when "EXECUTE" is pressed by the user
       - conditions:
           - condition: template
             value_template: "{{ trigger is not defined }}"
@@ -221,10 +234,10 @@ action:
                 "{{haspobject}}.txt=\"{{text}}\""
                 ]
       #########################################################################
-      # Update temperature if our weather provider changed state
-      - conditions:
+      # Update display if our entity has changed state
+      - conditions: # Update display if our entity has changed state
           - condition: template
-            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == weather_provider) }}'
+            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == trigger_entity) }}'
         sequence:
           - service: mqtt.publish
             data_template:
@@ -278,7 +291,7 @@ action:
                       topic: "{{commandtopic}}.bco2"
                       payload: "{{trigger.payload}}"
     #########################################################################
-    # Catch remaining triggers to display temperature and apply text style
+    # Catch remaining triggers to display template and apply text style
     default:
       - service: mqtt.publish
         data:

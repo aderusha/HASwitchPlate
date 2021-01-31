@@ -1,7 +1,26 @@
 blueprint:
   name: "plate01 p[x].b[y] displays the month + date with a calendar icon"
-  description: "A HASP button displays month + date on the right with a calendar icon on the left"
-  source_url: "https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Display_Calendar_with_Icon.yaml"
+  description: |
+
+    # Description
+
+    A HASP button displays month + date on the right with a calendar icon on the left.
+
+    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Calendar_with_Icon.png?raw=true)
+
+    ## HASP Page and Button reference
+
+    <details>
+
+    This automation is designed to work with the full-width buttons found on pages 1-3
+
+    | Pages 1-3 |
+    |-----------|
+    | ![Pages 1-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p1-p3_4buttons.png?raw=true) |
+
+    </details>
+
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Calendar_with_Icon.yaml"
   domain: automation
   input:
     haspconnected:
@@ -14,7 +33,8 @@ blueprint:
           device_class: connectivity
     hasppage:
       name: "HASP Page"
-      description: "Select the HASP page (1-3) for the calendar"
+      description: "Select the HASP page (1-3) for the calendar. Refer to the HASP Page and Button reference above."
+      default: 1
       selector:
         number:
           min: 1
@@ -22,7 +42,8 @@ blueprint:
           mode: box
     haspbutton:
       name: "HASP Button"
-      description: "Select the HASP button (4-7) for the calendar.  Refer to the object map in the HASP documentation."
+      description: "Select the HASP button (4-7) for the calendar. Refer to the HASP Page and Button reference above."
+      default: 4
       selector:
         number:
           min: 4
@@ -173,14 +194,14 @@ action:
                   - condition: template
                     value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
                 sequence:
-                  - delay: '00:00:00.5'
+                  - delay: "00:00:00.5"
                   - service: mqtt.publish
                     data_template:
                       topic: "{{commandtopic}}.pco"
                       payload: "{{trigger.payload}}"
                   - condition: template
                     value_template: "{{ activepage|int == hasppage|int }}"
-                  - delay: '00:00:00.5'
+                  - delay: "00:00:00.5"
                   - service: mqtt.publish
                     data_template:
                       topic: "{{jsoncommandtopic}}"
@@ -215,7 +236,7 @@ action:
                     data_template:
                       topic: "{{commandtopic}}.bco2"
                       payload: "{{trigger.payload}}"
-    
+
     # Catch any other trigger conditions, apply styles, place text, and then place icon if our target page is currently active
     default:
       - service: mqtt.publish

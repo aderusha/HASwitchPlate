@@ -1,7 +1,7 @@
 blueprint:
   name: "plate01 Theme Dark on Light"
   description: "Press EXECUTE to apply the theme Dark on Light to the selected HASP device"
-  source_url: "https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Theme_Dark_on_Light.yaml"
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Theme_Dark_on_Light.yaml"
   domain: automation
   input:
     haspconnected:

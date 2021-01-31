@@ -1,7 +1,73 @@
 blueprint:
-  name: "plate01 p[x].b[y] triggers a scene"
-  description: "Press a button on the HASP to trigger a scene"
-  source_url: "https://github.com/aderusha/HASwitchPlate/blob/dev/Home_Assistant/blueprints/automation/hasp_Trigger_Scene.yaml"
+  name: "plate01 p[x].b[y] displays text and triggers a scene"
+  description: |
+
+    # Description
+
+    A button on the HASP will display text and trigger a scene when pressed
+
+    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Text_and_Trigger_Scene.png?raw=true)
+
+    ## Examples
+
+    <details>
+
+    ### Trigger the scene "Lights On" and display a light icon + scene name
+
+    **Scene:** `scene.lights_on`
+    **Text:** `   Lights On`
+    **Font:** `8`
+
+    </details>
+
+    ## HASP Page and Button reference
+
+    <details>
+
+    | Page 0 | Pages 1-3 | Pages 4-5 |
+    |--------|-----------|-----------|
+    | ![Page 0](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p0_Init_Screen.png?raw=true) | ![Pages 1-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p1-p3_4buttons.png?raw=true) | ![Pages 4-5](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p4-p5_3sliders.png?raw=true) |
+
+    | Page 6 | Page 7 | Page 8 |
+    |--------|--------|--------|
+    | ![Page 6](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p6_8buttons.png?raw=true) | ![Page 7](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p7_12buttons.png?raw=true) | ![Page 8](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p8_5buttons+1slider.png?raw=true) |
+
+    | Page 9 | Page 10 | Page 11 |
+    |--------|---------|---------|
+    | ![Page 9](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p9_9buttons.png?raw=true) | ![Page 10](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p10_5buttons.png?raw=true) | ![Page 11](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p11_1button.png?raw=true)
+
+    </details>
+
+    ## HASP Font reference
+
+    <details>
+
+    The Nextion display supports monospaced and proportional fonts.  For proportional fonts, the HASP project includes [Consolas](https://docs.microsoft.com/en-us/typography/font-list/consolas) in 4 sizes and [Webdings](https://en.wikipedia.org/wiki/Webdings#Character_set) in 1 size.
+
+    | Number | Font              | Characters per line | Lines per button |
+    |--------|-------------------|---------------------|------------------|
+    | 0      | Consolas 24 point | 20 characters       | 2 lines          |
+    | 1      | Consolas 32 point | 15 characters       | 2 lines          |
+    | 2      | Consolas 48 point | 10 characters       | 1 lines          |
+    | 3      | Consolas 80 point | 6 characters        | 1 lines          |
+    | 4      | Webdings 56 point | 8 characters        | 1 lines          |
+
+    The HASP also includes [Google's "Noto Sans"](https://github.com/googlefonts/noto-fonts) proportional font in 5 sizes.  These fonts also include [1400+ icons which you can copy and paste from here](https://htmlpreview.github.io/?https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/hasp-fontawesome5.html)
+
+    | Number | Font                       |
+    |--------|----------------------------|
+    | 5      | Noto Sans Regular 24 point |
+    | 6      | Noto Sans Regular 32 point |
+    | 7      | Noto Sans Regular 48 point |
+    | 8      | Noto Sans Regular 64 point |
+    | 9      | Noto Sans Regular 80 point |
+    | 10     | Noto Sans Bold 80 point    |
+
+    ![HASP Fonts 0-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_0-3.png?raw=true) ![HASP Fonts 4-7](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_4-7.png?raw=true) ![HASP Fonts 8-10](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_8-10.png?raw=true)
+
+    </details>
+
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Text_and_Trigger_Scene.yaml"
   domain: automation
   input:
     haspconnected:
@@ -14,7 +80,8 @@ blueprint:
           device_class: connectivity
     page:
       name: "HASP Page"
-      description: "Select the HASP page (1-11) for this scene button"
+      description: "Select the HASP page (1-11) for this scene button. Refer to the HASP Page and Button reference above."
+      default: 1
       selector:
         number:
           min: 1
@@ -22,7 +89,8 @@ blueprint:
           mode: box
     button:
       name: "HASP Button"
-      description: "Select the HASP button for this scene"
+      description: "Select the HASP button for this scene. Refer to the HASP Page and Button reference above."
+      default: 4
       selector:
         number:
           min: 4
@@ -30,16 +98,18 @@ blueprint:
           mode: box
     scene:
       name: "Scene to trigger"
-      description: "Select a scene for this button to trigger"
+      description: "Select a scene for this button to trigger."
       selector:
         entity:
           domain: scene
     text:
       name: "HASP Button Text"
-      description: "Enter text to appear on the button"
+      description: "Enter text to appear on the button.  This text can include a template."
+      default: "Text"
     font:
       name: "HASP Button Font"
-      description: "Select the text font for this button label"
+      description: "Select the text font for this button label. Refer to the HASP Font reference above."
+      default: 7
       selector:
         number:
           min: 0
@@ -48,6 +118,7 @@ blueprint:
     xcen:
       name: "Text horizontal alignment"
       description: "Horizontal text alignment: 0=Left 1=Center 2=Right"
+      default: 1
       selector:
         number:
           min: 0
@@ -56,6 +127,7 @@ blueprint:
     ycen:
       name: "Text vertical alignment"
       description: "Vertical text alignment: 0=Top 1=Center 2=Bottom"
+      default: 1
       selector:
         number:
           min: 0
@@ -64,6 +136,7 @@ blueprint:
     wrap:
       name: "Text wrap"
       description: "Enable line-wrapping text if too long to fit in the button."
+      default: false
       selector:
         boolean:
 
@@ -144,21 +217,21 @@ action:
           - condition: template
             value_template: "{{ trigger is not defined }}"
         sequence:
-        - service: mqtt.publish
-          data_template:
-            topic: "{{jsoncommandtopic}}"
-            payload: >-
-              [
-              "{{haspobject}}.font={{font}}",
-              "{{haspobject}}.xcen={{xcen}}",
-              "{{haspobject}}.ycen={{ycen}}",
-              "{{haspobject}}.isbr={{isbr}}",
-              "{{haspobject}}.pco={{selectedfg}}",
-              "{{haspobject}}.bco={{selectedbg}}",
-              "{{haspobject}}.pco2={{unselectedfg}}",
-              "{{haspobject}}.bco2={{unselectedbg}}",
-              "{{haspobject}}.txt=\"{{text}}\""
-              ]
+          - service: mqtt.publish
+            data_template:
+              topic: "{{jsoncommandtopic}}"
+              payload: >-
+                [
+                "{{haspobject}}.font={{font}}",
+                "{{haspobject}}.xcen={{xcen}}",
+                "{{haspobject}}.ycen={{ycen}}",
+                "{{haspobject}}.isbr={{isbr}}",
+                "{{haspobject}}.pco={{selectedfg}}",
+                "{{haspobject}}.bco={{selectedbg}}",
+                "{{haspobject}}.pco2={{unselectedfg}}",
+                "{{haspobject}}.bco2={{unselectedbg}}",
+                "{{haspobject}}.txt=\"{{text}}\""
+                ]
       #########################################################################
       # Catch triggers fired by incoming MQTT messages
       - conditions:
@@ -214,7 +287,6 @@ action:
                     data_template:
                       topic: "{{commandtopic}}.bco2"
                       payload: "{{trigger.payload}}"
-
 
     #########################################################################
     # Apply text and style when device is connected or home assistant starts
