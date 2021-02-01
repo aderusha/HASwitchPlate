@@ -52,6 +52,8 @@ blueprint:
       name: "Page select button 1 text"
       description: "Enter text to appear on the left-most page select button #1.  It's a small button, so keep it short.  6 character (or shorter) words are crisp and legible."
       default: "Page 1"
+      selector:
+        text:
     page1font:
       name: "Page select button 1 font"
       description: "Select the font for page select button #1.  Font 6 might be a good starting point.  You can refer to the HASP Font reference above to see available options."
@@ -60,7 +62,7 @@ blueprint:
         number:
           min: 0
           max: 10
-          mode: box
+          mode: slider
     page1page:
       name: "Page select button 1 page"
       description: "Select the destination page for page select button #1.  When you click the left-most page button on the HASP, the HASP will flip to the page number you select here.  If this is your first time here, try page 1."
@@ -69,11 +71,13 @@ blueprint:
         number:
           min: 0
           max: 11
-          mode: box
+          mode: slider
     page2text:
       name: "Page select button 2 text"
-      description: "Enter text to appear on the center page select button #2"
+      description: "Enter text to appear on the center page select button #2. If page scrolling is enabled, use the Page Names list below."
       default: "Page 2"
+      selector:
+        text:
     page2font:
       name: "Page select button 2 font"
       description: "Select the font for page select button #2."
@@ -82,7 +86,7 @@ blueprint:
         number:
           min: 0
           max: 10
-          mode: box
+          mode: slider
     page2page:
       name: "Page select button 2 page"
       description: "Select the destination page for page select button #2"
@@ -91,11 +95,13 @@ blueprint:
         number:
           min: 0
           max: 11
-          mode: box
+          mode: slider
     page3text:
       name: "Page select button 3 text"
       description: "Enter text to appear on the right-most page select button #3"
       default: "Page 3"
+      selector:
+        text:
     page3font:
       name: "Page select button 3 font"
       description: "Select the font for page select button #3"
@@ -104,7 +110,7 @@ blueprint:
         number:
           min: 0
           max: 10
-          mode: box
+          mode: slider
     page3page:
       name: "Page select button 3 page"
       description: "Select the destination page for page select button #3"
@@ -113,10 +119,40 @@ blueprint:
         number:
           min: 0
           max: 11
-          mode: box
+          mode: slider
+    page_scroll:
+      name: "Enable page scrolling instead of page select"
+      description: "If enabled, page buttons 1 and 3 will scroll up and down through available pages. The middle page button 2 will continue to select its assigned page number, but the label for page button 2 will be determined based on the Page Names defined below."
+      default: false
+      selector:
+        boolean:
+    page_scroll_list:
+      name: "Page scroll list"
+      description: "If page scrolling is enabled, set this list to include all active pages eligible for scrolling in the desired order. If a page is not being used, remove it from the list to skip it while scrolling up/down."
+      default: "1,2,3,4,5,6,7,8,9,10,11"
+      selector:
+        text:
+    page_names:
+      name: "Page names"
+      description: 'If page scrolling is enabled, the list here assigns the label seen on Page Button 2 for each page.  For example, if "page9" is set to "HVAC", when page 9 is selected the text "HVAC" will appear on the middle page select button.  If you prefer one single label for the page2 button on all pages, simply set each page to the same value.'
+      default:
+        page0: Page 0
+        page1: Page 1
+        page2: Page 2
+        page3: Page 3
+        page4: Page 4
+        page5: Page 5
+        page6: Page 6
+        page7: Page 7
+        page8: Page 8
+        page9: Page 9
+        page10: Page 10
+        page11: Page 11
+      selector:
+        object:
     reset_hasp:
       name: "First-time HASP setup or reset"
-      description: "Select this if this is a brand-new HASP (or you'd like to reset some default theme settings). Turn it on, hit save, and click EXECUTE to setup your HASP.  After the first run, toggle this back off."
+      description: "Turn this on if this is a brand-new HASP (or you'd like to reset some default theme settings). Turn it on, hit save, and click EXECUTE to setup your HASP.  After the first run you can toggle this back off."
       default: true
       selector:
         boolean:
@@ -135,8 +171,12 @@ variables:
   page3text: !input page3text
   page3font: !input page3font
   page3page: !input page3page
+  page_scroll: !input page_scroll
+  page_scroll_list: !input page_scroll_list
+  page_names: !input page_names
   reset_hasp: !input reset_hasp
   haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
+  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{{ states(activepage_entity) | int }}'
   statustopic: '{{ "hasp/" ~ haspname ~ "/status" }}'
   commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
   jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
@@ -159,6 +199,35 @@ variables:
   unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
   unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
   page_button_trigger: "OFF"
+  page_list: '{{page_scroll_list.split(",")}}'
+  page_previous: >
+    {%- set page = namespace() -%}
+    {%- set page.previous = page_list[(page_list|length)-1]|int -%}
+    {%- set page.next = page_list[0]|int -%}
+    {%- for item in page_list -%}
+      {%- if item|int == activepage -%}
+        {%- if not loop.first -%}
+          {%- set page.previous = loop.previtem|int -%}
+        {%- endif -%}
+        {%- if not loop.last -%}
+          {%- set page.next = loop.nextitem|int -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}{{page.previous}}
+  page_next: >
+    {%- set page = namespace() -%}
+    {%- set page.previous = page_list[(page_list|length)-1]|int -%}
+    {%- set page.next = page_list[0]|int -%}
+    {%- for item in page_list -%}
+      {%- if item|int == activepage -%}
+        {%- if not loop.first -%}
+          {%- set page.previous = loop.previtem|int -%}
+        {%- endif -%}
+        {%- if not loop.last -%}
+          {%- set page.next = loop.nextitem|int -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}{{page.next}}
 
 trigger:
   - platform: state
@@ -190,6 +259,10 @@ action:
           - condition: template
             value_template: "{{ trigger is not defined }}"
         sequence:
+          - service: mqtt.publish
+            data_template:
+              topic: "debug"
+              payload: "page_names: {{page_names}} activepage: {{activepage}} page_scroll_list: {{page_scroll_list}} page_list: {{page_list}} page_previous: {{page_previous}} page_next: {{page_next}} test: {%if 1 == activepage %}true{% endif %}"
           # Push discovery messages for RGB lights used to configure themes
           - service: mqtt.publish
             data_template:
@@ -294,7 +367,7 @@ action:
               topic: "{{jsoncommandtopic}}"
               payload_template: >-
                 [{% for p in range(1,12) %}"p[{{p}}].b[1].font={{page1font}}","p[{{p}}].b[1].txt=\"{{page1text}}\"",{% endfor %}"delay=1",
-                {% for p in range(1,12) %}"p[{{p}}].b[2].font={{page2font}}","p[{{p}}].b[2].txt=\"{{page2text}}\"",{% endfor %}"delay=1",
+                {% for p in range(1,12) %}"p[{{p}}].b[2].font={{page2font}}","p[{{p}}].b[2].txt=\"{% if page_scroll %}{{page_names.get("page" ~ p)}}{% else %}{{page2text}}{% endif %}\"",{% endfor %}"delay=1",
                 {% for p in range(1,12) %}"p[{{p}}].b[3].font={{page3font}}","p[{{p}}].b[3].txt=\"{{page3text}}\"",{% endfor %}"delay=1"]
 
           #########################################################################
@@ -350,7 +423,7 @@ action:
               topic: "{{jsoncommandtopic}}"
               payload_template: >-
                 [{% for p in range(1,12) %}"p[{{p}}].b[1].font={{page1font}}","p[{{p}}].b[1].txt=\"{{page1text}}\"",{% endfor %}"delay=1",
-                {% for p in range(1,12) %}"p[{{p}}].b[2].font={{page2font}}","p[{{p}}].b[2].txt=\"{{page2text}}\"",{% endfor %}"delay=1",
+                {% for p in range(1,12) %}"p[{{p}}].b[2].font={{page2font}}","p[{{p}}].b[2].txt=\"{% if page_scroll %}{{page_names.get("page" ~ p)}}{% else %}{{page2text}}{% endif %}\"",{% endfor %}"delay=1",
                 {% for p in range(1,12) %}"p[{{p}}].b[3].font={{page3font}}","p[{{p}}].b[3].txt=\"{{page3text}}\"",{% endfor %}"delay=1"]
           - service: mqtt.publish # apply selected foreground color to page select buttons
             data_template:
@@ -361,9 +434,11 @@ action:
                 {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
                 {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
                 {%- set colorcode = (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int -%}
-                [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].pco={{colorcode}}"{%- else -%}"p[{{p}}].b[1].pco2={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
+                [{%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].pco={{colorcode}}"{%- else -%}"p[{{p}}].b[1].pco2={{colorcode}}"{%- endif -%},{%- endfor -%}
+                {%- else -%}{%- for p in range(1,12) %}"p[{{p}}].b[1].pco2={{colorcode}}",{%- endfor -%}{%- endif -%}"delay=1",
                 {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].pco={{colorcode}}"{%- else -%}"p[{{p}}].b[2].pco2={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
-                {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco={{colorcode}}"{%- else -%}"p[{{p}}].b[3].pco2={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1"]
+                {%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco={{colorcode}}"{%- else -%}"p[{{p}}].b[3].pco2={{colorcode}}"{%- endif -%},{%- endfor -%}
+                {%- else -%}{%- for p in range(1,12) %}"p[{{p}}].b[3].pco2={{colorcode}}",{%- endfor -%}{%- endif -%}"delay=1"]
           - service: mqtt.publish # apply selected background color to page select buttons
             data_template:
               topic: "{{jsoncommandtopic}}"
@@ -373,9 +448,11 @@ action:
                 {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
                 {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
                 {%- set colorcode = (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int -%}
-                [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].bco={{colorcode}}"{%- else -%}"p[{{p}}].b[1].bco2={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
+                [{%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].bco={{colorcode}}"{%- else -%}"p[{{p}}].b[1].bco2={{colorcode}}"{%- endif -%},{%- endfor -%}
+                {% else %}{%- for p in range(1,12) %}"p[{{p}}].b[1].bco2={{colorcode}}",{%- endfor -%}{%- endif -%}"delay=1",
                 {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].bco={{colorcode}}"{%- else -%}"p[{{p}}].b[2].bco2={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
-                {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].bco={{colorcode}}"{%- else -%}"p[{{p}}].b[3].bco2={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1"]
+                {%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].bco={{colorcode}}"{%- else -%}"p[{{p}}].b[3].bco2={{colorcode}}"{%- endif -%},{%- endfor -%}
+                {% else %}{%- for p in range(1,12) %}"p[{{p}}].b[3].bco2={{colorcode}}",{%- endfor -%}{%- endif -%}"delay=1"]
           - service: mqtt.publish # apply unselected foreground color to page select buttons
             data_template:
               topic: "{{jsoncommandtopic}}"
@@ -385,9 +462,11 @@ action:
                 {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
                 {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
                 {%- set colorcode = (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int -%}
-                [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].pco2={{colorcode}}"{%- else -%}"p[{{p}}].b[1].pco={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
+                [{%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].pco2={{colorcode}}"{%- else -%}"p[{{p}}].b[1].pco={{colorcode}}"{%- endif -%},{%- endfor -%}
+                {% else %}{%- for p in range(1,12) %}"p[{{p}}].b[1].pco={{colorcode}}",{%- endfor -%}{%- endif -%}"delay=1",
                 {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].pco2={{colorcode}}"{%- else -%}"p[{{p}}].b[2].pco={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
-                {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco2={{colorcode}}"{%- else -%}"p[{{p}}].b[3].pco={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1"]
+                {%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco2={{colorcode}}"{%- else -%}"p[{{p}}].b[3].pco={{colorcode}}"{%- endif -%},{%- endfor -%}
+                {% else %}{%- for p in range(1,12) %}"p[{{p}}].b[3].pco={{colorcode}}",{%- endfor -%}{%- endif -%}"delay=1"]
           - service: mqtt.publish # apply unselected background color to page select buttons
             data_template:
               topic: "{{jsoncommandtopic}}"
@@ -397,9 +476,11 @@ action:
                 {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
                 {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
                 {%- set colorcode = (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int -%}
-                [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].bco2={{colorcode}}"{%- else -%}"p[{{p}}].b[1].bco={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
+                [{%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].bco2={{colorcode}}"{%- else -%}"p[{{p}}].b[1].bco={{colorcode}}"{%- endif -%},{%- endfor -%}
+                {% else %}{%- for p in range(1,12) %}"p[{{p}}].b[1].bco={{colorcode}}",{%- endfor -%}{%- endif -%}"delay=1",
                 {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].bco2={{colorcode}}"{%- else -%}"p[{{p}}].b[2].bco={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1",
-                {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].bco2={{colorcode}}"{%- else -%}"p[{{p}}].b[3].bco={{colorcode}}"{%- endif -%},{%- endfor -%}"delay=1"]
+                {%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].bco2={{colorcode}}"{%- else -%}"p[{{p}}].b[3].bco={{colorcode}}"{%- endif -%},{%- endfor -%}
+                {% else %}{%- for p in range(1,12) %}"p[{{p}}].b[3].bco={{colorcode}}",{%- endfor -%}{%- endif -%}"delay=1"]
 
           - service: mqtt.publish # restore active page
             data_template:
@@ -417,38 +498,61 @@ action:
             value_template: '{{ trigger.platform == "mqtt" }}'
         sequence:
           - choose:
-              #########################################################################
-              # Page control buttons
-              - conditions: # catch p[x].b[1] and send the command to switch to the selected page
-                  - condition: template
-                    value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event | regex_match("p\[\d+\].b\[1\]")) and (trigger.payload_json.value == page_button_trigger) }}'
-                sequence:
-                  - service: mqtt.publish
-                    data_template:
-                      topic: "hasp/{{haspname}}/command/page"
-                      payload: !input page1page
-                      retain: true
-              - conditions: # catch p[x].b[2]
-                  - condition: template
-                    value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event | regex_match("p\[\d+\].b\[2\]")) and (trigger.payload_json.value == page_button_trigger) }}'
-                sequence:
-                  - service: mqtt.publish
-                    data_template:
-                      topic: "hasp/{{haspname}}/command/page"
-                      payload: !input page2page
-              - conditions: # catch p[x].b[3]
-                  - condition: template
-                    value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event | regex_match("p\[\d+\].b\[3\]")) and (trigger.payload_json.value == page_button_trigger) }}'
-                sequence:
-                  - service: mqtt.publish
-                    data_template:
-                      topic: "hasp/{{haspname}}/command/page"
-                      payload: !input page3page
-              #########################################################################
-              # Apply selected theme colors when they change
               - conditions:
                   - condition: template
-                    value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
+                    value_template: "{{ trigger.topic == jsontopic }}"
+                sequence:
+                  - choose:
+                      #########################################################################
+                      # Page control buttons
+                      - conditions: # catch p[x].b[1] and send the command to switch to the selected page
+                          - condition: template
+                            value_template: '{{ (trigger.payload_json.event | regex_match("p\[\d+\].b\[1\]")) and (trigger.payload_json.value == page_button_trigger) and not page_scroll}}'
+                        sequence:
+                          - service: mqtt.publish
+                            data_template:
+                              topic: "hasp/{{haspname}}/command/page"
+                              payload: !input page1page
+                              retain: true
+                      - conditions: # catch p[x].b[1] and send the command to switch to the previous page if page_scroll == true
+                          - condition: template
+                            value_template: '{{ (trigger.payload_json.event | regex_match("p\[\d+\].b\[1\]")) and (trigger.payload_json.value == page_button_trigger) and page_scroll}}'
+                        sequence:
+                          - service: mqtt.publish
+                            data_template:
+                              topic: "hasp/{{haspname}}/command/page"
+                              payload: "{{page_previous}}"
+                              retain: true
+                      - conditions: # catch p[x].b[2]
+                          - condition: template
+                            value_template: '{{ (trigger.payload_json.event | regex_match("p\[\d+\].b\[2\]")) and (trigger.payload_json.value == page_button_trigger) }}'
+                        sequence:
+                          - service: mqtt.publish
+                            data_template:
+                              topic: "hasp/{{haspname}}/command/page"
+                              payload: !input page2page
+                      - conditions: # catch p[x].b[3] and send the command to switch to the selected page
+                          - condition: template
+                            value_template: '{{ (trigger.payload_json.event | regex_match("p\[\d+\].b\[3\]")) and (trigger.payload_json.value == page_button_trigger) and not page_scroll}}'
+                        sequence:
+                          - service: mqtt.publish
+                            data_template:
+                              topic: "hasp/{{haspname}}/command/page"
+                              payload: !input page3page
+                      - conditions: # catch p[x].b[3] and send the command to switch to the next page if page_scroll == true
+                          - condition: template
+                            value_template: '{{ (trigger.payload_json.event | regex_match("p\[\d+\].b\[3\]")) and (trigger.payload_json.value == page_button_trigger) and page_scroll }}'
+                        sequence:
+                          - service: mqtt.publish
+                            data_template:
+                              topic: "hasp/{{haspname}}/command/page"
+                              payload: "{{page_next}}"
+
+              #########################################################################
+              # Apply selected theme colors to the page select buttons when theme colors are published
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == selectedforegroundcolortopic and not page_scroll }}"
                 sequence:
                   - service: mqtt.publish
                     data_template:
@@ -459,7 +563,18 @@ action:
                         {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco={{trigger.payload}}"{%- else -%}"p[{{p}}].b[3].pco2={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1"]
               - conditions:
                   - condition: template
-                    value_template: "{{ trigger.topic == selectedbackgroundcolortopic }}"
+                    value_template: "{{ trigger.topic == selectedforegroundcolortopic and page_scroll }}"
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: >-
+                        [{%- for p in range(1,12) %}"p[{{p}}].b[1].pco2={{trigger.payload}}",{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].pco={{trigger.payload}}"{%- else -%}"p[{{p}}].b[2].pco2={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}"p[{{p}}].b[3].pco2={{trigger.payload}}",{%- endfor -%}"delay=1"]
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == selectedbackgroundcolortopic and not page_scroll }}"
                 sequence:
                   - service: mqtt.publish
                     data_template:
@@ -470,7 +585,18 @@ action:
                         {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].bco={{trigger.payload}}"{%- else -%}"p[{{p}}].b[3].bco2={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1"]
               - conditions:
                   - condition: template
-                    value_template: "{{ trigger.topic == unselectedforegroundcolortopic }}"
+                    value_template: "{{ trigger.topic == selectedbackgroundcolortopic and page_scroll }}"
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: >-
+                        [{%- for p in range(1,12) %}"p[{{p}}].b[1].bco2={{trigger.payload}}",{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].bco={{trigger.payload}}"{%- else -%}"p[{{p}}].b[2].bco2={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}"p[{{p}}].b[3].bco2={{trigger.payload}}",{%- endfor -%}"delay=1"]
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == unselectedforegroundcolortopic and not page_scroll }}"
                 sequence:
                   - service: mqtt.publish
                     data_template:
@@ -481,7 +607,18 @@ action:
                         {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[3].pco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1"]
               - conditions:
                   - condition: template
-                    value_template: "{{ trigger.topic == unselectedbackgroundcolortopic }}"
+                    value_template: "{{ trigger.topic == unselectedforegroundcolortopic and page_scroll }}"
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: >-
+                        [{%- for p in range(1,12) %}"p[{{p}}].b[1].pco={{trigger.payload}}",{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].pco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[2].pco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}"p[{{p}}].b[3].pco={{trigger.payload}}",{%- endfor -%}"delay=1"]
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == unselectedbackgroundcolortopic and not page_scroll }}"
                 sequence:
                   - service: mqtt.publish
                     data_template:
@@ -490,3 +627,14 @@ action:
                         [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].bco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[1].bco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
                         {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].bco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[2].bco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
                         {%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].bco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[3].bco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1"]
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == unselectedbackgroundcolortopic and page_scroll }}"
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: >-
+                        [{%- for p in range(1,12) %}"p[{{p}}].b[1].bco={{trigger.payload}}",{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].bco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[2].bco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
+                        {%- for p in range(1,12) %}"p[{{p}}].b[3].bco={{trigger.payload}}",{%- endfor -%}"delay=1"]

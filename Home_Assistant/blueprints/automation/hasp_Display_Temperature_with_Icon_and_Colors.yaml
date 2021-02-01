@@ -1,6 +1,7 @@
 blueprint:
   name: "plate01 p[x].b[y] displays the current temperature with icon and colors"
   description: |
+
     # Description
 
     A HASP button displays the current temperature on the right with a dynamic thermometer icon on the left and (optional) colors.
@@ -19,6 +20,27 @@ blueprint:
 
     </details>
 
+    ## Nextion color codes
+
+    <details>
+
+    The Nextion environment utilizes RGB 565 encoding.  [Use this handy convertor](https://nodtem66.github.io/nextion-hmi-color-convert/index.html) to select your colors and convert to the RGB 565 format.
+
+    Here are some example colors:
+
+    | Color  | Code  |
+    |--------|-------|
+    | White  | 65535 |
+    | Black  | 0     |
+    | Grey   | 25388 |
+    | Red    | 63488 |
+    | Green  | 2016  |
+    | Blue   | 31    |
+    | Yellow | 65504 |
+    | Orange | 64512 |
+    | Brown  | 48192 |
+
+    </details>
   source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Temperature_with_Icon_and_Colors.yaml"
   domain: automation
   input:
@@ -65,7 +87,7 @@ blueprint:
           mode: box
     thermometer_empty_color:
       name: "Thermometer empty color"
-      description: "Icon color for an empty thermometer in Nextion RGB565 format. -1 = Current theme foreground color, or 2047 = Ice blue"
+      description: 'Icon color for an empty thermometer in Nextion RGB565 format (see "Nextion color codes" above for reference). -1 = Current theme foreground color, or 2047 = Ice blue'
       default: 2047
       selector:
         number:
@@ -177,7 +199,7 @@ variables:
   jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
   temperature: '{{state_attr(weather_provider, "temperature")}}'
   icon: "{% set temp = temperature|int %}{% if temp <= thermometer_quarter_threshold|int -%}{% elif temp < thermometer_half_threshold|int %}{% elif temp < thermometer_three_quarter_threshold|int %}{% elif temp < thermometer_full_threshold|int %}{% else %}{%- endif %}"
-  suffixstring: '{% if suffix|int == 1 %}°{% elif suffix|int == 2 %}°F{% elif suffix|int == 3 %}°C{% endif %}'
+  suffixstring: "{% if suffix|int == 1 %}°{% elif suffix|int == 2 %}°F{% elif suffix|int == 3 %}°C{% endif %}"
   text: "{{temperature}}{{suffixstring}}"
   font: 10
   ypos: "{{(haspbutton|int - 4) * 67 + 2}}"
