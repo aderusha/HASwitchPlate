@@ -92,7 +92,7 @@ variables:
     {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   text: '{{(now().strftime("%b "))~now().day}}'
-  font: 8
+  font: 9
   ypos: "{{(haspbutton|int - 4) * 67 + 2}}" # calculate the top pixel position based on the selected button
   xpos: 0
   icon: ""
@@ -133,7 +133,7 @@ action:
             value_template: "{{ trigger is not defined }}"
         sequence:
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
               payload: >-
                 ["{{haspobject}}.font={{font}}",
@@ -154,7 +154,7 @@ action:
             value_template: '{{ trigger.platform == "time" }}'
         sequence:
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
               payload: >-
                 ["{{haspobject}}.txt=\"{{text}} \""
@@ -175,7 +175,7 @@ action:
                     value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == haspobject ) and (trigger.payload_json.value == "OFF") }}'
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
               - conditions: # Page changed to our page, so place the icon on the screen.
@@ -183,7 +183,7 @@ action:
                     value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == "page" ) and (trigger.payload_json.value == hasppage|int) }}'
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################
@@ -196,14 +196,14 @@ action:
                 sequence:
                   - delay: "00:00:00.5"
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{commandtopic}}.pco"
                       payload: "{{trigger.payload}}"
                   - condition: template
                     value_template: "{{ activepage|int == hasppage|int }}"
                   - delay: "00:00:00.5"
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{trigger.payload}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################
@@ -213,7 +213,7 @@ action:
                     value_template: "{{ trigger.topic == selectedbackgroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{commandtopic}}.bco"
                       payload: "{{trigger.payload}}"
               #########################################################################
@@ -223,7 +223,7 @@ action:
                     value_template: "{{ trigger.topic == unselectedforegroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{commandtopic}}.pco2"
                       payload: "{{trigger.payload}}"
               #########################################################################
@@ -233,14 +233,14 @@ action:
                     value_template: "{{ trigger.topic == unselectedbackgroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{commandtopic}}.bco2"
                       payload: "{{trigger.payload}}"
 
     # Catch any other trigger conditions, apply styles, place text, and then place icon if our target page is currently active
     default:
       - service: mqtt.publish
-        data_template:
+        data:
           topic: "{{jsoncommandtopic}}"
           payload: >-
             ["{{haspobject}}.font={{font}}",

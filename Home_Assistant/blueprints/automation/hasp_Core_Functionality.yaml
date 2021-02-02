@@ -12,6 +12,8 @@ blueprint:
 
     <details>
 
+    The blueprint below allows you to select a font for each of the three page buttons.  This text section provides some information about the HASP fonts and how to use them.  Different blueprints might offer additional information in collapsible sections like this.
+
     The Nextion display supports monospaced and proportional fonts.  For proportional fonts, the HASP project includes [Consolas](https://docs.microsoft.com/en-us/typography/font-list/consolas) in 4 sizes and [Webdings](https://en.wikipedia.org/wiki/Webdings#Character_set) in 1 size.
 
     | Number | Font              | Characters per line | Lines per button |
@@ -22,7 +24,7 @@ blueprint:
     | 3      | Consolas 80 point | 6 characters        | 1 lines          |
     | 4      | Webdings 56 point | 8 characters        | 1 lines          |
 
-    The HASP also includes [Google's "Noto Sans"](https://github.com/googlefonts/noto-fonts) proportional font in 5 sizes.  These fonts also include [1400+ icons which you can copy and paste from here](https://htmlpreview.github.io/?https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/hasp-fontawesome5.html)
+    The HASP also includes [Google's "Noto Sans"](https://github.com/googlefonts/noto-fonts) proportional font in 5 sizes.
 
     | Number | Font                       |
     |--------|----------------------------|
@@ -33,6 +35,12 @@ blueprint:
     | 9      | Noto Sans Regular 80 point |
     | 10     | Noto Sans Bold 80 point    |
 
+    ### Icons
+    
+    Fonts 5-10 also include [1400+ icons which you can copy and paste from here](https://htmlpreview.github.io/?https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/hasp-fontawesome5.html)
+
+    ### Font examples
+    
     ![HASP Fonts 0-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_0-3.png?raw=true) ![HASP Fonts 4-7](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_4-7.png?raw=true) ![HASP Fonts 8-10](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_8-10.png?raw=true)
 
     </details>
@@ -261,7 +269,7 @@ action:
         sequence:
           # Push discovery messages for RGB lights used to configure themes
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "homeassistant/light/{{haspname}}/selectedforegroundcolor/config"
               payload: >-
                 {"name":"{{haspname}} selected foreground color",
@@ -285,7 +293,7 @@ action:
                 }}
               retain: true
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "homeassistant/light/{{haspname}}/selectedbackgroundcolor/config"
               payload: >-
                 {"name":"{{haspname}} selected background color",
@@ -310,7 +318,7 @@ action:
                 }}
               retain: true
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "homeassistant/light/{{haspname}}/unselectedforegroundcolor/config"
               payload: >-
                 {"name":"{{haspname}} unselected foreground color",
@@ -334,7 +342,7 @@ action:
                 }}
               retain: true
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "homeassistant/light/{{haspname}}/unselectedbackgroundcolor/config"
               payload: >-
                 {"name":"{{haspname}} unselected background color",
@@ -359,9 +367,9 @@ action:
               retain: true
           # Send page select button config
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
-              payload_template: >-
+              payload: >-
                 [{% for p in range(1,12) %}"p[{{p}}].b[1].font={{page1font}}","p[{{p}}].b[1].txt=\"{{page1text}}\"",{% endfor %}"delay=1",
                 {% for p in range(1,12) %}"p[{{p}}].b[2].font={{page2font}}","p[{{p}}].b[2].txt=\"{% if page_scroll %}{{page_names.get("page" ~ p)}}{% else %}{{page2text}}{% endif %}\"",{% endfor %}"delay=1",
                 {% for p in range(1,12) %}"p[{{p}}].b[3].font={{page3font}}","p[{{p}}].b[3].txt=\"{{page3text}}\"",{% endfor %}"delay=1"]
@@ -371,39 +379,39 @@ action:
           - condition: template
             value_template: "{{ reset_hasp }}"
           - service: light.turn_on
-            data_template:
+            data:
               entity_id: "light.{{haspname}}_selected_foreground_color"
               rgb_color: "{{default_selected_foreground_color}}"
           - service: light.turn_on
-            data_template:
+            data:
               entity_id: "light.{{haspname}}_selected_foreground_color"
               brightness: "{{default_selected_foreground_brightness}}"
           - service: light.turn_on
-            data_template:
+            data:
               entity_id: "light.{{haspname}}_selected_background_color"
               rgb_color: "{{default_selected_background_color}}"
           - service: light.turn_on
-            data_template:
+            data:
               entity_id: "light.{{haspname}}_selected_background_color"
               brightness: "{{default_selected_background_brightness}}"
           - service: light.turn_on
-            data_template:
+            data:
               entity_id: "light.{{haspname}}_unselected_foreground_color"
               rgb_color: "{{default_unselected_foreground_color}}"
           - service: light.turn_on
-            data_template:
+            data:
               entity_id: "light.{{haspname}}_unselected_foreground_color"
               brightness: "{{default_unselected_foreground_brightness}}"
           - service: light.turn_on
-            data_template:
+            data:
               entity_id: "light.{{haspname}}_unselected_background_color"
               rgb_color: "{{default_unselected_background_color}}"
           - service: light.turn_on
-            data_template:
+            data:
               entity_id: "light.{{haspname}}_unselected_background_color"
               brightness: "{{default_unselected_background_brightness}}"
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "hasp/{{haspname}}/command/page"
               payload: "{{page1page}}"
               retain: false
@@ -415,14 +423,14 @@ action:
             value_template: '{{ trigger.platform == "state" and trigger.entity_id == haspconnected }}'
         sequence:
           - service: mqtt.publish # send page button text
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
-              payload_template: >-
+              payload: >-
                 [{% for p in range(1,12) %}"p[{{p}}].b[1].font={{page1font}}","p[{{p}}].b[1].txt=\"{{page1text}}\"",{% endfor %}"delay=1",
                 {% for p in range(1,12) %}"p[{{p}}].b[2].font={{page2font}}","p[{{p}}].b[2].txt=\"{% if page_scroll %}{{page_names.get("page" ~ p)}}{% else %}{{page2text}}{% endif %}\"",{% endfor %}"delay=1",
                 {% for p in range(1,12) %}"p[{{p}}].b[3].font={{page3font}}","p[{{p}}].b[3].txt=\"{{page3text}}\"",{% endfor %}"delay=1"]
           - service: mqtt.publish # apply selected foreground color to page select buttons
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
               payload: >-
                 {%- set colorsource="light." ~ haspname ~ "_selected_foreground_color" -%}
@@ -436,7 +444,7 @@ action:
                 {%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco={{colorcode}}"{%- else -%}"p[{{p}}].b[3].pco2={{colorcode}}"{%- endif -%},{%- endfor -%}
                 {%- else -%}{%- for p in range(1,12) %}"p[{{p}}].b[3].pco2={{colorcode}}",{%- endfor -%}{%- endif -%}"delay=1"]
           - service: mqtt.publish # apply selected background color to page select buttons
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
               payload: >-
                 {%- set colorsource="light." ~ haspname ~ "_selected_background_color" -%}
@@ -450,7 +458,7 @@ action:
                 {%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].bco={{colorcode}}"{%- else -%}"p[{{p}}].b[3].bco2={{colorcode}}"{%- endif -%},{%- endfor -%}
                 {% else %}{%- for p in range(1,12) %}"p[{{p}}].b[3].bco2={{colorcode}}",{%- endfor -%}{%- endif -%}"delay=1"]
           - service: mqtt.publish # apply unselected foreground color to page select buttons
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
               payload: >-
                 {%- set colorsource="light." ~ haspname ~ "_unselected_foreground_color" -%}
@@ -464,7 +472,7 @@ action:
                 {%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco2={{colorcode}}"{%- else -%}"p[{{p}}].b[3].pco={{colorcode}}"{%- endif -%},{%- endfor -%}
                 {% else %}{%- for p in range(1,12) %}"p[{{p}}].b[3].pco={{colorcode}}",{%- endfor -%}{%- endif -%}"delay=1"]
           - service: mqtt.publish # apply unselected background color to page select buttons
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
               payload: >-
                 {%- set colorsource="light." ~ haspname ~ "_unselected_background_color" -%}
@@ -479,9 +487,9 @@ action:
                 {% else %}{%- for p in range(1,12) %}"p[{{p}}].b[3].bco={{colorcode}}",{%- endfor -%}{%- endif -%}"delay=1"]
 
           - service: mqtt.publish # restore active page
-            data_template:
+            data:
               topic: "hasp/{{haspname}}/command/page"
-              payload_template: '{{states("number." ~ haspname ~ "_active_page")|int}}'
+              payload: '{{states("number." ~ haspname ~ "_active_page")|int}}'
           - service: mqtt.publish # request sensor update
             data:
               topic: "hasp/{{haspname}}/command"
@@ -506,7 +514,7 @@ action:
                             value_template: '{{ (trigger.payload_json.event | regex_match("p\[\d+\].b\[1\]")) and (trigger.payload_json.value == page_button_trigger) and not page_scroll}}'
                         sequence:
                           - service: mqtt.publish
-                            data_template:
+                            data:
                               topic: "hasp/{{haspname}}/command/page"
                               payload: !input page1page
                               retain: true
@@ -515,7 +523,7 @@ action:
                             value_template: '{{ (trigger.payload_json.event | regex_match("p\[\d+\].b\[1\]")) and (trigger.payload_json.value == page_button_trigger) and page_scroll}}'
                         sequence:
                           - service: mqtt.publish
-                            data_template:
+                            data:
                               topic: "hasp/{{haspname}}/command/page"
                               payload: "{{page_previous}}"
                               retain: true
@@ -524,7 +532,7 @@ action:
                             value_template: '{{ (trigger.payload_json.event | regex_match("p\[\d+\].b\[2\]")) and (trigger.payload_json.value == page_button_trigger) }}'
                         sequence:
                           - service: mqtt.publish
-                            data_template:
+                            data:
                               topic: "hasp/{{haspname}}/command/page"
                               payload: !input page2page
                               retain: true
@@ -533,7 +541,7 @@ action:
                             value_template: '{{ (trigger.payload_json.event | regex_match("p\[\d+\].b\[3\]")) and (trigger.payload_json.value == page_button_trigger) and not page_scroll}}'
                         sequence:
                           - service: mqtt.publish
-                            data_template:
+                            data:
                               topic: "hasp/{{haspname}}/command/page"
                               payload: !input page3page
                               retain: true
@@ -542,7 +550,7 @@ action:
                             value_template: '{{ (trigger.payload_json.event | regex_match("p\[\d+\].b\[3\]")) and (trigger.payload_json.value == page_button_trigger) and page_scroll }}'
                         sequence:
                           - service: mqtt.publish
-                            data_template:
+                            data:
                               topic: "hasp/{{haspname}}/command/page"
                               payload: "{{page_next}}"
                               retain: true
@@ -554,7 +562,7 @@ action:
                     value_template: "{{ trigger.topic == selectedforegroundcolortopic and not page_scroll }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: >-
                         [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].pco={{trigger.payload}}"{%- else -%}"p[{{p}}].b[1].pco2={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
@@ -565,7 +573,7 @@ action:
                     value_template: "{{ trigger.topic == selectedforegroundcolortopic and page_scroll }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: >-
                         [{%- for p in range(1,12) %}"p[{{p}}].b[1].pco2={{trigger.payload}}",{%- endfor -%}"delay=1",
@@ -576,7 +584,7 @@ action:
                     value_template: "{{ trigger.topic == selectedbackgroundcolortopic and not page_scroll }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: >-
                         [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].bco={{trigger.payload}}"{%- else -%}"p[{{p}}].b[1].bco2={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
@@ -587,7 +595,7 @@ action:
                     value_template: "{{ trigger.topic == selectedbackgroundcolortopic and page_scroll }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: >-
                         [{%- for p in range(1,12) %}"p[{{p}}].b[1].bco2={{trigger.payload}}",{%- endfor -%}"delay=1",
@@ -598,7 +606,7 @@ action:
                     value_template: "{{ trigger.topic == unselectedforegroundcolortopic and not page_scroll }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: >-
                         [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].pco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[1].pco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
@@ -609,7 +617,7 @@ action:
                     value_template: "{{ trigger.topic == unselectedforegroundcolortopic and page_scroll }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: >-
                         [{%- for p in range(1,12) %}"p[{{p}}].b[1].pco={{trigger.payload}}",{%- endfor -%}"delay=1",
@@ -620,7 +628,7 @@ action:
                     value_template: "{{ trigger.topic == unselectedbackgroundcolortopic and not page_scroll }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: >-
                         [{%- for p in range(1,12) %}{%- if p == page1page|int %}"p[{{p}}].b[1].bco2={{trigger.payload}}"{%- else -%}"p[{{p}}].b[1].bco={{trigger.payload}}"{%- endif -%},{%- endfor -%}"delay=1",
@@ -631,7 +639,7 @@ action:
                     value_template: "{{ trigger.topic == unselectedbackgroundcolortopic and page_scroll }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: >-
                         [{%- for p in range(1,12) %}"p[{{p}}].b[1].bco={{trigger.payload}}",{%- endfor -%}"delay=1",

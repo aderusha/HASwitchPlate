@@ -1,21 +1,22 @@
 blueprint:
-  name: "plate01 p[x].b[y] displays the state of an entity"
+  name: "plate01 p[x].b[y] displays text and activates a page"
   description: |
 
     # Description
 
-    A HASP button displays the current state of a selected entity
+    A button on the HASP will display text and activate a page when pressed
 
-    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Entity_State.png?raw=true)
+    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Text_and_Activate_Page.png?raw=true)
 
     ## Examples
 
     <details>
 
-    ### Show current weather condition
+    ### Show a page icon and select page 8
 
-    **Entity:** Select a weather provider of your choice
-    **Title Case:** `true`
+    **Page:** `8`
+    **Text:** `Music`
+    **Font:** `10`
 
     </details>
 
@@ -63,16 +64,16 @@ blueprint:
     | 10     | Noto Sans Bold 80 point    |
 
     ### Icons
-    
+
     Fonts 5-10 also include [1400+ icons which you can copy and paste from here](https://htmlpreview.github.io/?https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/hasp-fontawesome5.html)
 
     ### Font examples
-    
+
     ![HASP Fonts 0-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_0-3.png?raw=true) ![HASP Fonts 4-7](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_4-7.png?raw=true) ![HASP Fonts 8-10](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_8-10.png?raw=true)
 
     </details>
 
-  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Entity_State.yaml"
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Text_and_Trigger_Scene.yaml"
   domain: automation
   input:
     haspconnected:
@@ -83,49 +84,48 @@ blueprint:
           integration: mqtt
           domain: binary_sensor
           device_class: connectivity
-    hasppage:
+    page:
       name: "HASP Page"
-      description: "Select the HASP page (1-11). Refer to the HASP Page and Button reference above."
+      description: "Select the HASP page (1-11) for this page button. Refer to the HASP Page and Button reference above."
       default: 1
       selector:
         number:
           min: 1
           max: 11
           mode: box
-    haspbutton:
+    button:
       name: "HASP Button"
-      description: "Select the HASP button (4-15) for the state display. Refer to the HASP Page and Button reference above."
+      description: "Select the HASP button for this page. Refer to the HASP Page and Button reference above."
       default: 4
       selector:
         number:
           min: 4
           max: 15
           mode: box
-    selected_entity:
-      name: "Select an entity to display state"
+    targetpage:
+      name: "Page to activate"
+      description: "Select a destination page for this button to activate."
+      default: 1
       selector:
-        entity:
-    prefix:
-      name: "State display prefix"
-      description: 'Prefix for state display, enter "none" for no prefix'
-      default: "none"
-      selector:
-        text:
-    suffix:
-      name: "State display suffix"
-      description: 'Suffix for state display, enter "none" for no suffix'
-      default: "none"
+        number:
+          min: 1
+          max: 11
+          mode: box
+    text:
+      name: "HASP Button Text"
+      description: "Enter text to appear on the button."
+      default: "Text"
       selector:
         text:
     font:
-      name: "State display font"
-      description: "Select the font for the state display:"
+      name: "HASP Button Font"
+      description: "Select the text font for this button label. Refer to the HASP Font reference above."
       default: 7
       selector:
         number:
           min: 0
           max: 10
-          mode: box
+          mode: slider
     xcen:
       name: "Text horizontal alignment"
       description: "Horizontal text alignment: 0=Left 1=Center 2=Right"
@@ -150,12 +150,6 @@ blueprint:
       default: false
       selector:
         boolean:
-    title_case:
-      name: "Title Case"
-      description: "Apply The Title Case Filter To Capitalize The First Character Of Each Word In The Result"
-      default: false
-      selector:
-        boolean:
 
 mode: parallel
 max_exceeded: silent
@@ -163,22 +157,20 @@ max_exceeded: silent
 variables:
   haspconnected: !input haspconnected
   haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
-  hasppage: !input hasppage
-  haspbutton: !input haspbutton
-  selected_entity: !input selected_entity
-  prefix: !input prefix
-  suffix: !input suffix
+  page: !input page
+  button: !input button
+  targetpage: !input targetpage
+  text: !input text
   font: !input font
   xcen: !input xcen
   ycen: !input ycen
   wrap: !input wrap
-  title_case: !input title_case
-  haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
-  commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
-  jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
-  selected_entity_state: "{{states(selected_entity)}}"
-  text: '{% if prefix|lower != "none" %}{{prefix}}{% endif %}{% if title_case %}{{selected_entity_state|title}}{% else %}{{selected_entity_state}}{% endif %}{% if suffix|lower != "none" %}{{suffix}}{% endif %}'
   isbr: "{% if wrap == true %}1{% else %}0{% endif %}"
+  haspobject: '{{ "p[" ~ page ~ "].b[" ~ button ~ "]" }}'
+  commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
+  pagecommandtopic: '{{ "hasp/" ~ haspname ~ "/command/page" }}'
+  jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
+  jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
   selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
   selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
   unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
@@ -214,8 +206,8 @@ trigger:
     to: "on"
   - platform: homeassistant
     event: start
-  - platform: state
-    entity_id: !input selected_entity
+  - platform: mqtt
+    topic: "hasp/+/state/json"
   - platform: mqtt
     topic: "hasp/+/light/selectedforegroundcolor/rgb"
   - platform: mqtt
@@ -233,7 +225,7 @@ condition:
 action:
   - choose:
       #########################################################################
-      # Display state and apply text style when "EXECUTE" is pressed by the user
+      # Apply text and style when "EXECUTE" is pressed by the user
       - conditions:
           - condition: template
             value_template: "{{ trigger is not defined }}"
@@ -254,16 +246,6 @@ action:
                 "{{haspobject}}.txt=\"{{text}}\""
                 ]
       #########################################################################
-      # Update display if our entity has changed state
-      - conditions: # Update display if our entity has changed state
-          - condition: template
-            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == selected_entity) }}'
-        sequence:
-          - service: mqtt.publish
-            data:
-              topic: "{{commandtopic}}.txt"
-              payload: '"{{text}}"'
-      #########################################################################
       # Catch triggers fired by incoming MQTT messages
       - conditions:
           - condition: template
@@ -271,7 +253,17 @@ action:
         sequence:
           - choose:
               #########################################################################
-              # Theme: Apply selected foreground color on change
+              # Primary function: Activate a scene in response to our selected button being pressed ON
+              - conditions:
+                  - condition: template
+                    value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == haspobject) and (trigger.payload_json.value == "OFF") }}'
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{pagecommandtopic}}"
+                      payload: "{{targetpage}}"
+              #########################################################################
+              # Theme: Apply selected foreground color when it changes
               - conditions:
                   - condition: template
                     value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
@@ -310,8 +302,9 @@ action:
                     data:
                       topic: "{{commandtopic}}.bco2"
                       payload: "{{trigger.payload}}"
+
     #########################################################################
-    # Catch remaining triggers to display state and apply text style
+    # Apply text and style when device is connected or home assistant starts
     default:
       - service: mqtt.publish
         data:

@@ -18,117 +18,117 @@ trigger: []
 
 action:
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/status"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/command"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/command/page"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/state/page"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/sensor"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/light/state"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/brightness/state"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "homeassistant/binary_sensor/{{haspname}}/config"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "homeassistant/light/{{haspname}}/config"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "homeassistant/sensor/{{haspname}}/config"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "homeassistant/number/{{haspname}}/config"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "homeassistant/light/{{haspname}}/selectedforegroundcolor/config"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "homeassistant/light/{{haspname}}/selectedbackgroundcolor/config"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "homeassistant/light/{{haspname}}/unselectedforegroundcolor/config"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "homeassistant/light/{{haspname}}/unselectedbackgroundcolor/config"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/light/selectedforegroundcolor/switch"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/light/selectedforegroundcolor/rgb"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/light/selectedbackgroundcolor/switch"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/light/selectedbackgroundcolor/rgb"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/light/unselectedforegroundcolor/switch"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/light/unselectedforegroundcolor/rgb"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/light/unselectedbackgroundcolor/switch"
       payload: ""
       retain: true
   - service: mqtt.publish
-    data_template:
+    data:
       topic: "hasp/{{haspname}}/light/unselectedbackgroundcolor/rgb"
       payload: ""
       retain: true

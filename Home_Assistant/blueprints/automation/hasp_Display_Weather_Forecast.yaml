@@ -1,25 +1,16 @@
 blueprint:
-  name: "plate01 p[x].b[y] displays the state of an entity"
+  name: "plate01 p[x].b[y] displays the weather forecast"
   description: |
 
-    # Description
+    ## Description
 
-    A HASP button displays the current state of a selected entity
+    A HASP button displays an attribute of a selected weather forecast.  You can use this to display tomorrow's condition, or tonight's low temp.  
+    Available forecast conditions will vary by weather provider, check your selected provider's state under `Developer Tools` > `States` to get
+    a sense of what your selected provider has to offer.
 
-    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Entity_State.png?raw=true)
+    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Weather_Forecast.png?raw=true)
 
-    ## Examples
-
-    <details>
-
-    ### Show current weather condition
-
-    **Entity:** Select a weather provider of your choice
-    **Title Case:** `true`
-
-    </details>
-
-    ## HASP Page and Button reference
+    ### HASP Page and Button reference
 
     <details>
 
@@ -62,17 +53,12 @@ blueprint:
     | 9      | Noto Sans Regular 80 point |
     | 10     | Noto Sans Bold 80 point    |
 
-    ### Icons
-    
-    Fonts 5-10 also include [1400+ icons which you can copy and paste from here](https://htmlpreview.github.io/?https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/hasp-fontawesome5.html)
-
     ### Font examples
     
     ![HASP Fonts 0-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_0-3.png?raw=true) ![HASP Fonts 4-7](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_4-7.png?raw=true) ![HASP Fonts 8-10](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_8-10.png?raw=true)
 
     </details>
-
-  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Entity_State.yaml"
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Weather_Forecast.yaml"
   domain: automation
   input:
     haspconnected:
@@ -85,7 +71,7 @@ blueprint:
           device_class: connectivity
     hasppage:
       name: "HASP Page"
-      description: "Select the HASP page (1-11). Refer to the HASP Page and Button reference above."
+      description: "Select the HASP page (1-11) for the forecast. Refer to the HASP Page and Button reference above."
       default: 1
       selector:
         number:
@@ -94,33 +80,44 @@ blueprint:
           mode: box
     haspbutton:
       name: "HASP Button"
-      description: "Select the HASP button (4-15) for the state display. Refer to the HASP Page and Button reference above."
+      description: "Select the HASP button (4-15) for the forecast. Refer to the HASP Page and Button reference above."
       default: 4
       selector:
         number:
           min: 4
           max: 15
           mode: box
-    selected_entity:
-      name: "Select an entity to display state"
+    weather_provider:
+      name: "Weather provider"
+      description: "Select the weather provider to obtain the forecast"
       selector:
         entity:
-    prefix:
-      name: "State display prefix"
-      description: 'Prefix for state display, enter "none" for no prefix'
-      default: "none"
+          domain: weather
+    forecast_index:
+      name: "Forecast index"
+      description: 'Weather forecasts are provided at intervals determined by your weather source.  The next time interval will be index "0".  Increment this number for future forecasts'
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: box
+    forecast_attribute:
+      name: "Enter the desired forecast attribute"
+      description: 'Type in the name of the desired forecast attribute for your provider.  "condition" is a common attribute for many providers.'
+      default: "condition"
       selector:
         text:
-    suffix:
-      name: "State display suffix"
-      description: 'Suffix for state display, enter "none" for no suffix'
+    prefix:
+      name: "Forecast display prefix"
+      description: 'Prefix for forecast display, maybe something like "tonight: " or "tomorrow: ". Enter "none" for no prefix.'
       default: "none"
       selector:
         text:
     font:
-      name: "State display font"
-      description: "Select the font for the state display:"
-      default: 7
+      name: "Forecast Font"
+      description: "Select the font for the forecast:"
+      default: 6
       selector:
         number:
           min: 0
@@ -146,14 +143,14 @@ blueprint:
           mode: box
     wrap:
       name: "Text wrap"
-      description: "Enable line-wrapping text if too long to fit in the button."
       default: false
+      description: "Enable line-wrapping text if too long to fit in the button."
       selector:
         boolean:
     title_case:
       name: "Title Case"
       description: "Apply The Title Case Filter To Capitalize The First Character Of Each Word In The Result"
-      default: false
+      default: true
       selector:
         boolean:
 
@@ -165,9 +162,10 @@ variables:
   haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
   hasppage: !input hasppage
   haspbutton: !input haspbutton
-  selected_entity: !input selected_entity
+  weather_provider: !input weather_provider
+  forecast_index: !input forecast_index
+  forecast_attribute: !input forecast_attribute
   prefix: !input prefix
-  suffix: !input suffix
   font: !input font
   xcen: !input xcen
   ycen: !input ycen
@@ -176,8 +174,7 @@ variables:
   haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
   commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
   jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
-  selected_entity_state: "{{states(selected_entity)}}"
-  text: '{% if prefix|lower != "none" %}{{prefix}}{% endif %}{% if title_case %}{{selected_entity_state|title}}{% else %}{{selected_entity_state}}{% endif %}{% if suffix|lower != "none" %}{{suffix}}{% endif %}'
+  text: '{% if prefix|lower != "none" %}{{prefix}}{% endif %}{% if title_case %}{{state_attr(weather_provider, "forecast")[forecast_index|int].get(forecast_attribute)|title}}{% else %}{{state_attr(weather_provider, "forecast")[forecast_index|int].get(forecast_attribute)}}{% endif %}'
   isbr: "{% if wrap == true %}1{% else %}0{% endif %}"
   selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
   selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
@@ -215,7 +212,7 @@ trigger:
   - platform: homeassistant
     event: start
   - platform: state
-    entity_id: !input selected_entity
+    entity_id: !input weather_provider
   - platform: mqtt
     topic: "hasp/+/light/selectedforegroundcolor/rgb"
   - platform: mqtt
@@ -233,7 +230,7 @@ condition:
 action:
   - choose:
       #########################################################################
-      # Display state and apply text style when "EXECUTE" is pressed by the user
+      # Display attribute and apply text style when "EXECUTE" is pressed by the user
       - conditions:
           - condition: template
             value_template: "{{ trigger is not defined }}"
@@ -254,10 +251,10 @@ action:
                 "{{haspobject}}.txt=\"{{text}}\""
                 ]
       #########################################################################
-      # Update display if our entity has changed state
-      - conditions: # Update display if our entity has changed state
+      # Update forecast if our weather provider changed state
+      - conditions:
           - condition: template
-            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == selected_entity) }}'
+            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == weather_provider) }}'
         sequence:
           - service: mqtt.publish
             data:
@@ -311,7 +308,7 @@ action:
                       topic: "{{commandtopic}}.bco2"
                       payload: "{{trigger.payload}}"
     #########################################################################
-    # Catch remaining triggers to display state and apply text style
+    # Catch remaining triggers to display forecast and apply text style
     default:
       - service: mqtt.publish
         data:

@@ -274,7 +274,7 @@ action:
             value_template: "{{ trigger is not defined }}"
         sequence:
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
               payload: >-
                 ["{{haspobject}}.font={{font}}",
@@ -295,7 +295,7 @@ action:
             value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == weather_provider) }}'
         sequence:
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
               payload: >-
                 ["{{haspobject}}.pco={{textcolor}}",
@@ -317,7 +317,7 @@ action:
                     value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == haspobject ) and (trigger.payload_json.value == "OFF") and (activepage|int == hasppage|int)}}'
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{tempcolor}},0,1,1,3,\"{{icon}}\""]'
               - conditions: # Page changed to our page, so place the icon on the screen.
@@ -325,7 +325,7 @@ action:
                     value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == "page" ) and (trigger.payload_json.value == hasppage|int) }}'
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{tempcolor}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################
@@ -336,14 +336,14 @@ action:
                 sequence:
                   - delay: "00:00:00.5"
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{commandtopic}}.pco"
                       payload: "{{textcolor}}"
                   - condition: template
                     value_template: "{{ activepage|int == hasppage|int }}"
                   - delay: "00:00:00.5"
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{tempcolor}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################

@@ -1,6 +1,13 @@
 blueprint:
   name: "plate01 Theme Dark on Light"
-  description: "Press EXECUTE to apply the theme Dark on Light to the selected HASP device"
+  description: |
+
+    ## Description
+
+    Press EXECUTE to apply the theme Dark on Light to the selected HASP device
+
+    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Theme_Dark_on_Light.png?raw=true)
+
   source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Theme_Dark_on_Light.yaml"
   domain: automation
   input:
@@ -13,7 +20,7 @@ blueprint:
           domain: binary_sensor
           device_class: connectivity
 
-mode: parallel
+mode: single
 max_exceeded: silent
 
 variables:
@@ -32,35 +39,34 @@ trigger: []
 
 action:
   - service: light.turn_on
-    data_template:
+    data:
       entity_id: "light.{{haspname}}_selected_foreground_color"
       rgb_color: "{{selected_foreground_color}}"
   - service: light.turn_on
-    data_template:
+    data:
       entity_id: "light.{{haspname}}_selected_foreground_color"
       brightness: "{{selected_foreground_brightness}}"
   - service: light.turn_on
-    data_template:
+    data:
       entity_id: "light.{{haspname}}_selected_background_color"
       rgb_color: "{{selected_background_color}}"
   - service: light.turn_on
-    data_template:
+    data:
       entity_id: "light.{{haspname}}_selected_background_color"
       brightness: "{{selected_background_brightness}}"
   - service: light.turn_on
-    data_template:
+    data:
       entity_id: "light.{{haspname}}_unselected_foreground_color"
       rgb_color: "{{unselected_foreground_color}}"
   - service: light.turn_on
-    data_template:
+    data:
       entity_id: "light.{{haspname}}_unselected_foreground_color"
       brightness: "{{unselected_foreground_brightness}}"
   - service: light.turn_on
-    data_template:
+    data:
       entity_id: "light.{{haspname}}_unselected_background_color"
       rgb_color: "{{unselected_background_color}}"
   - service: light.turn_on
-    data_template:
+    data:
       entity_id: "light.{{haspname}}_unselected_background_color"
       brightness: "{{unselected_background_brightness}}"
-

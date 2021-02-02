@@ -210,7 +210,7 @@ action:
             value_template: "{{ trigger is not defined }}"
         sequence:
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
               payload: >-
                 ["{{toggleobject}}.txt=\"{{text}}\"",
@@ -235,7 +235,7 @@ action:
             value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == dimmer) and (trigger.from_state.state != trigger.to_state.state) and (activepage|int == hasppage|int) }}'
         sequence:
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
               payload: '["{{toggleobject}}.txt=\"{{text}}\"","{{dimmerobject}}.val={{brightness}}","delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
       - conditions: # dimmer has changed value, on/off state has also changed
@@ -243,7 +243,7 @@ action:
             value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == dimmer) and (trigger.from_state.state != trigger.to_state.state) }}'
         sequence:
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
               payload: '["{{toggleobject}}.txt=\"{{text}}\"","{{dimmerobject}}.val={{brightness}}"]'
       - conditions: # dimmer has changed value
@@ -251,7 +251,7 @@ action:
             value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == dimmer) }}'
         sequence:
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
               payload: '["{{dimmerobject}}.val={{brightness}}"]'
 
@@ -283,7 +283,7 @@ action:
                         sequence:
                           - service: light.turn_on
                             entity_id: !input dimmer
-                            data_template:
+                            data:
                               brightness: "{{trigger.payload_json.value}}"
                       #########################################################################
                       # Icon overlay
@@ -292,9 +292,9 @@ action:
                             value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == "page" ) and (trigger.payload_json.value == hasppage|int) }}'
                         sequence:
                           - service: mqtt.publish
-                            data_template:
+                            data:
                               topic: "{{jsoncommandtopic}}"
-                              payload: '["ref {{togglebutton}}","delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\"","delay=1","ref {{dimmerbutton}}"]'
+                              payload: '["ref {{togglebutton}}","delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\"","delay=1","vis {{dimmerbutton}},1"]'
  
               #########################################################################
               # Theme: Apply selected foreground color when it changes.
@@ -305,16 +305,16 @@ action:
                     value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{togglecommandtopic}}.pco"
                       payload: "{{trigger.payload}}"
                   - condition: template
                     value_template: "{{ activepage|int == hasppage|int }}"
                   - delay: "00:00:00.5"
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
-                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{trigger.payload}},0,1,1,3,\"{{icon}}\"","delay=1","ref {{dimmerbutton}}"]'
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{trigger.payload}},0,1,1,3,\"{{icon}}\"","delay=1","vis {{dimmerbutton}},1"]'
               #########################################################################
               # Theme: Apply selected background color on change
               - conditions:
@@ -322,7 +322,7 @@ action:
                     value_template: "{{ trigger.topic == selectedbackgroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{togglecommandtopic}}.bco"
                       payload: "{{trigger.payload}}"
               #########################################################################
@@ -332,7 +332,7 @@ action:
                     value_template: "{{ trigger.topic == unselectedforegroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: '["{{toggleobject}}.pco2={{trigger.payload}}","{{dimmerobject}}.pco={{trigger.payload}}"]'
               #########################################################################
@@ -342,7 +342,7 @@ action:
                     value_template: "{{ trigger.topic == unselectedbackgroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{jsoncommandtopic}}"
                       payload: '["{{toggleobject}}.bco2={{trigger.payload}}","{{dimmerobject}}.bco={{trigger.payload}}"]'
     #########################################################################
@@ -350,7 +350,7 @@ action:
     # apply styles, place text, and then place icon if our target page is currently active
     default:
       - service: mqtt.publish
-        data_template:
+        data:
           topic: "{{jsoncommandtopic}}"
           payload: >-
             ["{{toggleobject}}.font={{font}}",

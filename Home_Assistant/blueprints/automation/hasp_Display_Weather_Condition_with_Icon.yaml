@@ -1,78 +1,25 @@
 blueprint:
-  name: "plate01 p[x].b[y] displays the state of an entity"
+  name: "plate01 p[x].b[y] displays the current weather condition with icons"
   description: |
 
     # Description
 
-    A HASP button displays the current state of a selected entity
+    A HASP button displays the current weather condition on the right with a matching icon on the left
 
-    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Entity_State.png?raw=true)
-
-    ## Examples
-
-    <details>
-
-    ### Show current weather condition
-
-    **Entity:** Select a weather provider of your choice
-    **Title Case:** `true`
-
-    </details>
+    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Weather_Condition_with_Icon?raw=true)
 
     ## HASP Page and Button reference
 
     <details>
 
-    | Page 0 | Pages 1-3 | Pages 4-5 |
-    |--------|-----------|-----------|
-    | ![Page 0](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p0_Init_Screen.png?raw=true) | ![Pages 1-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p1-p3_4buttons.png?raw=true) | ![Pages 4-5](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p4-p5_3sliders.png?raw=true) |
+    This automation is designed to work with the full-width buttons found on pages 1-3
 
-    | Page 6 | Page 7 | Page 8 |
-    |--------|--------|--------|
-    | ![Page 6](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p6_8buttons.png?raw=true) | ![Page 7](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p7_12buttons.png?raw=true) | ![Page 8](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p8_5buttons+1slider.png?raw=true) |
-
-    | Page 9 | Page 10 | Page 11 |
-    |--------|---------|---------|
-    | ![Page 9](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p9_9buttons.png?raw=true) | ![Page 10](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p10_5buttons.png?raw=true) | ![Page 11](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p11_1button.png?raw=true)
+    | Pages 1-3 |
+    |-----------|
+    | ![Pages 1-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p1-p3_4buttons.png?raw=true) |
 
     </details>
-
-    ## HASP Font reference
-
-    <details>
-
-    The Nextion display supports monospaced and proportional fonts.  For proportional fonts, the HASP project includes [Consolas](https://docs.microsoft.com/en-us/typography/font-list/consolas) in 4 sizes and [Webdings](https://en.wikipedia.org/wiki/Webdings#Character_set) in 1 size.
-
-    | Number | Font              | Characters per line | Lines per button |
-    |--------|-------------------|---------------------|------------------|
-    | 0      | Consolas 24 point | 20 characters       | 2 lines          |
-    | 1      | Consolas 32 point | 15 characters       | 2 lines          |
-    | 2      | Consolas 48 point | 10 characters       | 1 lines          |
-    | 3      | Consolas 80 point | 6 characters        | 1 lines          |
-    | 4      | Webdings 56 point | 8 characters        | 1 lines          |
-
-    The HASP also includes [Google's "Noto Sans"](https://github.com/googlefonts/noto-fonts) proportional font in 5 sizes.
-
-    | Number | Font                       |
-    |--------|----------------------------|
-    | 5      | Noto Sans Regular 24 point |
-    | 6      | Noto Sans Regular 32 point |
-    | 7      | Noto Sans Regular 48 point |
-    | 8      | Noto Sans Regular 64 point |
-    | 9      | Noto Sans Regular 80 point |
-    | 10     | Noto Sans Bold 80 point    |
-
-    ### Icons
-    
-    Fonts 5-10 also include [1400+ icons which you can copy and paste from here](https://htmlpreview.github.io/?https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/hasp-fontawesome5.html)
-
-    ### Font examples
-    
-    ![HASP Fonts 0-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_0-3.png?raw=true) ![HASP Fonts 4-7](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_4-7.png?raw=true) ![HASP Fonts 8-10](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_8-10.png?raw=true)
-
-    </details>
-
-  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Entity_State.yaml"
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Weather_Condition_with_Icon.yaml"
   domain: automation
   input:
     haspconnected:
@@ -85,77 +32,28 @@ blueprint:
           device_class: connectivity
     hasppage:
       name: "HASP Page"
-      description: "Select the HASP page (1-11). Refer to the HASP Page and Button reference above."
+      description: "Select the HASP page (1-3) for the temperature"
       default: 1
       selector:
         number:
           min: 1
-          max: 11
+          max: 3
           mode: box
     haspbutton:
       name: "HASP Button"
-      description: "Select the HASP button (4-15) for the state display. Refer to the HASP Page and Button reference above."
+      description: "Select the HASP button (4-7) for the temperature.  Refer to the object map in the HASP documentation."
       default: 4
       selector:
         number:
           min: 4
-          max: 15
+          max: 7
           mode: box
-    selected_entity:
-      name: "Select an entity to display state"
+    weather_provider:
+      name: "Weather provider"
+      description: "Select the weather provider to obtain the temperature"
       selector:
         entity:
-    prefix:
-      name: "State display prefix"
-      description: 'Prefix for state display, enter "none" for no prefix'
-      default: "none"
-      selector:
-        text:
-    suffix:
-      name: "State display suffix"
-      description: 'Suffix for state display, enter "none" for no suffix'
-      default: "none"
-      selector:
-        text:
-    font:
-      name: "State display font"
-      description: "Select the font for the state display:"
-      default: 7
-      selector:
-        number:
-          min: 0
-          max: 10
-          mode: box
-    xcen:
-      name: "Text horizontal alignment"
-      description: "Horizontal text alignment: 0=Left 1=Center 2=Right"
-      default: 1
-      selector:
-        number:
-          min: 0
-          max: 2
-          mode: box
-    ycen:
-      name: "Text vertical alignment"
-      description: "Vertical text alignment: 0=Top 1=Center 2=Bottom"
-      default: 1
-      selector:
-        number:
-          min: 0
-          max: 2
-          mode: box
-    wrap:
-      name: "Text wrap"
-      description: "Enable line-wrapping text if too long to fit in the button."
-      default: false
-      selector:
-        boolean:
-    title_case:
-      name: "Title Case"
-      description: "Apply The Title Case Filter To Capitalize The First Character Of Each Word In The Result"
-      default: false
-      selector:
-        boolean:
+          domain: weather
 
 mode: parallel
 max_exceeded: silent
@@ -165,20 +63,22 @@ variables:
   haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
   hasppage: !input hasppage
   haspbutton: !input haspbutton
-  selected_entity: !input selected_entity
-  prefix: !input prefix
-  suffix: !input suffix
-  font: !input font
-  xcen: !input xcen
-  ycen: !input ycen
-  wrap: !input wrap
-  title_case: !input title_case
+  weather_provider: !input weather_provider
   haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
   commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
   jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
-  selected_entity_state: "{{states(selected_entity)}}"
-  text: '{% if prefix|lower != "none" %}{{prefix}}{% endif %}{% if title_case %}{{selected_entity_state|title}}{% else %}{{selected_entity_state}}{% endif %}{% if suffix|lower != "none" %}{{suffix}}{% endif %}'
-  isbr: "{% if wrap == true %}1{% else %}0{% endif %}"
+  jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
+  icon: '{%set condition=states(weather_provider)%}{% if condition == "clear-night" -%}{% elif condition == "cloudy" %}{% elif condition == "fog" %}{% elif condition == "hail" %}{% elif condition == "lightning" %}{% elif condition == "lightning-rainy" %}{% elif condition == "partlycloudy" %}{% elif condition == "pouring" %}{% elif condition == "rainy" %}{% elif condition == "snowy" %}{% elif condition == "snowy-rainy" %}{% elif condition == "sunny" %}{% elif condition == "windy" %}{% elif condition == "windy-variant" %}{% elif condition == "exceptional" %}{% else %}{%- endif %}'
+  text: '{{states(weather_provider)|replace("windy-variant","windy")|replace("clear-night","clear night")|replace("partlycloudy","partly cloudy")|replace("lightning-rainy","lightning & rain")|replace("snowy-rainy","snow & rain")|title}}'
+  font: '{%set weatherlength=states(weather_provider)|length %}{% if weatherlength < 7 -%}8{% elif weatherlength < 12 %}7{% else %}6{%- endif %}'
+  ypos: "{{(haspbutton|int - 4) * 67 + 2}}"
+  xpos: 0
+  iconwidth: 65
+  iconheight: 65
+  iconfont: 8
+  xcen: 2
+  ycen: 1
+  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{{ states(activepage_entity) | int }}'
   selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
   selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
   unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
@@ -207,6 +107,7 @@ variables:
     {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
     {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+  textcolor: "{%- if colortemp == true -%}{{selectedfg}}{% else %}{{selectedfg}}{% endif %}"
 
 trigger:
   - platform: state
@@ -215,7 +116,9 @@ trigger:
   - platform: homeassistant
     event: start
   - platform: state
-    entity_id: !input selected_entity
+    entity_id: !input weather_provider
+  - platform: mqtt
+    topic: "hasp/+/state/json"
   - platform: mqtt
     topic: "hasp/+/light/selectedforegroundcolor/rgb"
   - platform: mqtt
@@ -233,7 +136,7 @@ condition:
 action:
   - choose:
       #########################################################################
-      # Display state and apply text style when "EXECUTE" is pressed by the user
+      # Apply text and style when "EXECUTE" is pressed by the user
       - conditions:
           - condition: template
             value_template: "{{ trigger is not defined }}"
@@ -242,27 +145,32 @@ action:
             data:
               topic: "{{jsoncommandtopic}}"
               payload: >-
-                [
-                "{{haspobject}}.font={{font}}",
+                ["{{haspobject}}.font={{font}}",
                 "{{haspobject}}.xcen={{xcen}}",
                 "{{haspobject}}.ycen={{ycen}}",
-                "{{haspobject}}.isbr={{isbr}}",
-                "{{haspobject}}.pco={{selectedfg}}",
+                "{{haspobject}}.pco={{textcolor}}",
                 "{{haspobject}}.bco={{selectedbg}}",
                 "{{haspobject}}.pco2={{unselectedfg}}",
                 "{{haspobject}}.bco2={{unselectedbg}}",
-                "{{haspobject}}.txt=\"{{text}}\""
-                ]
+                "{{haspobject}}.txt=\"{{text}} \""
+                {%- if activepage|int == hasppage|int -%}
+                ,"delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""
+                {%- endif -%}]
       #########################################################################
-      # Update display if our entity has changed state
-      - conditions: # Update display if our entity has changed state
+      # Update temperature if our weather provider changed state
+      - conditions:
           - condition: template
-            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == selected_entity) }}'
+            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == weather_provider) }}'
         sequence:
           - service: mqtt.publish
             data:
-              topic: "{{commandtopic}}.txt"
-              payload: '"{{text}}"'
+              topic: "{{jsoncommandtopic}}"
+              payload: >-
+                ["{{haspobject}}.pco={{textcolor}}",
+                "{{haspobject}}.txt=\"{{text}} \""
+                {%- if activepage|int == hasppage|int -%}
+                ,"delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""
+                {%- endif -%}]
       #########################################################################
       # Catch triggers fired by incoming MQTT messages
       - conditions:
@@ -271,15 +179,41 @@ action:
         sequence:
           - choose:
               #########################################################################
+              # Icon overlay
+              - conditions: # Somebody pressed our button which hides the overlaid icon.  Put it back.
+                  - condition: template
+                    value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == haspobject ) and (trigger.payload_json.value == "OFF") and (activepage|int == hasppage|int)}}'
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
+              - conditions: # Page changed to our page, so place the icon on the screen.
+                  - condition: template
+                    value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == "page" ) and (trigger.payload_json.value == hasppage|int) }}'
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
+              #########################################################################
               # Theme: Apply selected foreground color on change
               - conditions:
                   - condition: template
                     value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
                 sequence:
+                  - delay: "00:00:00.5"
                   - service: mqtt.publish
                     data:
                       topic: "{{commandtopic}}.pco"
                       payload: "{{trigger.payload}}"
+                  - condition: template
+                    value_template: "{{ activepage|int == hasppage|int }}"
+                  - delay: "00:00:00.5"
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{trigger.payload}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################
               # Theme: Apply selected background color on change
               - conditions:
@@ -311,20 +245,20 @@ action:
                       topic: "{{commandtopic}}.bco2"
                       payload: "{{trigger.payload}}"
     #########################################################################
-    # Catch remaining triggers to display state and apply text style
+    # Catch remaining triggers to display temperature and apply text style
     default:
       - service: mqtt.publish
         data:
           topic: "{{jsoncommandtopic}}"
           payload: >-
-            [
-            "{{haspobject}}.font={{font}}",
+            ["{{haspobject}}.font={{font}}",
             "{{haspobject}}.xcen={{xcen}}",
             "{{haspobject}}.ycen={{ycen}}",
-            "{{haspobject}}.isbr={{isbr}}",
-            "{{haspobject}}.pco={{selectedfg}}",
+            "{{haspobject}}.pco={{textcolor}}",
             "{{haspobject}}.bco={{selectedbg}}",
             "{{haspobject}}.pco2={{unselectedfg}}",
             "{{haspobject}}.bco2={{unselectedbg}}",
-            "{{haspobject}}.txt=\"{{text}}\""
-            ]
+            "{{haspobject}}.txt=\"{{text}} \""
+            {%- if activepage|int == hasppage|int -%}
+            ,"delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""
+            {%- endif -%}]

@@ -52,7 +52,7 @@ blueprint:
     | 3      | Consolas 80 point | 6 characters        | 1 lines          |
     | 4      | Webdings 56 point | 8 characters        | 1 lines          |
 
-    The HASP also includes [Google's "Noto Sans"](https://github.com/googlefonts/noto-fonts) proportional font in 5 sizes.  These fonts also include [1400+ icons which you can copy and paste from here](https://htmlpreview.github.io/?https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/hasp-fontawesome5.html)
+    The HASP also includes [Google's "Noto Sans"](https://github.com/googlefonts/noto-fonts) proportional font in 5 sizes.
 
     | Number | Font                       |
     |--------|----------------------------|
@@ -63,6 +63,12 @@ blueprint:
     | 9      | Noto Sans Regular 80 point |
     | 10     | Noto Sans Bold 80 point    |
 
+    ### Icons
+    
+    Fonts 5-10 also include [1400+ icons which you can copy and paste from here](https://htmlpreview.github.io/?https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/hasp-fontawesome5.html)
+
+    ### Font examples
+    
     ![HASP Fonts 0-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_0-3.png?raw=true) ![HASP Fonts 4-7](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_4-7.png?raw=true) ![HASP Fonts 8-10](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_8-10.png?raw=true)
 
     </details>
@@ -220,7 +226,7 @@ action:
             value_template: "{{ trigger is not defined }}"
         sequence:
           - service: mqtt.publish
-            data_template:
+            data:
               topic: "{{jsoncommandtopic}}"
               payload: >-
                 [
@@ -256,7 +262,7 @@ action:
                     value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{commandtopic}}.pco"
                       payload: "{{trigger.payload}}"
               #########################################################################
@@ -266,7 +272,7 @@ action:
                     value_template: "{{ trigger.topic == selectedbackgroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{commandtopic}}.bco"
                       payload: "{{trigger.payload}}"
               #########################################################################
@@ -276,7 +282,7 @@ action:
                     value_template: "{{ trigger.topic == unselectedforegroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{commandtopic}}.pco2"
                       payload: "{{trigger.payload}}"
               #########################################################################
@@ -286,7 +292,7 @@ action:
                     value_template: "{{ trigger.topic == unselectedbackgroundcolortopic }}"
                 sequence:
                   - service: mqtt.publish
-                    data_template:
+                    data:
                       topic: "{{commandtopic}}.bco2"
                       payload: "{{trigger.payload}}"
 
@@ -294,7 +300,7 @@ action:
     # Apply text and style when device is connected or home assistant starts
     default:
       - service: mqtt.publish
-        data_template:
+        data:
           topic: "{{jsoncommandtopic}}"
           payload: >-
             [
