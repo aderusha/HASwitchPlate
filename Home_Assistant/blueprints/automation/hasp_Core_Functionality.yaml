@@ -259,10 +259,6 @@ action:
           - condition: template
             value_template: "{{ trigger is not defined }}"
         sequence:
-          - service: mqtt.publish
-            data_template:
-              topic: "debug"
-              payload: "page_names: {{page_names}} activepage: {{activepage}} page_scroll_list: {{page_scroll_list}} page_list: {{page_list}} page_previous: {{page_previous}} page_next: {{page_next}} test: {%if 1 == activepage %}true{% endif %}"
           # Push discovery messages for RGB lights used to configure themes
           - service: mqtt.publish
             data_template:
@@ -531,6 +527,7 @@ action:
                             data_template:
                               topic: "hasp/{{haspname}}/command/page"
                               payload: !input page2page
+                              retain: true
                       - conditions: # catch p[x].b[3] and send the command to switch to the selected page
                           - condition: template
                             value_template: '{{ (trigger.payload_json.event | regex_match("p\[\d+\].b\[3\]")) and (trigger.payload_json.value == page_button_trigger) and not page_scroll}}'
@@ -539,6 +536,7 @@ action:
                             data_template:
                               topic: "hasp/{{haspname}}/command/page"
                               payload: !input page3page
+                              retain: true
                       - conditions: # catch p[x].b[3] and send the command to switch to the next page if page_scroll == true
                           - condition: template
                             value_template: '{{ (trigger.payload_json.event | regex_match("p\[\d+\].b\[3\]")) and (trigger.payload_json.value == page_button_trigger) and page_scroll }}'
@@ -547,6 +545,7 @@ action:
                             data_template:
                               topic: "hasp/{{haspname}}/command/page"
                               payload: "{{page_next}}"
+                              retain: true
 
               #########################################################################
               # Apply selected theme colors to the page select buttons when theme colors are published

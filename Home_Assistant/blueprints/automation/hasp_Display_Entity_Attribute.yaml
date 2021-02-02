@@ -107,14 +107,20 @@ blueprint:
     selected_attribute:
       name: "Enter the desired entity attribute"
       description: "Type in the name of the desired attribute of the entity selected above"
+      selector:
+        text:
     prefix:
       name: "State display prefix"
       description: 'Prefix for state display, enter "none" for no prefix'
       default: "none"
+      selector:
+        text:
     suffix:
       name: "State display suffix"
       description: 'Suffix for state display, enter "none" for no suffix'
       default: "none"
+      selector:
+        text:
     font:
       name: "Font"
       description: "Select the font for the displayed text. Refer to the HASP Font reference above."

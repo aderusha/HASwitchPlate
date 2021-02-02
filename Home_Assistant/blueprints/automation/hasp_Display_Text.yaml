@@ -90,7 +90,7 @@ blueprint:
         text:
     font:
       name: "Font"
-      description: "Select the font for the displayed text. Refer to the HASP Font reference above"
+      description: "Select the font for the displayed text. Refer to the HASP Font reference above."
       default: 7
       selector:
         number:

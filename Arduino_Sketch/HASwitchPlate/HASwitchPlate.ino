@@ -102,7 +102,7 @@ bool startupCompleteFlag = false;                     // Startup process has com
 const long statusUpdateInterval = 300000;             // Time in msec between publishing MQTT status updates (5 minutes)
 long statusUpdateTimer = 0;                           // Timer for update check
 const unsigned long connectTimeout = 300;             // Timeout for WiFi and MQTT connection attempts in seconds
-const unsigned long reConnectTimeout = 15;            // Timeout for WiFi reconnection attempts in seconds
+const unsigned long reConnectTimeout = 60;            // Timeout for WiFi reconnection attempts in seconds
 byte espMac[6];                                       // Byte array to store our MAC address
 bool mqttTlsEnabled = false;                          // Enable MQTT client TLS connections
 const uint16_t mqttMaxPacketSize = 2048;              // Size of buffer for incoming MQTT message
@@ -687,12 +687,12 @@ void mqttDiscovery()
   debugPrintln(String(F("MQTT OUT: '")) + mqttDiscoveryTopic + String(F("' : '")) + String(mqttDiscoveryPayload) + String(F("'")));
   // sensor discovery for device telemetry
   mqttDiscoveryTopic = String(F("homeassistant/sensor/")) + String(haspNode) + String(F("/config"));
-  mqttDiscoveryPayload = String(F("{\"name\":\"")) + String(haspNode) + String(F(" sensor\",\"json_attributes_topic\":\"")) + mqttSensorTopic + String(F("\",\"state_topic\":\"")) + mqttStatusTopic + String(F("\",\"availability_topic\":\"")) + mqttStatusTopic + String(F("\",\"unique_id\":\"")) + mqttClientId + String(F("-sensor\",\"payload_available\":\"ON\",\"payload_not_available\":\"OFF\",\"device\":{\"identifiers\":[\"")) + mqttClientId + String(F("\"],\"connections\":[[\"mac\",\"")) + macAddress + String(F("\"]],\"name\":\"")) + String(haspNode) + String(F("\",\"manufacturer\":\"HASwitchPlate\",\"model\":\"HASP v1.0.0\",\"sw_version\":")) + String(haspVersion) + String(F("}}"));
+  mqttDiscoveryPayload = String(F("{\"name\":\"")) + String(haspNode) + String(F(" sensor\",\"json_attributes_topic\":\"")) + mqttSensorTopic + String(F("\",\"state_topic\":\"")) + mqttStatusTopic + String(F("\",\"availability_topic\":\"")) + mqttStatusTopic + String(F("\",\"unique_id\":\"")) + mqttClientId + String(F("-sensor\",\"payload_available\":\"ON\",\"payload_not_available\":\"OFF\",\"icon\":\"mdi:cellphone-text\",\"device\":{\"identifiers\":[\"")) + mqttClientId + String(F("\"],\"connections\":[[\"mac\",\"")) + macAddress + String(F("\"]],\"name\":\"")) + String(haspNode) + String(F("\",\"manufacturer\":\"HASwitchPlate\",\"model\":\"HASP v1.0.0\",\"sw_version\":")) + String(haspVersion) + String(F("}}"));
   mqttClient.publish(mqttDiscoveryTopic, mqttDiscoveryPayload, true, 1);
   debugPrintln(String(F("MQTT OUT: '")) + mqttDiscoveryTopic + String(F("' : '")) + String(mqttDiscoveryPayload) + String(F("'")));
   // number discovery for active page
   mqttDiscoveryTopic = String(F("homeassistant/number/")) + String(haspNode) + String(F("/config"));
-  mqttDiscoveryPayload = String(F("{\"name\":\"")) + String(haspNode) + String(F(" active page\",\"command_topic\":\"")) + mqttCommandTopic + String(F("/page\",\"state_topic\":\"")) + mqttStateTopic + String(F("/page\",\"retain\":\"true\",\"unique_id\":\"")) + mqttClientId + String(F("-page\",\"device\":{\"identifiers\":[\"")) + mqttClientId + String(F("\"],\"connections\":[[\"mac\",\"")) + macAddress + String(F("\"]],\"name\":\"")) + String(haspNode) + String(F("\",\"manufacturer\":\"HASwitchPlate\",\"model\":\"HASP v1.0.0\",\"sw_version\":")) + String(haspVersion) + String(F("}}"));
+  mqttDiscoveryPayload = String(F("{\"name\":\"")) + String(haspNode) + String(F(" active page\",\"command_topic\":\"")) + mqttCommandTopic + String(F("/page\",\"state_topic\":\"")) + mqttStateTopic + String(F("/page\",\"retain\":\"true\",\"icon\":\"mdi:page-next-outline\",\"unique_id\":\"")) + mqttClientId + String(F("-page\",\"device\":{\"identifiers\":[\"")) + mqttClientId + String(F("\"],\"connections\":[[\"mac\",\"")) + macAddress + String(F("\"]],\"name\":\"")) + String(haspNode) + String(F("\",\"manufacturer\":\"HASwitchPlate\",\"model\":\"HASP v1.0.0\",\"sw_version\":")) + String(haspVersion) + String(F("}}"));
   mqttClient.publish(mqttDiscoveryTopic, mqttDiscoveryPayload, true, 1);
   debugPrintln(String(F("MQTT OUT: '")) + mqttDiscoveryTopic + String(F("' : '")) + String(mqttDiscoveryPayload) + String(F("'")));
 }
@@ -1008,7 +1008,7 @@ void nextionProcessInput()
       if (mqttClient.connected())
       {
         String mqttPageTopic = mqttStateTopic + "/page";
-        mqttClient.publish(mqttPageTopic, nextionPage, true, 1);
+        mqttClient.publish(mqttPageTopic, nextionPage, false, 1);
         debugPrintln(String(F("MQTT OUT: '")) + mqttPageTopic + String(F("' : '")) + nextionPage + String(F("'")));
         String mqttButtonJSONEvent = String(F("{\"event\":\"page\", \"value\":")) + nextionPage + String(F("}"));
         mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
@@ -2230,7 +2230,7 @@ void webHandleRoot()
   {
     webServer.sendContent(F(" checked='checked'"));
   }
-  webServer.sendContent(F("><br/><b>Serial debug output enabled:</b><input id='debugSerialEnabled' name='debugSerialEnabled' type='checkbox'"));
+  webServer.sendContent(F("><br/><b>USB serial debug output enabled:</b><input id='debugSerialEnabled' name='debugSerialEnabled' type='checkbox'"));
   if (debugSerialEnabled)
   {
     webServer.sendContent(F(" checked='checked'"));
@@ -3250,10 +3250,10 @@ void telnetHandleClient()
 void debugPrintln(const String &debugText)
 { // Debug output line of text to our debug targets
   const String debugTimeText = "[+" + String(float(millis()) / 1000, 3) + "s] ";
-  Serial.print(debugTimeText);
-  Serial.println(debugText);
   if (debugSerialEnabled)
   {
+    // Serial.print(debugTimeText);
+    // Serial.println(debugText);
     SoftwareSerial debugSerial(-1, 1); // -1==nc for RX, 1==TX pin
     debugSerial.begin(debugSerialBaud);
     debugSerial.print(debugTimeText);

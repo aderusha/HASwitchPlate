@@ -1,0 +1,368 @@
+blueprint:
+  name: "plate01 p[x].b[y] displays a dimmer with a toggle on/off icon"
+  description: |
+
+    # Description
+
+    A HASP button displays a dimmer control on page 4 and 5 with a toggle on/off icon to the left.
+
+    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Dimmer_with_Icon.png?raw=true)
+
+    ## HASP Page and Button reference
+
+    <details>
+
+    This automation is designed to work with the silders and buttons found on pages 4 and 5
+
+    | Pages 4-5 |
+    |-----------|
+    | ![Pages 4-5](https://github.com/aderusha/HASwitchPlate/raw/dev/Documentation/Images/NextionUI_p4-p5_3sliders.png?raw=true?raw=true) |
+
+    </details>
+
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Dimmer_with_Icon.yaml"
+  domain: automation
+  input:
+    haspconnected:
+      name: "HASP Device"
+      description: "Select the HASP device"
+      selector:
+        entity:
+          integration: mqtt
+          domain: binary_sensor
+          device_class: connectivity
+    hasppage:
+      name: "HASP Page"
+      description: "Select the HASP page (4 or 5) for the dimmer. Refer to the HASP Page and Button reference above."
+      default: 4
+      selector:
+        number:
+          min: 4
+          max: 5
+          mode: box
+    haspbutton:
+      name: "HASP Button"
+      description: "Select the HASP button (7-9) for the dimmer. Refer to the HASP Page and Button reference above."
+      default: 7
+      selector:
+        number:
+          min: 7
+          max: 9
+          mode: box
+    dimmer:
+      name: "Light to control"
+      description: "Select a light device which supports dimming"
+      selector:
+        entity:
+          domain: light
+    text_on:
+      name: "HASP Button Text On"
+      description: "Enter text to appear on the button above the dimmer when the selected device is ON."
+      default: "Dimmer"
+      selector:
+        text:
+    text_off:
+      name: "HASP Button Text Off"
+      description: "Enter text to appear on the button when the selected device is OFF.  The default value of {{text_on}} will leave the text unchanged when the device turns on/off"
+      default: "{{text_on}}"
+      selector:
+        text:
+    font:
+      name: "HASP Button Font"
+      description: "Select the text font for this button label. Refer to the HASP Font reference above."
+      default: 5
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: slider
+    xcen:
+      name: "Text horizontal alignment"
+      description: "Horizontal text alignment: 0=Left 1=Center 2=Right"
+      default: 1
+      selector:
+        number:
+          min: 0
+          max: 2
+          mode: box
+    ycen:
+      name: "Text vertical alignment"
+      description: "Vertical text alignment: 0=Top 1=Center 2=Bottom"
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 2
+          mode: box
+    wrap:
+      name: "Text wrap"
+      description: "Enable line-wrapping text if too long to fit in the button."
+      default: false
+      selector:
+        boolean:
+    icon_on:
+      name: '"On" state icon'
+      description: 'Enter the icon to be shown when the selected entity is "on"'
+      default: ""
+      selector:
+        text:
+    icon_off:
+      name: '"Off" state icon'
+      description: 'Enter the icon to be shown when the selected entity is "off"'
+      default: ""
+      selector:
+        text:
+
+mode: parallel
+max_exceeded: silent
+
+variables:
+  haspconnected: !input haspconnected
+  haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
+  hasppage: !input hasppage
+  haspbutton: !input haspbutton
+  dimmer: !input dimmer
+  font: !input font
+  text_on: !input text_on
+  text_off: !input text_off
+  xcen: !input xcen
+  ycen: !input ycen
+  wrap: !input wrap
+  icon_on: !input icon_on
+  icon_off: !input icon_off
+  dimmerbutton: "{{haspbutton|int}}"
+  togglebutton: "{{dimmerbutton-3}}"
+  dimmerobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
+  toggleobject: '{{ "p[" ~ hasppage ~ "].b[" ~ togglebutton ~ "]" }}'
+  commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ dimmerobject }}'
+  togglecommandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ toggleobject }}'
+  jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
+  jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
+  isbr: "{% if wrap == true %}1{% else %}0{% endif %}"
+  selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
+  selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
+  unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
+  unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
+  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{{ states(activepage_entity) | int }}'
+  selectedfg: >-
+    {%- set colorsource="light." ~ haspname ~ "_selected_foreground_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+  selectedbg: >-
+    {%- set colorsource="light." ~ haspname ~ "_selected_background_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+  unselectedfg: >-
+    {%- set colorsource="light." ~ haspname ~ "_unselected_foreground_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+  unselectedbg: >-
+    {%- set colorsource="light." ~ haspname ~ "_unselected_background_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+  ypos: "{{(haspbutton|int - 7) * 90 + 32}}" # calculate the top pixel position based on the selected button
+  xpos: 0
+  icon: '{% if states(dimmer) == "on" %}{{icon_on}}{% else %}{{icon_off}}{% endif %}'
+  text: '{% if states(dimmer) == "on" %}{{text_on}}{% else %}{{text_off}}{% endif %}'
+  iconwidth: 60
+  iconheight: 65
+  iconfont: 8
+  brightness: '{% if state_attr(dimmer, "brightness")|lower == "none" %}0{% else %}{{state_attr(dimmer, "brightness")}}{% endif %}'
+
+trigger:
+  - platform: state
+    entity_id: !input haspconnected
+    to: "on"
+  - platform: homeassistant
+    event: start
+  - platform: state
+    entity_id: !input dimmer
+  - platform: mqtt
+    topic: "hasp/+/state/json"
+  - platform: mqtt
+    topic: "hasp/+/light/selectedforegroundcolor/rgb"
+  - platform: mqtt
+    topic: "hasp/+/light/selectedbackgroundcolor/rgb"
+  - platform: mqtt
+    topic: "hasp/+/light/unselectedforegroundcolor/rgb"
+  - platform: mqtt
+    topic: "hasp/+/light/unselectedbackgroundcolor/rgb"
+
+condition:
+  - condition: state
+    entity_id: !input haspconnected
+    state: "on"
+
+action:
+  - choose:
+      #########################################################################
+      # Apply text and style when "EXECUTE" is pressed by the user
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger is not defined }}"
+        sequence:
+          - service: mqtt.publish
+            data_template:
+              topic: "{{jsoncommandtopic}}"
+              payload: >-
+                ["{{toggleobject}}.txt=\"{{text}}\"",
+                "{{toggleobject}}.font={{font}}",
+                "{{toggleobject}}.xcen={{xcen}}",
+                "{{toggleobject}}.ycen={{ycen}}",
+                "{{toggleobject}}.pco={{selectedfg}}",
+                "{{toggleobject}}.bco={{selectedbg}}",
+                "{{toggleobject}}.pco2={{unselectedfg}}",
+                "{{toggleobject}}.bco2={{unselectedbg}}",
+                "{{dimmerobject}}.pco={{unselectedfg}}",
+                "{{dimmerobject}}.bco={{unselectedbg}}",
+                "{{dimmerobject}}.val={{brightness}}"
+                {%- if activepage|int == hasppage|int -%}
+                ,"delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\"","vis {{dimmerbutton}},1"
+                {%- endif -%}]
+
+      #########################################################################
+      # Update display if our entity has changed state
+      - conditions: # dimmer has changed value, on/off state has also changed, and we're currently on the selected page
+          - condition: template
+            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == dimmer) and (trigger.from_state.state != trigger.to_state.state) and (activepage|int == hasppage|int) }}'
+        sequence:
+          - service: mqtt.publish
+            data_template:
+              topic: "{{jsoncommandtopic}}"
+              payload: '["{{toggleobject}}.txt=\"{{text}}\"","{{dimmerobject}}.val={{brightness}}","delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
+      - conditions: # dimmer has changed value, on/off state has also changed
+          - condition: template
+            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == dimmer) and (trigger.from_state.state != trigger.to_state.state) }}'
+        sequence:
+          - service: mqtt.publish
+            data_template:
+              topic: "{{jsoncommandtopic}}"
+              payload: '["{{toggleobject}}.txt=\"{{text}}\"","{{dimmerobject}}.val={{brightness}}"]'
+      - conditions: # dimmer has changed value
+          - condition: template
+            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == dimmer) }}'
+        sequence:
+          - service: mqtt.publish
+            data_template:
+              topic: "{{jsoncommandtopic}}"
+              payload: '["{{dimmerobject}}.val={{brightness}}"]'
+
+      #########################################################################
+      # Handle MQTT message triggers
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger.platform == "mqtt" }}'
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == jsontopic }}"
+                sequence:
+                  - choose:
+                      #########################################################################
+                      # Primary function: Toggle a light when we press the button
+                      - conditions:
+                          - condition: template
+                            value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == toggleobject) and (trigger.payload_json.value == "OFF") }}'
+                        sequence:
+                          - service: homeassistant.toggle
+                            entity_id: !input dimmer
+                      #########################################################################
+                      # Primary function: Set the dimmer value when the HASP slider has moved
+                      - conditions:
+                          - condition: template
+                            value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == dimmerobject ~ ".val") }}'
+                        sequence:
+                          - service: light.turn_on
+                            entity_id: !input dimmer
+                            data_template:
+                              brightness: "{{trigger.payload_json.value}}"
+                      #########################################################################
+                      # Icon overlay
+                      - conditions: # Page changed to our page, so place the icon on the screen.
+                          - condition: template
+                            value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == "page" ) and (trigger.payload_json.value == hasppage|int) }}'
+                        sequence:
+                          - service: mqtt.publish
+                            data_template:
+                              topic: "{{jsoncommandtopic}}"
+                              payload: '["ref {{togglebutton}}","delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\"","delay=1","ref {{dimmerbutton}}"]'
+ 
+              #########################################################################
+              # Theme: Apply selected foreground color when it changes.
+              # If the page is currently active, delay a moment before applying the overlay
+              # so it will fire after any other theme elements being applied.
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "{{togglecommandtopic}}.pco"
+                      payload: "{{trigger.payload}}"
+                  - condition: template
+                    value_template: "{{ activepage|int == hasppage|int }}"
+                  - delay: "00:00:00.5"
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{trigger.payload}},0,1,1,3,\"{{icon}}\"","delay=1","ref {{dimmerbutton}}"]'
+              #########################################################################
+              # Theme: Apply selected background color on change
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == selectedbackgroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "{{togglecommandtopic}}.bco"
+                      payload: "{{trigger.payload}}"
+              #########################################################################
+              # Theme: Apply unselected foreground color on change
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == unselectedforegroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: '["{{toggleobject}}.pco2={{trigger.payload}}","{{dimmerobject}}.pco={{trigger.payload}}"]'
+              #########################################################################
+              # Theme: Apply unselected background color on change
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == unselectedbackgroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data_template:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: '["{{toggleobject}}.bco2={{trigger.payload}}","{{dimmerobject}}.bco={{trigger.payload}}"]'
+    #########################################################################
+    # Catch any other trigger conditions (device connect, home assistant start, etc),
+    # apply styles, place text, and then place icon if our target page is currently active
+    default:
+      - service: mqtt.publish
+        data_template:
+          topic: "{{jsoncommandtopic}}"
+          payload: >-
+            ["{{toggleobject}}.font={{font}}",
+            "{{toggleobject}}.txt=\"{{text}}\"",
+            "{{toggleobject}}.xcen={{xcen}}",
+            "{{toggleobject}}.ycen={{ycen}}",
+            "{{toggleobject}}.pco={{selectedfg}}",
+            "{{toggleobject}}.bco={{selectedbg}}",
+            "{{toggleobject}}.pco2={{unselectedfg}}",
+            "{{toggleobject}}.bco2={{unselectedbg}}",
+            "{{dimmerobject}}.pco={{unselectedfg}}",
+            "{{dimmerobject}}.bco={{unselectedbg}}"
+            {%- if activepage|int == hasppage|int -%}
+            ,"delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\"","vis {{dimmerbutton}},1"
+            {%- endif -%}]

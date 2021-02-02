@@ -104,8 +104,10 @@ blueprint:
           domain: scene
     text:
       name: "HASP Button Text"
-      description: "Enter text to appear on the button.  This text can include a template."
+      description: "Enter text to appear on the button."
       default: "Text"
+      selector:
+        text:
     font:
       name: "HASP Button Font"
       description: "Select the text font for this button label. Refer to the HASP Font reference above."
