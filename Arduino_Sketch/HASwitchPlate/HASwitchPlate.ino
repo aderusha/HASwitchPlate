@@ -78,7 +78,8 @@ unsigned long debugTimer = 0;                         // Clock for debug perform
 bool debugSerialEnabled = true;                       // Enable USB serial debug output
 const unsigned long debugSerialBaud = 115200;         // Desired baud rate for serial debug output
 bool debugTelnetEnabled = false;                      // Enable telnet debug output
-const unsigned long nextionCommandDelay = 5000;       // Time in μsec between submitting each command in a large JSON to prevent buffer overruns
+bool nextionBufferOverrun = false;                    // Set to true if an overrun error was encountered
+const unsigned long nextionCommandDelay = 5000;       // Time in μsec to back off after an overrun
 const unsigned long telnetInputMax = 128;             // Size of user input buffer for user telnet session
 bool motionEnabled = false;                           // Motion sensor is enabled
 bool mdnsEnabled = true;                              // mDNS enabled
@@ -933,6 +934,7 @@ void nextionProcessInput()
   else if (nextionReturnBuffer[0] == 0x24)
   { // Serial Buffer Overflow
     debugPrintln(String(F("HMI IN: [Serial Buffer Overflow] 0x")) + String(nextionReturnBuffer[0], HEX));
+    nextionBufferOverrun = true;
     if (mqttClient.connected())
     {
       String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Serial Buffer Overflow\"}"));
@@ -1247,6 +1249,16 @@ void nextionSendCmd(const String &nextionCmd)
   Serial1.write(nextionSuffix, sizeof(nextionSuffix));
   debugPrintln(String(F("HMI OUT: ")) + nextionCmd);
   nextionHandleInput();
+  while (nextionBufferOverrun == true)
+  {
+    nextionBufferOverrun = false;
+    delayMicroseconds(nextionCommandDelay);
+    Serial1.print(nextionCmd);
+    Serial1.write(nextionSuffix, sizeof(nextionSuffix));
+    debugPrintln(String(F("HMI OUT: ")) + nextionCmd);
+    delayMicroseconds(nextionCommandDelay);
+    nextionHandleInput();
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1265,8 +1277,7 @@ void nextionParseJson(const String &strPayload)
     for (uint8_t i = 0; i < nextionCommands.size(); i++)
     {
       nextionSendCmd(nextionCommands[i]);
-      delayMicroseconds(nextionCommandDelay); // Larger JSON objects can take a while to run through over serial,
-    }                                         // give the ESP and Nextion a moment to deal with life
+    }
   }
 }
 
@@ -3252,8 +3263,8 @@ void debugPrintln(const String &debugText)
   const String debugTimeText = "[+" + String(float(millis()) / 1000, 3) + "s] ";
   if (debugSerialEnabled)
   {
-    // Serial.print(debugTimeText);
-    // Serial.println(debugText);
+    Serial.print(debugTimeText);
+    Serial.println(debugText);
     SoftwareSerial debugSerial(-1, 1); // -1==nc for RX, 1==TX pin
     debugSerial.begin(debugSerialBaud);
     debugSerial.print(debugTimeText);
