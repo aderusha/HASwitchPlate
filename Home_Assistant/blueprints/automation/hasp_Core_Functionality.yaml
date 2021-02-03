@@ -36,11 +36,11 @@ blueprint:
     | 10     | Noto Sans Bold 80 point    |
 
     ### Icons
-    
+
     Fonts 5-10 also include [1400+ icons which you can copy and paste from here](https://htmlpreview.github.io/?https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/hasp-fontawesome5.html)
 
     ### Font examples
-    
+
     ![HASP Fonts 0-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_0-3.png?raw=true) ![HASP Fonts 4-7](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_4-7.png?raw=true) ![HASP Fonts 8-10](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_8-10.png?raw=true)
 
     </details>
@@ -158,6 +158,12 @@ blueprint:
         page11: Page 11
       selector:
         object:
+    show_lovelace:
+      name: "Show lovelace configuration notification"
+      description: "Turn this on to have a ready-made entities card configuration presented when you click EXECUTE.  Toggle this back off once you've added the code to your dashboard."
+      default: true
+      selector:
+        boolean:
     reset_hasp:
       name: "First-time HASP setup or reset"
       description: "Turn this on if this is a brand-new HASP (or you'd like to reset some default theme settings). Turn it on, hit save, and click EXECUTE to setup your HASP.  After the first run you can toggle this back off."
@@ -182,6 +188,7 @@ variables:
   page_scroll: !input page_scroll
   page_scroll_list: !input page_scroll_list
   page_names: !input page_names
+  show_lovelace: !input show_lovelace
   reset_hasp: !input reset_hasp
   haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
   activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{{ states(activepage_entity) | int }}'
@@ -373,48 +380,95 @@ action:
                 [{% for p in range(1,12) %}"p[{{p}}].b[1].font={{page1font}}","p[{{p}}].b[1].txt=\"{{page1text}}\"",{% endfor %}"delay=1",
                 {% for p in range(1,12) %}"p[{{p}}].b[2].font={{page2font}}","p[{{p}}].b[2].txt=\"{% if page_scroll %}{{page_names.get("page" ~ p)}}{% else %}{{page2text}}{% endif %}\"",{% endfor %}"delay=1",
                 {% for p in range(1,12) %}"p[{{p}}].b[3].font={{page3font}}","p[{{p}}].b[3].txt=\"{{page3text}}\"",{% endfor %}"delay=1"]
+          - choose:
+              #########################################################################
+              # Create a notification with the lovelace entity card YAML
+              - conditions:
+                  - condition: template
+                    value_template: "{{ show_lovelace }}"
+                sequence:
+                  - service: persistent_notification.create
+                    data:
+                      title: '{{haspname}} Lovelace "Entities" Card'
+                      message: >-
+                        To [create a Lovelace card](https://www.home-assistant.io/lovelace/) to control HASP {{haspname}},
+                        [create an Entities Card](https://www.home-assistant.io/lovelace/entities/), select "Show code editor",
+                        and then paste in the code you see below.
 
-          #########################################################################
-          # Check if reset_hasp is enabled, then push some defaults to the device
-          - condition: template
-            value_template: "{{ reset_hasp }}"
-          - service: light.turn_on
-            data:
-              entity_id: "light.{{haspname}}_selected_foreground_color"
-              rgb_color: "{{default_selected_foreground_color}}"
-          - service: light.turn_on
-            data:
-              entity_id: "light.{{haspname}}_selected_foreground_color"
-              brightness: "{{default_selected_foreground_brightness}}"
-          - service: light.turn_on
-            data:
-              entity_id: "light.{{haspname}}_selected_background_color"
-              rgb_color: "{{default_selected_background_color}}"
-          - service: light.turn_on
-            data:
-              entity_id: "light.{{haspname}}_selected_background_color"
-              brightness: "{{default_selected_background_brightness}}"
-          - service: light.turn_on
-            data:
-              entity_id: "light.{{haspname}}_unselected_foreground_color"
-              rgb_color: "{{default_unselected_foreground_color}}"
-          - service: light.turn_on
-            data:
-              entity_id: "light.{{haspname}}_unselected_foreground_color"
-              brightness: "{{default_unselected_foreground_brightness}}"
-          - service: light.turn_on
-            data:
-              entity_id: "light.{{haspname}}_unselected_background_color"
-              rgb_color: "{{default_unselected_background_color}}"
-          - service: light.turn_on
-            data:
-              entity_id: "light.{{haspname}}_unselected_background_color"
-              brightness: "{{default_unselected_background_brightness}}"
-          - service: mqtt.publish
-            data:
-              topic: "hasp/{{haspname}}/command/page"
-              payload: "{{page1page}}"
-              retain: false
+                        ```yaml
+                          type: entities
+                          title: HASP {{haspname}}
+                          show_header_toggle: false
+                          state_color: true
+                          entities:
+                            - entity: number.{{haspname}}_active_page
+                            - type: divider
+                            - entity: light.{{haspname}}_backlight
+                              secondary_info: brightness
+                            - type: section
+                            - entity: light.{{haspname}}_selected_foreground_color
+                              icon: 'mdi:palette'
+                              name: Selected Foreground Color
+                              secondary_info: brightness
+                            - entity: light.{{haspname}}_selected_background_color
+                              icon: 'mdi:palette'
+                              name: Selected Background Color
+                              secondary_info: brightness
+                            - entity: light.{{haspname}}_unselected_foreground_color
+                              icon: 'mdi:palette'
+                              name: Unselected Foreground Color
+                              secondary_info: brightness
+                            - entity: light.{{haspname}}_unselected_background_color
+                              icon: 'mdi:palette'
+                              name: Unselected Background Color
+                              secondary_info: brightness
+                            - type: section
+                        ```
+                      notification_id: "{{haspname}} Lovelace Configuration"
+          - choose:
+              #########################################################################
+              # Push some defaults to the device
+              - conditions:
+                  - condition: template
+                    value_template: "{{ reset_hasp }}"
+                sequence:
+                  - service: light.turn_on
+                    data:
+                      entity_id: "light.{{haspname}}_selected_foreground_color"
+                      rgb_color: "{{default_selected_foreground_color}}"
+                  - service: light.turn_on
+                    data:
+                      entity_id: "light.{{haspname}}_selected_foreground_color"
+                      brightness: "{{default_selected_foreground_brightness}}"
+                  - service: light.turn_on
+                    data:
+                      entity_id: "light.{{haspname}}_selected_background_color"
+                      rgb_color: "{{default_selected_background_color}}"
+                  - service: light.turn_on
+                    data:
+                      entity_id: "light.{{haspname}}_selected_background_color"
+                      brightness: "{{default_selected_background_brightness}}"
+                  - service: light.turn_on
+                    data:
+                      entity_id: "light.{{haspname}}_unselected_foreground_color"
+                      rgb_color: "{{default_unselected_foreground_color}}"
+                  - service: light.turn_on
+                    data:
+                      entity_id: "light.{{haspname}}_unselected_foreground_color"
+                      brightness: "{{default_unselected_foreground_brightness}}"
+                  - service: light.turn_on
+                    data:
+                      entity_id: "light.{{haspname}}_unselected_background_color"
+                      rgb_color: "{{default_unselected_background_color}}"
+                  - service: light.turn_on
+                    data:
+                      entity_id: "light.{{haspname}}_unselected_background_color"
+                      brightness: "{{default_unselected_background_brightness}}"
+                  - service: mqtt.publish
+                    data:
+                      topic: "hasp/{{haspname}}/command/page"
+                      payload: "{{page1page}}"
+                      retain: false
 
       #########################################################################
       # Push configuration to device when it connects
