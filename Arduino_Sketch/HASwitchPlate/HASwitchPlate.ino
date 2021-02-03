@@ -745,7 +745,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Nextion Startup] 0x00 0x00 0x00")));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x00 0x00 0x00\", \"return_code_description\":\"Nextion Startup\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x00 0x00 0x00\",\"return_code_description\":\"Nextion Startup\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -755,7 +755,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Invalid Instruction] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Invalid Instruction\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Invalid Instruction\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -765,7 +765,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Instruction Successful] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Instruction Successful\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Instruction Successful\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -775,7 +775,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Invalid Component ID] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Invalid Component ID\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Invalid Component ID\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -785,7 +785,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Invalid Page ID] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Invalid Page ID\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Invalid Page ID\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -795,7 +795,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Invalid Picture ID] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Invalid Picture ID\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Invalid Picture ID\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -805,7 +805,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Invalid Font ID	] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Invalid Font ID	\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Invalid Font ID	\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -815,7 +815,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Invalid File Operation] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Invalid File Operation\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Invalid File Operation\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -825,7 +825,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Invalid CRC] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Invalid CRC\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Invalid CRC\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -835,7 +835,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Invalid Baud rate Setting] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Invalid Baud rate Setting\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Invalid Baud rate Setting\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -845,7 +845,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Invalid Waveform ID or Channel #] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Invalid Waveform ID or Channel #\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Invalid Waveform ID or Channel #\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -855,7 +855,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Invalid Variable name or attribute] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Invalid Variable name or attribute\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Invalid Variable name or attribute\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -865,7 +865,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Invalid Variable Operation] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Invalid Variable Operation\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Invalid Variable Operation\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -875,7 +875,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Assignment failed to assign] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Assignment failed to assign\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Assignment failed to assign\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -885,7 +885,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [EEPROM Operation failed] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"EEPROM Operation failed\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"EEPROM Operation failed\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -895,7 +895,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Invalid Quantity of Parameters] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Invalid Quantity of Parameters\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Invalid Quantity of Parameters\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -905,7 +905,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [IO Operation failed] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"IO Operation failed\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"IO Operation failed\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -915,7 +915,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Escape Character Invalid] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Escape Character Invalid\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Escape Character Invalid\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -925,7 +925,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Variable name too long] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Variable name too long\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Variable name too long\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -935,7 +935,7 @@ void nextionProcessInput()
     debugPrintln(String(F("HMI IN: [Serial Buffer Overflow] 0x")) + String(nextionReturnBuffer[0], HEX));
     if (mqttClient.connected())
     {
-      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\", \"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\", \"return_code_description\":\"Serial Buffer Overflow\"}"));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"return_data\",\"return_code\":\"0x")) + String(nextionReturnBuffer[0], HEX) + String(F("\",\"return_code_description\":\"Serial Buffer Overflow\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -960,7 +960,7 @@ void nextionProcessInput()
         String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
         mqttClient.publish(mqttButtonTopic, "ON");
         debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'ON'");
-        String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + nextionPage + String(F("].b[")) + nextionButtonID + String(F("]\", \"value\":\"ON\"}"));
+        String mqttButtonJSONEvent = String(F("{\"event_type\":\"button_short_press\",\"event\":\"p[")) + nextionPage + String(F("].b[")) + nextionButtonID + String(F("]\",\"value\":\"ON\"}"));
         mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
         debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
       }
@@ -980,7 +980,7 @@ void nextionProcessInput()
         String mqttButtonTopic = mqttStateTopic + "/p[" + nextionPage + "].b[" + nextionButtonID + "]";
         mqttClient.publish(mqttButtonTopic, "OFF");
         debugPrintln(String(F("MQTT OUT: '")) + mqttButtonTopic + "' : 'OFF'");
-        String mqttButtonJSONEvent = String(F("{\"event\":\"p[")) + nextionPage + String(F("].b[")) + nextionButtonID + String(F("]\", \"value\":\"OFF\"}"));
+        String mqttButtonJSONEvent = String(F("{\"event_type\":\"button_short_release\",\"event\":\"p[")) + nextionPage + String(F("].b[")) + nextionButtonID + String(F("]\",\"value\":\"OFF\"}"));
         mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
         debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
         // Now see if this object has a .val that might have been updated.  Works for sliders,
@@ -1037,7 +1037,7 @@ void nextionProcessInput()
         String mqttTouchTopic = mqttStateTopic + "/touchOn";
         mqttClient.publish(mqttTouchTopic, xyCoord);
         debugPrintln(String(F("MQTT OUT: '")) + mqttTouchTopic + String(F("' : '")) + xyCoord + String(F("'")));
-        String mqttButtonJSONEvent = String(F("{\"event\":\"touchxy\", \"touch_event\":\"ON\", \"touchx\":\"")) + String(xCoord) + String(F("\", \"touchy\":\"")) + String(yCoord) + String(F("\", \"screen_state\":\""));
+        String mqttButtonJSONEvent = String(F("{\"event_type\":\"button_short_press\",\"event\":\"touchxy\",\"touch_event\":\"ON\",\"touchx\":\"")) + String(xCoord) + String(F("\",\"touchy\":\"")) + String(yCoord) + String(F("\",\"screen_state\":\""));
         if (nextionReturnBuffer[0] == 0x67)
         {
           mqttButtonJSONEvent += "awake\"}";
@@ -1058,7 +1058,7 @@ void nextionProcessInput()
         String mqttTouchTopic = mqttStateTopic + "/touchOff";
         mqttClient.publish(mqttTouchTopic, xyCoord);
         debugPrintln(String(F("MQTT OUT: '")) + mqttTouchTopic + String(F("' : '")) + xyCoord + String(F("'")));
-        String mqttButtonJSONEvent = String(F("{\"event\":\"touchxy\", \"touch_event\":\"OFF\", \"touchx\":\"")) + String(xCoord) + String(F("\", \"touchy\":\"")) + String(yCoord) + String(F("\", \"screen_state\":\""));
+        String mqttButtonJSONEvent = String(F("{\"event_type\":\"button_short_press\",\"event\":\"touchxy\",\"touch_event\":\"OFF\",\"touchx\":\"")) + String(xCoord) + String(F("\",\"touchy\":\"")) + String(yCoord) + String(F("\",\"screen_state\":\""));
         if (nextionReturnBuffer[0] == 0x67)
         {
           mqttButtonJSONEvent += "awake\"}";
@@ -1095,7 +1095,7 @@ void nextionProcessInput()
         String mqttReturnTopic = mqttStateTopic + mqttGetSubtopic;
         mqttClient.publish(mqttReturnTopic, getString);
         debugPrintln(String(F("MQTT OUT: '")) + mqttReturnTopic + String(F("' : '")) + getString + String(F("'")));
-        String mqttButtonJSONEvent = String(F("{\"event\":\"")) + mqttGetSubtopicJSON + String(F("\", \"value\":\"")) + getString + String(F("\"}"));
+        String mqttButtonJSONEvent = String(F("{\"event\":\"")) + mqttGetSubtopicJSON + String(F("\",\"value\":\"")) + getString + String(F("\"}"));
         mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
         debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
         mqttGetSubtopic = "";
@@ -1150,7 +1150,7 @@ void nextionProcessInput()
         String mqttReturnTopic = mqttStateTopic + mqttGetSubtopic;
         mqttClient.publish(mqttReturnTopic, getString);
         debugPrintln(String(F("MQTT OUT: '")) + mqttReturnTopic + String(F("' : '")) + getString + String(F("'")));
-        String mqttButtonJSONEvent = String(F("{\"event\":\"")) + mqttGetSubtopicJSON + String(F("\", \"value\":")) + getString + String(F("}"));
+        String mqttButtonJSONEvent = String(F("{\"event\":\"")) + mqttGetSubtopicJSON + String(F("\",\"value\":")) + getString + String(F("}"));
         mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
         debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
       }
@@ -1189,7 +1189,7 @@ void nextionProcessInput()
       lcdBacklightOn = 0;
       mqttClient.publish(mqttLightStateTopic, "OFF", true, 1);
       debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'OFF'")));
-      String mqttButtonJSONEvent = String(F("{\"event\":\"sleep\", \"value\":\"ON\""));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"sleep\",\"value\":\"ON\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
@@ -1204,7 +1204,7 @@ void nextionProcessInput()
       debugPrintln(String(F("MQTT OUT: '")) + mqttLightStateTopic + String(F("' : 'ON'")));
       mqttClient.publish(mqttLightBrightStateTopic, String(lcdBacklightDim), true, 1);
       debugPrintln(String(F("MQTT OUT: '")) + mqttLightBrightStateTopic + String(F("' : ")) + String(lcdBacklightDim));
-      String mqttButtonJSONEvent = String(F("{\"event\":\"sleep\", \"value\":\"OFF\""));
+      String mqttButtonJSONEvent = String(F("{\"event\":\"sleep\",\"value\":\"OFF\"}"));
       mqttClient.publish(mqttStateJSONTopic, mqttButtonJSONEvent);
       debugPrintln(String(F("MQTT OUT: '")) + mqttStateJSONTopic + String(F("' : '")) + mqttButtonJSONEvent + String(F("'")));
     }
