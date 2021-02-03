@@ -1,5 +1,5 @@
 blueprint:
-  name: "plate01 p[x].b[y] displays text and triggers a scene"
+  name: "HASP p[x].b[y] displays text and triggers a scene"
   description: |
 
     # Description
@@ -64,11 +64,11 @@ blueprint:
     | 10     | Noto Sans Bold 80 point    |
 
     ### Icons
-    
+
     Fonts 5-10 also include [1400+ icons which you can copy and paste from here](https://htmlpreview.github.io/?https://github.com/aderusha/HASwitchPlate/blob/master/Documentation/Images/hasp-fontawesome5.html)
 
     ### Font examples
-    
+
     ![HASP Fonts 0-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_0-3.png?raw=true) ![HASP Fonts 4-7](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_4-7.png?raw=true) ![HASP Fonts 8-10](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_Fonts_8-10.png?raw=true)
 
     </details>
@@ -248,13 +248,20 @@ action:
         sequence:
           - choose:
               #########################################################################
-              # Primary function: Activate a scene in response to our selected button being pressed ON
+              # Catch incoming JSON messages
               - conditions:
                   - condition: template
-                    value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == haspobject) and (trigger.payload_json.value == "ON") }}'
+                    value_template: "{{ trigger.topic == jsontopic }}"
                 sequence:
-                  - service: scene.turn_on
-                    entity_id: !input scene
+                  - choose:
+                      #########################################################################
+                      # Primary function: Activate a scene in response to our selected button being pressed ON
+                      - conditions:
+                          - condition: template
+                            value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == haspobject) and (trigger.payload_json.value == "ON") }}'
+                        sequence:
+                          - service: scene.turn_on
+                            entity_id: !input scene
               #########################################################################
               # Theme: Apply selected foreground color when it changes
               - conditions:

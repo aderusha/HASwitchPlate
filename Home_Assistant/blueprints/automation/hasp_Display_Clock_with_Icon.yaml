@@ -1,5 +1,5 @@
 blueprint:
-  name: "plate01 p[x].b[y] displays a clock with a clock icon"
+  name: "HASP p[x].b[y] displays a clock with a clock icon"
   description: |
 
     # Description
@@ -172,23 +172,30 @@ action:
         sequence:
           - choose:
               #########################################################################
-              # Icon overlay
-              - conditions: # Somebody pressed our button which hides the overlaid icon.  Put it back.
+              # Catch incoming JSON messages
+              - conditions:
                   - condition: template
-                    value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == haspobject ) and (trigger.payload_json.value == "OFF") }}'
+                    value_template: "{{ trigger.topic == jsontopic }}"
                 sequence:
-                  - service: mqtt.publish
-                    data:
-                      topic: "{{jsoncommandtopic}}"
-                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
-              - conditions: # Page changed to our page, so place the icon on the screen.
-                  - condition: template
-                    value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == "page" ) and (trigger.payload_json.value == hasppage|int) }}'
-                sequence:
-                  - service: mqtt.publish
-                    data:
-                      topic: "{{jsoncommandtopic}}"
-                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
+                  - choose:
+                      #########################################################################
+                      # Icon overlay
+                      - conditions: # Somebody pressed our button which hides the overlaid icon.  Put it back.
+                          - condition: template
+                            value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == haspobject ) and (trigger.payload_json.value == "OFF") }}'
+                        sequence:
+                          - service: mqtt.publish
+                            data:
+                              topic: "{{jsoncommandtopic}}"
+                              payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
+                      - conditions: # Page changed to our page, so place the icon on the screen.
+                          - condition: template
+                            value_template: '{{ (trigger.topic == jsontopic ) and (trigger.payload_json.event == "page" ) and (trigger.payload_json.value == hasppage|int) }}'
+                        sequence:
+                          - service: mqtt.publish
+                            data:
+                              topic: "{{jsoncommandtopic}}"
+                              payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################
               # Theme: Apply selected foreground color when it changes.
               # If the page is currently active, delay a moment before applying the overlay

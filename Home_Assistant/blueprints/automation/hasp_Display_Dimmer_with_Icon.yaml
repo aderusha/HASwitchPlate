@@ -1,5 +1,5 @@
 blueprint:
-  name: "plate01 p[x].b[y] displays a dimmer with a toggle on/off icon"
+  name: "HASP p[x].b[y] displays a dimmer with a toggle on/off icon"
   description: |
 
     # Description
@@ -262,6 +262,8 @@ action:
             value_template: '{{ trigger.platform == "mqtt" }}'
         sequence:
           - choose:
+              #########################################################################
+              # Catch incoming JSON messages
               - conditions:
                   - condition: template
                     value_template: "{{ trigger.topic == jsontopic }}"

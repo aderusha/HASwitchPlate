@@ -1,5 +1,5 @@
 blueprint:
-  name: "plate01 p[x].b[y] displays a toggle button"
+  name: "HASP p[x].b[y] displays a toggle button"
   description: |
 
     # Description
@@ -386,13 +386,20 @@ action:
         sequence:
           - choose:
               #########################################################################
-              # Primary function: Toggle an entity in response to our selected button being pressed ON
+              # Catch incoming JSON messages
               - conditions:
                   - condition: template
-                    value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == haspobject) and (trigger.payload_json.value == button_trigger) }}'
+                    value_template: "{{ trigger.topic == jsontopic }}"
                 sequence:
-                  - service: '{{toggle_service}}'
-                    entity_id: !input entity
+                  - choose:
+                      #########################################################################
+                      # Primary function: Toggle an entity in response to our selected button being pressed ON
+                      - conditions:
+                          - condition: template
+                            value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == haspobject) and (trigger.payload_json.value == button_trigger) }}'
+                        sequence:
+                          - service: '{{toggle_service}}'
+                            entity_id: !input entity
               #########################################################################
               # Theme: Apply selected foreground color when it changes
               - conditions:

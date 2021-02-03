@@ -1,0 +1,117 @@
+blueprint:
+  name: "HASP Sleeps after an idle interval"
+  description: |
+    
+    # Description
+
+    Configure a HASP to sleep when idle after a defined number of seconds.  The screen will go dark, and the next time you
+    touch the screen it will turn back on to be ready for use.
+
+    The HASP stops accepting any input when sleeping, so items on the screen that change periodically will need a refresh.
+    For example, if a clock is displayed, it won't update until the next minute elapses.  The "Force Refresh on Wake" option
+    will push all updates to the HASP when it awakens.  This might make the screen refresh a few times when that happens.
+
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Sleep_When_Idle.yaml"
+  domain: automation
+  input:
+    haspconnected:
+      name: "HASP Device"
+      description: "Select the HASP device"
+      selector:
+        entity:
+          integration: mqtt
+          domain: binary_sensor
+          device_class: connectivity
+    idletime:
+      name: "Idle time"
+      description: "Idle time in seconds before screen sleep.  Set to 0 to disable sleep on idle."
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 65535
+          mode: box
+    wakepage:
+      name: "Wake-up page"
+      description: "Select a HASP page to be shown when the device wakes from sleep.  Set to -1 to disable this feature and HASP will wake to the screen shown when it went to sleep."
+      default: -1
+      selector:
+        number:
+          min: -1
+          max: 11
+          mode: box
+    refresh:
+      name: "Force refresh on wake"
+      description: "Force a full refresh when waking from sleep.  This will update all screens which might have missed updates when asleep.  The screen may flicker a bit while this happens."
+      default: false
+      selector:
+        boolean:
+
+mode: parallel
+max_exceeded: silent
+
+variables:
+  haspconnected: !input haspconnected
+  haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
+  jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
+  statustopic: '{{ "hasp/" ~ haspname ~ "/status" }}'
+  jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
+  idletime: !input idletime
+  wakepage: !input wakepage
+  refresh: !input refresh
+  thsp: '{% if (idletime|int) < 3 %}0{% else %}{{idletime}}{% endif %}'
+  wup: '{% if (wakepage|int) < 0 %}255{% else %}{{wakepage}}{% endif %}'
+  thup: 1
+
+trigger:
+  - platform: state
+    entity_id: !input haspconnected
+    to: "on"
+  - platform: homeassistant
+    event: start
+  - platform: mqtt
+    topic: "hasp/+/state/json"
+
+condition:
+  - condition: state
+    entity_id: !input haspconnected
+    state: "on"
+
+action:
+  - choose:
+      #########################################################################
+      # Apply sleep settings when "EXECUTE" is pressed by the user
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger is not defined }}"
+        sequence:
+          - service: mqtt.publish
+            data:
+              topic: "{{jsoncommandtopic}}"
+              payload: '["sleep=0","thsp={{thsp}}","thup={{thup}}","wup={{wup}}"]'
+      #########################################################################
+      # Handle MQTT message triggers
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger.platform == "mqtt" }}'
+        sequence:
+          - choose:
+              #########################################################################
+              # Catch incoming JSON messages
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == jsontopic }}"
+                sequence:
+                  - choose:
+                      #########################################################################
+                      # If refresh enabled, catch wake event and toggle our connectivity topic OFF
+                      # HASP device will catch this, toggle it back on, triggering other blueprints
+                      # to send current state to the device.
+                      - conditions:
+                          - condition: template
+                            value_template: '{{ refresh and (trigger.topic == jsontopic) and (trigger.payload_json.event == "sleep") and (trigger.payload_json.value == "OFF") }}'
+                        sequence:
+                          - service: mqtt.publish
+                            data:
+                              topic: "{{statustopic}}"
+                              payload: "OFF"

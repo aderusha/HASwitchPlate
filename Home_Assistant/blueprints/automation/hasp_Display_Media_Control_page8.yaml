@@ -1,0 +1,294 @@
+blueprint:
+  name: "HASP p[8].b[all] Page 8 displays media controls"
+  description: |
+
+    # Description
+
+    Page 8 controls a selected media player with artist and track info, track back/play|pause/track forward, and volume control
+
+    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Volume_Control_page8.png?raw=true)
+
+    ## HASP Page and Button reference
+
+    <details>
+
+    This automation is designed to work with the media controls found on page 8:
+
+    | Page 8 |
+    |--------|
+    | ![Page 8](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p8_5buttons+1slider.png?raw=true) |
+
+
+    </details>
+
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Volume_Control_page8.yaml"
+  domain: automation
+  input:
+    haspconnected:
+      name: "HASP Device"
+      description: "Select the HASP device"
+      selector:
+        entity:
+          integration: mqtt
+          domain: binary_sensor
+          device_class: connectivity
+    mediaplayer:
+      name: "Media Player to control"
+      description: "Select a media player to control"
+      selector:
+        entity:
+          domain: media_player
+    button4attribute:
+      name: "Top button attribute"
+      description: "Enter the media_player attribute to show on the top-most button on the media player screen."
+      default: "media_artist"
+      selector:
+        text:
+    button5attribute:
+      name: "Second button attribute"
+      description: "Select the media_player attribute to show on the second-from-top button on the media player screen."
+      default: "media_title"
+      selector:
+        text:
+
+mode: parallel
+max_exceeded: silent
+
+variables:
+  haspconnected: !input haspconnected
+  haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
+  mediaplayer: !input mediaplayer
+  button4attribute: !input button4attribute
+  button5attribute: !input button5attribute
+  volumeobject: '{{ "p[8].b[9]" }}'
+  commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" }}'
+  volumecommandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ volumeobject ~ ".val" }}'
+  jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
+  jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
+  selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
+  selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
+  unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
+  unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
+  selectedfg: >-
+    {%- set colorsource="light." ~ haspname ~ "_selected_foreground_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+  selectedbg: >-
+    {%- set colorsource="light." ~ haspname ~ "_selected_background_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+  unselectedfg: >-
+    {%- set colorsource="light." ~ haspname ~ "_unselected_foreground_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+  unselectedbg: >-
+    {%- set colorsource="light." ~ haspname ~ "_unselected_background_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+  text: '{%- if hour24 == true -%}{%- set hourformat="%-H" -%}{%- else %}{%- set hourformat="%I" -%}{%- endif -%}{{(now().strftime(hourformat)|int)~now().strftime(":%M")}}'
+
+  volume: "{% if state_attr(mediaplayer, 'volume_level')|lower == 'none' %}0{% else %}{{(state_attr(mediaplayer, 'volume_level')*255)|int}}{% endif %}"
+  button4text: "{{state_attr(mediaplayer, button4attribute)|wordwrap(20, wrapstring='\\r')}}"
+  button4font: "{% set attr_length = state_attr(mediaplayer, button4attribute)|length%}{% if attr_length <= 6 -%}9{% elif attr_length <= 8 %}8{% elif attr_length <= 10 %}7{% else %}6{%- endif %}"
+  button5text: "{{state_attr(mediaplayer, button5attribute)|wordwrap(20, wrapstring='\\r')}}"
+  button5font: "{% set attr_length = state_attr(mediaplayer, button4attribute)|length%}{% if attr_length <= 6 -%}9{% elif attr_length <= 8 %}8{% elif attr_length <= 10 %}7{% else %}6{%- endif %}"
+  button6text: "" # prev track
+  button6font: 8
+  button7text: '{% if is_state(mediaplayer, "playing") %}{% else %}{% endif %}'
+  button7font: 8
+  button8text: "" # next track
+  button8font: 8
+
+trigger:
+  - platform: state
+    entity_id: !input haspconnected
+    to: "on"
+  - platform: homeassistant
+    event: start
+  - platform: state
+    entity_id: !input mediaplayer
+  - platform: mqtt
+    topic: "hasp/+/state/json"
+  - platform: mqtt
+    topic: "hasp/+/light/selectedforegroundcolor/rgb"
+  - platform: mqtt
+    topic: "hasp/+/light/selectedbackgroundcolor/rgb"
+  - platform: mqtt
+    topic: "hasp/+/light/unselectedforegroundcolor/rgb"
+  - platform: mqtt
+    topic: "hasp/+/light/unselectedbackgroundcolor/rgb"
+
+condition:
+  - condition: state
+    entity_id: !input haspconnected
+    state: "on"
+
+action:
+  - choose:
+      #########################################################################
+      # Apply text and style when "EXECUTE" is pressed by the user
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger is not defined }}"
+        sequence:
+          - service: mqtt.publish
+            data:
+              topic: "{{jsoncommandtopic}}"
+              payload: >-
+                ["p[8].b[4].pco={{selectedfg}}","p[8].b[4].bco={{selectedbg}}","p[8].b[4].pco2={{unselectedfg}}","p[8].b[4].bco2={{unselectedbg}}","p[8].b[4].font={{button4font}}","p[8].b[4].txt=\"{{button4text}}\"",
+                "p[8].b[5].pco={{selectedfg}}","p[8].b[5].bco={{selectedbg}}","p[8].b[5].pco2={{unselectedfg}}","p[8].b[5].bco2={{unselectedbg}}","p[8].b[5].font={{button5font}}","p[8].b[5].txt=\"{{button5text}}\"",
+                "p[8].b[6].pco={{selectedfg}}","p[8].b[6].bco={{selectedbg}}","p[8].b[6].pco2={{unselectedfg}}","p[8].b[6].bco2={{unselectedbg}}","p[8].b[6].font={{button6font}}","p[8].b[6].txt=\"{{button6text}}\"",
+                "p[8].b[7].pco={{selectedfg}}","p[8].b[7].bco={{selectedbg}}","p[8].b[7].pco2={{unselectedfg}}","p[8].b[7].bco2={{unselectedbg}}","p[8].b[7].font={{button7font}}","p[8].b[7].txt=\"{{button7text}}\"",
+                "p[8].b[8].pco={{selectedfg}}","p[8].b[8].bco={{selectedbg}}","p[8].b[8].pco2={{unselectedfg}}","p[8].b[8].bco2={{unselectedbg}}","p[8].b[8].font={{button8font}}","p[8].b[8].txt=\"{{button8text}}\"",
+                "{{volumeobject}}.pco={{unselectedfg}}","{{volumeobject}}.bco={{unselectedbg}}","{{volumeobject}}.val={{volume}}"]
+
+      #########################################################################
+      # Update volume if it has changed state
+      - conditions: # volume has changed value
+          - condition: template
+            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == mediaplayer) and (trigger.from_state.attributes.volume_level != trigger.to_state.attributes.volume_level)}}'
+        sequence:
+          - service: mqtt.publish
+            data:
+              topic: "{{volumecommandtopic}}"
+              payload: "{{volume}}"
+      #########################################################################
+      # Update button4attribute and button5attribute
+      - conditions:
+          - condition: template
+            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == mediaplayer) }}'
+        sequence:
+          - service: mqtt.publish
+            data:
+              topic: "{{jsoncommandtopic}}"
+              payload: '["p[8].b[4].font={{button4font}}","p[8].b[4].txt=\"{{button4text}}\"","p[8].b[5].font={{button5font}}","p[8].b[5].txt=\"{{button5text}}\""]'
+
+      #########################################################################
+      # Handle MQTT message triggers
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger.platform == "mqtt" }}'
+        sequence:
+          - choose:
+              #########################################################################
+              # Catch incoming JSON messages
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == jsontopic }}"
+                sequence:
+                  - choose:
+                      #########################################################################
+                      # Set the volume value when the HASP slider has moved
+                      - conditions:
+                          - condition: template
+                            value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == volumeobject ~ ".val") }}'
+                        sequence:
+                          - service: media_player.volume_set
+                            entity_id: !input mediaplayer
+                            data:
+                              volume_level: "{{trigger.payload_json.value/255}}"
+                      #########################################################################
+                      # Previous track button was pressed
+                      - conditions:
+                          - condition: template
+                            value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == "p[8].b[6]") and (trigger.payload_json.value == "ON")}}'
+                        sequence:
+                          - service: media_player.media_previous_track
+                            entity_id: !input mediaplayer
+                      #########################################################################
+                      # Play/pause was pressed
+                      - conditions:
+                          - condition: template
+                            value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == "p[8].b[7]") and (trigger.payload_json.value == "ON")}}'
+                        sequence:
+                          - service: media_player.media_play_pause
+                            entity_id: !input mediaplayer
+                      #########################################################################
+                      # Next track button was pressed
+                      - conditions:
+                          - condition: template
+                            value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == "p[8].b[8]") and (trigger.payload_json.value == "ON")}}'
+                        sequence:
+                          - service: media_player.media_next_track
+                            entity_id: !input mediaplayer
+
+              #########################################################################
+              # Theme: Apply selected foreground color when it changes.
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: >-
+                        ["p[8].b[4].pco={{selectedfg}}",
+                        "p[8].b[5].pco={{selectedfg}}",
+                        "p[8].b[6].pco={{selectedfg}}",
+                        "p[8].b[7].pco={{selectedfg}}",
+                        "p[8].b[8].pco={{selectedfg}}"]
+              #########################################################################
+              # Theme: Apply selected background color on change
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == selectedbackgroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: >-
+                        ["p[8].b[4].bco={{selectedbg}}",
+                        "p[8].b[5].bco={{selectedbg}}",
+                        "p[8].b[6].bco={{selectedbg}}",
+                        "p[8].b[7].bco={{selectedbg}}",
+                        "p[8].b[8].bco={{selectedbg}}"]
+              #########################################################################
+              # Theme: Apply unselected foreground color on change
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == unselectedforegroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: >-
+                        ["p[8].b[6].pco2={{unselectedfg}}",
+                        "p[8].b[7].pco2={{unselectedfg}}",
+                        "p[8].b[8].pco2={{unselectedfg}}",
+                        "{{volumeobject}}.pco={{unselectedfg}}"]
+              #########################################################################
+              # Theme: Apply unselected background color on change
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == unselectedbackgroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: >-
+                        ["p[8].b[6].bco2={{unselectedbg}}",
+                        "p[8].b[7].bco2={{unselectedbg}}",
+                        "p[8].b[8].bco2={{unselectedbg}}",
+                        "{{volumeobject}}.bco={{unselectedbg}}"]
+    #########################################################################
+    # Catch any other trigger conditions (device connect, home assistant start, etc),
+    # apply styles and place text.
+    default:
+      - service: mqtt.publish
+        data:
+          topic: "{{jsoncommandtopic}}"
+          payload: >-
+            ["p[8].b[4].pco={{selectedfg}}","p[8].b[4].bco={{selectedbg}}","p[8].b[4].font={{button4font}}","p[8].b[4].txt=\"{{button4text}}\"",
+            "p[8].b[5].pco={{selectedfg}}","p[8].b[5].bco={{selectedbg}}","p[8].b[5].font={{button5font}}","p[8].b[5].txt=\"{{button5text}}\"",
+            "p[8].b[6].pco={{selectedfg}}","p[8].b[6].bco={{selectedbg}}","p[8].b[6].pco2={{unselectedfg}}","p[8].b[6].bco2={{unselectedbg}}","p[8].b[6].font={{button6font}}","p[8].b[6].txt=\"{{button6text}}\"",
+            "p[8].b[7].pco={{selectedfg}}","p[8].b[7].bco={{selectedbg}}","p[8].b[7].pco2={{unselectedfg}}","p[8].b[7].bco2={{unselectedbg}}","p[8].b[7].font={{button7font}}","p[8].b[7].txt=\"{{button7text}}\"",
+            "p[8].b[8].pco={{selectedfg}}","p[8].b[8].bco={{selectedbg}}","p[8].b[8].pco2={{unselectedfg}}","p[8].b[8].bco2={{unselectedbg}}","p[8].b[8].font={{button8font}}","p[8].b[8].txt=\"{{button8text}}\"",
+            "{{volumeobject}}.pco={{unselectedfg}}","{{volumeobject}}.bco={{unselectedbg}}","{{volumeobject}}.val={{volume}}"]

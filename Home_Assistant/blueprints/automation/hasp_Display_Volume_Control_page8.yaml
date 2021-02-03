@@ -1,0 +1,172 @@
+blueprint:
+  name: "HASP p[8].b[9] The slider button on page 8 displays a volume control"
+  description: |
+
+    # Description
+
+    The slider button on page 8 displays a volume control
+
+    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Volume_Control_page8.png?raw=true)
+
+    ## HASP Page and Button reference
+
+    <details>
+
+    This automation is designed to work with the silder found on page 8:
+
+    | Page 8 |
+    |--------|
+    | ![Page 8](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p8_5buttons+1slider.png?raw=true) |
+
+
+    </details>
+
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Volume_Control_page8.yaml"
+  domain: automation
+  input:
+    haspconnected:
+      name: "HASP Device"
+      description: "Select the HASP device"
+      selector:
+        entity:
+          integration: mqtt
+          domain: binary_sensor
+          device_class: connectivity
+    volumeentity:
+      name: "Media Player to control"
+      description: "Select a media player to control volume"
+      selector:
+        entity:
+          domain: media_player
+
+mode: parallel
+max_exceeded: silent
+
+variables:
+  haspconnected: !input haspconnected
+  haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
+  volumeentity: !input volumeentity
+  volumeobject: "p[8].b[9]"
+  commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" }}'
+  volumecommandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ volumeobject }}'
+  jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
+  jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
+  unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
+  unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
+  unselectedfg: >-
+    {%- set colorsource="light." ~ haspname ~ "_unselected_foreground_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+  unselectedbg: >-
+    {%- set colorsource="light." ~ haspname ~ "_unselected_background_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+
+  volume: '{% if state_attr(volumeentity, "volume_level")|lower == "none" %}0{% else %}{{(state_attr(volumeentity, "volume_level")*100)|int}}{% endif %}'
+
+trigger:
+  - platform: state
+    entity_id: !input haspconnected
+    to: "on"
+  - platform: homeassistant
+    event: start
+  - platform: state
+    entity_id: !input volumeentity
+  - platform: mqtt
+    topic: "hasp/+/state/json"
+  - platform: mqtt
+    topic: "hasp/+/light/unselectedforegroundcolor/rgb"
+  - platform: mqtt
+    topic: "hasp/+/light/unselectedbackgroundcolor/rgb"
+
+condition:
+  - condition: state
+    entity_id: !input haspconnected
+    state: "on"
+
+action:
+  - choose:
+      #########################################################################
+      # Apply text and style when "EXECUTE" is pressed by the user
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger is not defined }}"
+        sequence:
+          - service: mqtt.publish
+            data:
+              topic: "{{jsoncommandtopic}}"
+              payload: >-
+                ["{{volumeobject}}.pco={{unselectedfg}}",
+                "{{volumeobject}}.bco={{unselectedbg}}",
+                "{{volumeobject}}.val={{volume}}"]
+
+      #########################################################################
+      # Update display if our entity has changed state
+      - conditions: # volume has changed value, on/off state has also changed, and we're currently on the selected page
+          - condition: template
+            value_template: '{{ (trigger.platform == "state") and (trigger.entity_id == volumeentity) }}'
+        sequence:
+          - service: mqtt.publish
+            data:
+              topic: "{{volumecommandtopic}}.val"
+              payload: "{{volume}}"
+
+      #########################################################################
+      # Handle MQTT message triggers
+      - conditions:
+          - condition: template
+            value_template: '{{ trigger.platform == "mqtt" }}'
+        sequence:
+          - choose:
+              #########################################################################
+              # Catch incoming JSON messages
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == jsontopic }}"
+                sequence:
+                  - choose:
+                      #########################################################################
+                      # Primary function: Set the volume value when the HASP slider has moved
+                      - conditions:
+                          - condition: template
+                            value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == volumeobject ~ ".val") }}'
+                        sequence:
+                          - service: media_player.volume_set
+                            entity_id: !input volumeentity
+                            data:
+                              volume_level: "{{trigger.payload_json.value/100}}"
+              #########################################################################
+              # Theme: Apply unselected foreground color on change
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == unselectedforegroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{volumecommandtopic}}.pco"
+                      payload: "{{trigger.payload}}"
+              #########################################################################
+              # Theme: Apply unselected background color on change
+              - conditions:
+                  - condition: template
+                    value_template: "{{ trigger.topic == unselectedbackgroundcolortopic }}"
+                sequence:
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{volumecommandtopic}}.bco"
+                      payload: "{{trigger.payload}}"
+    #########################################################################
+    # Catch any other trigger conditions (device connect, home assistant start, etc),
+    # apply styles, place text, and then place icon if our target page is currently active
+    default:
+      - service: mqtt.publish
+        data:
+          topic: "{{jsoncommandtopic}}"
+          payload: >-
+            ["{{volumeobject}}.pco={{unselectedfg}}",
+            "{{volumeobject}}.bco={{unselectedbg}}",
+            "{{volumeobject}}.val={{volume}}"]

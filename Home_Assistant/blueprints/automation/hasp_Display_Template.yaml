@@ -1,5 +1,5 @@
 blueprint:
-  name: "plate01 p[x].b[y] displays the output of a template"
+  name: "HASP p[x].b[y] displays the output of a template"
   description: |
 
     # Description

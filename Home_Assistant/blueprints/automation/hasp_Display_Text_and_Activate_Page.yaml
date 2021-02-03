@@ -1,5 +1,5 @@
 blueprint:
-  name: "plate01 p[x].b[y] displays text and activates a page"
+  name: "HASP p[x].b[y] displays text and activates a page"
   description: |
 
     # Description
@@ -253,15 +253,22 @@ action:
         sequence:
           - choose:
               #########################################################################
-              # Primary function: Activate a scene in response to our selected button being pressed ON
+              # Catch incoming JSON messages
               - conditions:
                   - condition: template
-                    value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == haspobject) and (trigger.payload_json.value == "OFF") }}'
+                    value_template: "{{ trigger.topic == jsontopic }}"
                 sequence:
-                  - service: mqtt.publish
-                    data:
-                      topic: "{{pagecommandtopic}}"
-                      payload: "{{targetpage}}"
+                  - choose:
+                      #########################################################################
+                      # Primary function: Activate a scene in response to our selected button being pressed ON
+                      - conditions:
+                          - condition: template
+                            value_template: '{{ (trigger.topic == jsontopic) and (trigger.payload_json.event == haspobject) and (trigger.payload_json.value == "OFF") }}'
+                        sequence:
+                          - service: mqtt.publish
+                            data:
+                              topic: "{{pagecommandtopic}}"
+                              payload: "{{targetpage}}"
               #########################################################################
               # Theme: Apply selected foreground color when it changes
               - conditions:
