@@ -306,6 +306,7 @@ action:
                   - condition: template
                     value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
                 sequence:
+                  - delay: "00:00:00.5"
                   - service: mqtt.publish
                     data:
                       topic: "{{togglecommandtopic}}.pco"
