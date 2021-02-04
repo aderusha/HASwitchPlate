@@ -169,7 +169,7 @@ action:
           - service: mqtt.publish
             data:
               topic: "{{jsoncommandtopic}}"
-              payload: '["p[8].b[4].font={{button4font}}","p[8].b[4].txt=\"{{button4text}}\"","p[8].b[5].font={{button5font}}","p[8].b[5].txt=\"{{button5text}}\""]'
+              payload: '["p[8].b[4].font={{button4font}}","p[8].b[4].txt=\"{{button4text}}\"","p[8].b[5].font={{button5font}}","p[8].b[5].txt=\"{{button5text}}\"","p[8].b[7].txt=\"{{button7text}}\""]'
 
       #########################################################################
       # Handle MQTT message triggers
@@ -182,7 +182,7 @@ action:
               # Catch incoming JSON messages
               - conditions:
                   - condition: template
-                    value_template: "{{ trigger.topic == jsontopic }}"
+                    value_template: "{{ (trigger.topic == jsontopic) and trigger.payload_json is defined }}"
                 sequence:
                   - choose:
                       #########################################################################

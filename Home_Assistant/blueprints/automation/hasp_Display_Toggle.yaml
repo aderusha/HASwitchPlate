@@ -389,7 +389,7 @@ action:
               # Catch incoming JSON messages
               - conditions:
                   - condition: template
-                    value_template: "{{ trigger.topic == jsontopic }}"
+                    value_template: "{{ (trigger.topic == jsontopic) and trigger.payload_json is defined }}"
                 sequence:
                   - choose:
                       #########################################################################

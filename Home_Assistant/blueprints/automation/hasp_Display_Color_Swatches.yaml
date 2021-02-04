@@ -1,0 +1,114 @@
+blueprint:
+  name: "HASP p[x].b[y] displays color swatches"
+  description: |
+
+    ## Description
+
+    A button on the HASP will display text.  This can be useful when combined with other blueprints which perform an action, but don't apply a label to a button.
+    Deploy both blueprints on the same button, and now you have a button that says things things and does things.
+
+    ![Preview](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/hasp_Display_Color_Swatches.png?raw=true)
+
+    ### HASP Page and Button reference
+
+    <details>
+
+    | Page 0 | Pages 1-3 | Pages 4-5 |
+    |--------|-----------|-----------|
+    | ![Page 0](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p0_Init_Screen.png?raw=true) | ![Pages 1-3](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p1-p3_4buttons.png?raw=true) | ![Pages 4-5](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p4-p5_3sliders.png?raw=true) |
+
+    | Page 6 | Page 7 | Page 8 |
+    |--------|--------|--------|
+    | ![Page 6](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p6_8buttons.png?raw=true) | ![Page 7](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p7_12buttons.png?raw=true) | ![Page 8](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p8_5buttons+1slider.png?raw=true) |
+
+    | Page 9 | Page 10 | Page 11 |
+    |--------|---------|---------|
+    | ![Page 9](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p9_9buttons.png?raw=true) | ![Page 10](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p10_5buttons.png?raw=true) | ![Page 11](https://github.com/aderusha/HASwitchPlate/raw/master/Documentation/Images/NextionUI_p11_1button.png?raw=true)
+
+    </details>
+
+
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Color_Swatches.yaml"
+  domain: automation
+  input:
+    haspconnected:
+      name: "HASP Device"
+      description: "Select the HASP device"
+      selector:
+        entity:
+          integration: mqtt
+          domain: binary_sensor
+          device_class: connectivity
+
+
+mode: parallel
+max_exceeded: silent
+
+variables:
+  haspconnected: !input haspconnected
+  haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
+  haspobject: '{{ "p[" ~ hasppage ~ "].b[" ~ haspbutton ~ "]" }}'
+  commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
+  jsoncommandtopic: '{{ "hasp/" ~ haspname ~ "/command/json" }}'
+  selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
+  selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
+  unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
+  unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
+  selectedfg: >-
+    {%- set colorsource="light." ~ haspname ~ "_selected_foreground_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+  selectedbg: >-
+    {%- set colorsource="light." ~ haspname ~ "_selected_background_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+  unselectedfg: >-
+    {%- set colorsource="light." ~ haspname ~ "_unselected_foreground_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+  unselectedbg: >-
+    {%- set colorsource="light." ~ haspname ~ "_unselected_background_color" -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
+
+trigger: []
+
+action:
+  - choose:
+      #########################################################################
+      # Display swatches
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger is not defined }}"
+        sequence:
+          - service: mqtt.publish
+            data:
+              topic: "{{jsoncommandtopic}}"
+              payload: >-
+                [
+                "sendxy=1",
+                "fill 0,63,59,51,65535",
+                "fill 60,63,59,51,65520",
+                "fill 120,63,59,51,55872",
+                "fill 180,63,60,51,51200",
+                "fill 0,115,59,51,63488",
+                "fill 60,115,59,51,32799",
+                "fill 120,115,59,51,32776",
+                "fill 180,115,60,51,64543",
+                "fill 0,167,59,51,2016",
+                "fill 60,167,59,51,1040",
+                "fill 120,167,59,51,1032",
+                "fill 180,167,60,51,34815",
+                "fill 0,219,59,50,31",
+                "fill 60,219,59,50,528",
+                "fill 120,219,59,50,16400",
+                "fill 180,219,60,50,65504"
+                ]

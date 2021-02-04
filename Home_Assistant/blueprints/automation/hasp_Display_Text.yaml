@@ -62,7 +62,7 @@ blueprint:
 
     </details>
 
-  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Template.yaml"
+  source_url: "https://github.com/aderusha/HASwitchPlate/blob/master/Home_Assistant/blueprints/automation/hasp_Display_Text.yaml"
   domain: automation
   input:
     haspconnected:
