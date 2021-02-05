@@ -209,7 +209,7 @@ variables:
   iconfont: 8
   xcen: 2
   ycen: 1
-  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{{ states(activepage_entity) | int }}'
+  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{% if states(activepage_entity)|lower == "none" %}-1{% else %}{{ states(activepage_entity) | int }}{% endif %}'
   selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
   selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
   unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
@@ -336,19 +336,19 @@ action:
                               topic: "{{jsoncommandtopic}}"
                               payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{tempcolor}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################
-              # Theme: Apply selected foreground color on change
+              # Theme: Apply selected foreground color when it changes.
+              # Any change to the button will remove the overlaid icon.
               - conditions:
                   - condition: template
                     value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
                 sequence:
-                  - delay: "00:00:00.5"
                   - service: mqtt.publish
                     data:
                       topic: "{{commandtopic}}.pco"
-                      payload: "{{textcolor}}"
+                      payload: "{{trigger.payload}}"
                   - condition: template
                     value_template: "{{ activepage|int == hasppage|int }}"
-                  - delay: "00:00:00.5"
+                  - delay: "00:00:01"
                   - service: mqtt.publish
                     data:
                       topic: "{{jsoncommandtopic}}"
@@ -363,6 +363,11 @@ action:
                     data:
                       topic: "{{commandtopic}}.bco"
                       payload: "{{trigger.payload}}"
+                  - delay: "00:00:00.5"
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################
               # Theme: Apply unselected foreground color on change
               - conditions:
@@ -373,6 +378,11 @@ action:
                     data:
                       topic: "{{commandtopic}}.pco2"
                       payload: "{{trigger.payload}}"
+                  - delay: "00:00:00.5"
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################
               # Theme: Apply unselected background color on change
               - conditions:
@@ -383,6 +393,11 @@ action:
                     data:
                       topic: "{{commandtopic}}.bco2"
                       payload: "{{trigger.payload}}"
+                  - delay: "00:00:00.5"
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
     #########################################################################
     # Catch remaining triggers to display temperature and apply text style
     default:

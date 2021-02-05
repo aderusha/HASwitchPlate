@@ -145,7 +145,7 @@ variables:
   jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
   text: '{{states(weather_provider)|replace("windy-variant","windy")|replace("clear-night","clear night")|replace("partlycloudy","partly cloudy")|replace("lightning-rainy","lightning & rain")|replace("snowy-rainy","snow & rain")|title}}'
   isbr: "{% if wrap == true %}1{% else %}0{% endif %}"
-  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{{ states(activepage_entity) | int }}'
+  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{% if states(activepage_entity)|lower == "none" %}-1{% else %}{{ states(activepage_entity) | int }}{% endif %}'
   selectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedforegroundcolor/rgb" }}'
   selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
   unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'

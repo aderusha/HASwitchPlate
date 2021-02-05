@@ -191,7 +191,8 @@ variables:
   show_lovelace: !input show_lovelace
   reset_hasp: !input reset_hasp
   haspname: '{{ haspconnected.split(".")[1].split("_connected")[0] }}'
-  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{{ states(activepage_entity) | int }}'
+  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{% if states(activepage_entity)|lower == "none" %}-1{% else %}{{ states(activepage_entity) | int }}{% endif %}'
+  
   statustopic: '{{ "hasp/" ~ haspname ~ "/status" }}'
   commandtopic: '{{ "hasp/" ~ haspname ~ "/command/" ~ haspobject }}'
   jsontopic: '{{ "hasp/" ~ haspname ~ "/state/json" }}'
@@ -287,7 +288,7 @@ action:
                 "availability_topic":"hasp/{{haspname}}/status",
                 "rgb_command_topic":"hasp/{{haspname}}/light/selectedforegroundcolor/rgb",
                 "rgb_command_template": {% raw %}"{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}",{% endraw %}
-                "retain":true,
+                "retain":false,
                 "unique_id":"{{haspClientId}}-selectedforegroundcolor",
                 "payload_on":"ON",
                 "payload_off":"OFF",
@@ -311,7 +312,7 @@ action:
                 "availability_topic":"hasp/{{haspname}}/status",
                 "rgb_command_topic":"hasp/{{haspname}}/light/selectedbackgroundcolor/rgb",
                 "rgb_command_template": {% raw %}"{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}",{% endraw %}
-                "retain":true,
+                "retain":false,
                 "unique_id":"{{haspClientId}}-selectedbackgroundcolor",
                 "payload_on":"ON",
                 "payload_off":"OFF",
@@ -336,7 +337,7 @@ action:
                 "availability_topic":"hasp/{{haspname}}/status",
                 "rgb_command_topic":"hasp/{{haspname}}/light/unselectedforegroundcolor/rgb",
                 "rgb_command_template": {% raw %}"{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}",{% endraw %}
-                "retain":true,
+                "retain":false,
                 "unique_id":"{{haspClientId}}-unselectedforegroundcolor",
                 "payload_on":"ON",
                 "payload_off":"OFF",
@@ -360,7 +361,7 @@ action:
                 "availability_topic":"hasp/{{haspname}}/status",
                 "rgb_command_topic":"hasp/{{haspname}}/light/unselectedbackgroundcolor/rgb",
                 "rgb_command_template": {% raw %}"{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}",{% endraw %}
-                "retain":true,
+                "retain":false,
                 "unique_id":"{{haspClientId}}-unselectedbackgroundcolor",
                 "payload_on":"ON",
                 "payload_off":"OFF",

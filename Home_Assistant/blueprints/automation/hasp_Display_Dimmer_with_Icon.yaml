@@ -143,7 +143,7 @@ variables:
   selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
   unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
   unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
-  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{{ states(activepage_entity) | int }}'
+  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{% if states(activepage_entity)|lower == "none" %}-1{% else %}{{ states(activepage_entity) | int }}{% endif %}'
   selectedfg: >-
     {%- set colorsource="light." ~ haspname ~ "_selected_foreground_color" -%}
     {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
@@ -313,7 +313,7 @@ action:
                       payload: "{{trigger.payload}}"
                   - condition: template
                     value_template: "{{ activepage|int == hasppage|int }}"
-                  - delay: "00:00:00.5"
+                  - delay: "00:00:01"
                   - service: mqtt.publish
                     data:
                       topic: "{{jsoncommandtopic}}"

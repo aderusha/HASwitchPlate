@@ -72,7 +72,7 @@ variables:
   selectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/selectedbackgroundcolor/rgb" }}'
   unselectedforegroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedforegroundcolor/rgb" }}'
   unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
-  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{{ states(activepage_entity) | int }}'
+  activepage: '{% set activepage_entity = "number." ~ haspname ~ "_active_page" %}{% if states(activepage_entity)|lower == "none" %}-1{% else %}{{ states(activepage_entity) | int }}{% endif %}'
   selectedfg: >-
     {%- set colorsource="light." ~ haspname ~ "_selected_foreground_color" -%}
     {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
@@ -198,20 +198,18 @@ action:
                               payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################
               # Theme: Apply selected foreground color when it changes.
-              # If the page is currently active, delay a moment before applying the overlay
-              # so it will fire after any other theme elements being applied.
+              # Any change to the button will remove the overlaid icon.
               - conditions:
                   - condition: template
                     value_template: "{{ trigger.topic == selectedforegroundcolortopic }}"
                 sequence:
-                  - delay: "00:00:00.5"
                   - service: mqtt.publish
                     data:
                       topic: "{{commandtopic}}.pco"
                       payload: "{{trigger.payload}}"
                   - condition: template
                     value_template: "{{ activepage|int == hasppage|int }}"
-                  - delay: "00:00:00.5"
+                  - delay: "00:00:01"
                   - service: mqtt.publish
                     data:
                       topic: "{{jsoncommandtopic}}"
@@ -226,6 +224,11 @@ action:
                     data:
                       topic: "{{commandtopic}}.bco"
                       payload: "{{trigger.payload}}"
+                  - delay: "00:00:00.5"
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################
               # Theme: Apply unselected foreground color on change
               - conditions:
@@ -236,6 +239,11 @@ action:
                     data:
                       topic: "{{commandtopic}}.pco2"
                       payload: "{{trigger.payload}}"
+                  - delay: "00:00:00.5"
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
               #########################################################################
               # Theme: Apply unselected background color on change
               - conditions:
@@ -246,6 +254,11 @@ action:
                     data:
                       topic: "{{commandtopic}}.bco2"
                       payload: "{{trigger.payload}}"
+                  - delay: "00:00:00.5"
+                  - service: mqtt.publish
+                    data:
+                      topic: "{{jsoncommandtopic}}"
+                      payload: '["delay=1","xstr {{xpos}},{{ypos}},{{iconwidth}},{{iconheight}},{{iconfont}},{{selectedfg}},0,1,1,3,\"{{icon}}\""]'
 
     # Catch any other trigger conditions, apply styles, place text, and then place icon if our target page is currently active
     default:
