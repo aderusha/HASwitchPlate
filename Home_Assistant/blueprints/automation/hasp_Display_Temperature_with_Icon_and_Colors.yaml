@@ -60,7 +60,7 @@ blueprint:
         number:
           min: 1
           max: 3
-          mode: box
+          mode: slider
     haspbutton:
       name: "HASP Button"
       description: "Select the HASP button (4-7) for the temperature. Refer to the HASP Page and Button reference above."
@@ -69,7 +69,7 @@ blueprint:
         number:
           min: 4
           max: 7
-          mode: box
+          mode: slider
     weather_provider:
       name: "Weather provider"
       description: "Select the weather provider to obtain the temperature"
@@ -84,7 +84,7 @@ blueprint:
         number:
           min: 0
           max: 3
-          mode: box
+          mode: slider
     thermometer_empty_color:
       name: "Thermometer empty color"
       description: 'Icon color for an empty thermometer in Nextion RGB565 format (see "Nextion color codes" above for reference). -1 = Current theme foreground color, or 2047 = Ice blue'
@@ -93,7 +93,7 @@ blueprint:
         number:
           min: -1
           max: 65535
-          mode: box
+          mode: slider
     thermometer_quarter_threshold:
       name: "Thermometer one quarter threshold"
       description: "Temperatures above this threshold will show a one-quarter full thermometer.  Below, show an empty thermometer."
@@ -102,7 +102,7 @@ blueprint:
         number:
           min: -20
           max: 125
-          mode: box
+          mode: slider
     thermometer_quarter_color:
       name: "Thermometer one quarter color"
       description: "Icon color for a one-quarter full thermometer in Nextion RGB565 format. -1 = Current theme foreground color, or 31 = Blue"
@@ -111,7 +111,7 @@ blueprint:
         number:
           min: -1
           max: 65535
-          mode: box
+          mode: slider
     thermometer_half_threshold:
       name: "Thermometer half threshold"
       description: "Temperatures above this threshold will show a half full thermometer.  This value must be higher than the value selected above."
@@ -120,7 +120,7 @@ blueprint:
         number:
           min: -10
           max: 125
-          mode: box
+          mode: slider
     thermometer_half_color:
       name: "Thermometer half color"
       description: "Icon color for a half full thermometer in Nextion RGB565 format. -1 = Current theme foreground color, or 1536 = Green"
@@ -129,7 +129,7 @@ blueprint:
         number:
           min: -1
           max: 65535
-          mode: box
+          mode: slider
     thermometer_three_quarter_threshold:
       name: "Thermometer three quarter threshold"
       description: "Temperatures above this threshold will show a three-quarters full thermometer.  This value must be higher than the value selected above."
@@ -138,7 +138,7 @@ blueprint:
         number:
           min: 0
           max: 125
-          mode: box
+          mode: slider
     thermometer_three_quarter_color:
       name: "Thermometer three quarter color"
       description: "Icon color for a three-quarter full thermometer in Nextion RGB565 format. -1 = Current theme foreground color, or 64512 = Orange"
@@ -147,7 +147,7 @@ blueprint:
         number:
           min: -1
           max: 65535
-          mode: box
+          mode: slider
     thermometer_full_threshold:
       name: "Thermometer full threshold"
       description: "Temperatures above this threshold will show a full thermometer.  This value must be higher than the value selected above."
@@ -156,7 +156,7 @@ blueprint:
         number:
           min: 10
           max: 125
-          mode: box
+          mode: slider
     thermometer_full_color:
       name: "Thermometer full color"
       description: "Icon color for a full thermometer in Nextion RGB565 format. -1 = Current theme foreground color, or 63488 = Red"
@@ -165,7 +165,7 @@ blueprint:
         number:
           min: -1
           max: 65535
-          mode: box
+          mode: slider
     colortemp:
       name: "Colorize temperature text"
       description: "Also apply icon colors to text"
@@ -216,27 +216,31 @@ variables:
   unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
   selectedfg: >-
     {%- set colorsource="light." ~ haspname ~ "_selected_foreground_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   selectedbg: >-
     {%- set colorsource="light." ~ haspname ~ "_selected_background_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   unselectedfg: >-
     {%- set colorsource="light." ~ haspname ~ "_unselected_foreground_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   unselectedbg: >-
     {%- set colorsource="light." ~ haspname ~ "_unselected_background_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   tempcolor: "{% set temp = temperature|int %}{% if temp <= thermometer_quarter_threshold|int -%}{% set color = thermometer_empty_color%}{% elif temp < thermometer_half_threshold|int %}{% set color = thermometer_quarter_color %}{% elif temp < thermometer_three_quarter_threshold|int %}{% set color = thermometer_half_color %}{% elif temp < thermometer_full_threshold|int %}{% set color = thermometer_three_quarter_color %}{% else %}{% set color = thermometer_full_color%}{% endif %}{% if color|int < 0 -%}{{selectedfg}}{% else %}{{color}}{% endif %}"
   textcolor: "{%- if colortemp == true -%}{{tempcolor}}{% else %}{{selectedfg}}{% endif %}"

@@ -135,7 +135,7 @@ blueprint:
         number:
           min: 1
           max: 11
-          mode: box
+          mode: slider
     haspbutton:
       name: "HASP Button"
       description: "Select the HASP button for this toggle.  Refer to the HASP Page and Button reference above."
@@ -144,7 +144,7 @@ blueprint:
         number:
           min: 4
           max: 15
-          mode: box
+          mode: slider
     entity:
       name: "Entity to toggle"
       description: "Select an entity for this button to toggle"
@@ -188,7 +188,7 @@ blueprint:
         number:
           min: -1
           max: 65535
-          mode: box
+          mode: slider
     on_bgcolor:
       name: '"on" background color'
       description: 'Text background color when the selected entity is "on" in Nextion RGB565 format. -1 = Current theme selected background color.'
@@ -197,7 +197,7 @@ blueprint:
         number:
           min: -1
           max: 65535
-          mode: box
+          mode: slider
     off_fgcolor:
       name: '"off" foreground color'
       description: 'Text foreground color when the selected entity is "off" in Nextion RGB565 format. -1 = Current theme unselected foreground color.'
@@ -206,7 +206,7 @@ blueprint:
         number:
           min: -1
           max: 65535
-          mode: box
+          mode: slider
     off_bgcolor:
       name: '"off" background color'
       description: 'Text background color when the selected entity is "off" in Nextion RGB565 format. -1 = Current theme unselected background color.'
@@ -215,7 +215,7 @@ blueprint:
         number:
           min: -1
           max: 65535
-          mode: box
+          mode: slider
     font:
       name: "Font"
       description: "Select the font for the displayed text. Refer to the HASP Font reference above."
@@ -224,7 +224,7 @@ blueprint:
         number:
           min: 0
           max: 10
-          mode: box
+          mode: slider
     xcen:
       name: "Text horizontal alignment"
       description: "Horizontal text alignment: 0=Left 1=Center 2=Right"
@@ -233,7 +233,7 @@ blueprint:
         number:
           min: 0
           max: 2
-          mode: box
+          mode: slider
     ycen:
       name: "Text vertical alignment"
       description: "Vertical text alignment: 0=Top 1=Center 2=Bottom"
@@ -242,7 +242,7 @@ blueprint:
         number:
           min: 0
           max: 2
-          mode: box
+          mode: slider
     wrap:
       name: "Text wrap"
       description: "Enable line-wrapping text if too long to fit in the button."
@@ -283,27 +283,31 @@ variables:
   unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
   selectedfg: >-
     {%- set colorsource="light." ~ haspname ~ "_selected_foreground_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   selectedbg: >-
     {%- set colorsource="light." ~ haspname ~ "_selected_background_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   unselectedfg: >-
     {%- set colorsource="light." ~ haspname ~ "_unselected_foreground_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   unselectedbg: >-
     {%- set colorsource="light." ~ haspname ~ "_unselected_background_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   entity_state: '{% if states(entity)|lower == state_on %}on{% else %}off{% endif %}'
   toggle_selectedfg: '{% if entity_state == "on" %}{% if on_fgcolor|int >= 0 %}{{on_fgcolor}}{% else %}{{selectedfg}}{% endif %}{% else %}{% if off_fgcolor|int >= 0 %}{{off_fgcolor}}{% else %}{{unselectedfg}}{% endif %}{% endif %}'

@@ -284,16 +284,11 @@ action:
               payload: >-
                 {"name":"{{haspname}} selected foreground color",
                 "command_topic":"hasp/{{haspname}}/light/selectedforegroundcolor/switch",
-                "state_topic":"hasp/{{haspname}}/status",
-                "availability_topic":"hasp/{{haspname}}/status",
+                "state_topic":"hasp/{{haspname}}/light/alwayson",
                 "rgb_command_topic":"hasp/{{haspname}}/light/selectedforegroundcolor/rgb",
                 "rgb_command_template": {% raw %}"{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}",{% endraw %}
                 "retain":false,
                 "unique_id":"{{haspClientId}}-selectedforegroundcolor",
-                "payload_on":"ON",
-                "payload_off":"OFF",
-                "payload_available":"ON",
-                "payload_not_available":"OFF",
                 "device":{"identifiers":["{{haspClientId}}"],
                 "connections":[["mac","{{haspMac}}"]],
                 "name":"{{haspname}}",
@@ -308,16 +303,11 @@ action:
               payload: >-
                 {"name":"{{haspname}} selected background color",
                 "command_topic":"hasp/{{haspname}}/light/selectedbackgroundcolor/switch",
-                "state_topic":"hasp/{{haspname}}/status",
-                "availability_topic":"hasp/{{haspname}}/status",
+                "state_topic":"hasp/{{haspname}}/light/alwayson",
                 "rgb_command_topic":"hasp/{{haspname}}/light/selectedbackgroundcolor/rgb",
                 "rgb_command_template": {% raw %}"{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}",{% endraw %}
                 "retain":false,
                 "unique_id":"{{haspClientId}}-selectedbackgroundcolor",
-                "payload_on":"ON",
-                "payload_off":"OFF",
-                "payload_available":"ON",
-                "payload_not_available":"OFF",
                 "device":{
                 "identifiers":["{{haspClientId}}"],
                 "connections":[["mac","{{haspMac}}"]],
@@ -333,16 +323,11 @@ action:
               payload: >-
                 {"name":"{{haspname}} unselected foreground color",
                 "command_topic":"hasp/{{haspname}}/light/unselectedforegroundcolor/switch",
-                "state_topic":"hasp/{{haspname}}/status",
-                "availability_topic":"hasp/{{haspname}}/status",
+                "state_topic":"hasp/{{haspname}}/light/alwayson",
                 "rgb_command_topic":"hasp/{{haspname}}/light/unselectedforegroundcolor/rgb",
                 "rgb_command_template": {% raw %}"{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}",{% endraw %}
                 "retain":false,
                 "unique_id":"{{haspClientId}}-unselectedforegroundcolor",
-                "payload_on":"ON",
-                "payload_off":"OFF",
-                "payload_available":"ON",
-                "payload_not_available":"OFF",
                 "device":{"identifiers":["{{haspClientId}}"],
                 "connections":[["mac","{{haspMac}}"]],
                 "name":"{{haspname}}",
@@ -357,16 +342,11 @@ action:
               payload: >-
                 {"name":"{{haspname}} unselected background color",
                 "command_topic":"hasp/{{haspname}}/light/unselectedbackgroundcolor/switch",
-                "state_topic":"hasp/{{haspname}}/status",
-                "availability_topic":"hasp/{{haspname}}/status",
+                "state_topic":"hasp/{{haspname}}/light/alwayson",
                 "rgb_command_topic":"hasp/{{haspname}}/light/unselectedbackgroundcolor/rgb",
                 "rgb_command_template": {% raw %}"{{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}",{% endraw %}
                 "retain":false,
                 "unique_id":"{{haspClientId}}-unselectedbackgroundcolor",
-                "payload_on":"ON",
-                "payload_off":"OFF",
-                "payload_available":"ON",
-                "payload_not_available":"OFF",
                 "device":{"identifiers":["{{haspClientId}}"],
                 "connections":[["mac","{{haspMac}}"]],
                 "name":"{{haspname}}",
@@ -374,6 +354,11 @@ action:
                 "model":"{{haspModel}}",
                 "sw_version":{{sw_version}}
                 }}
+              retain: true
+          - service: mqtt.publish
+            data:
+              topic: "hasp/{{haspname}}/light/alwayson"
+              payload: "ON"
               retain: true
           # Send page select button config
           - service: mqtt.publish
@@ -408,7 +393,7 @@ action:
                             - type: divider
                             - entity: light.{{haspname}}_backlight
                               secondary_info: brightness
-                            - type: section
+                            - type: divider
                             - entity: light.{{haspname}}_selected_foreground_color
                               icon: 'mdi:palette'
                               name: Selected Foreground Color
@@ -431,13 +416,13 @@ action:
                             entities:
                               - entity: {{haspsensor}}
                                 name: Blueprints
-                                icon: 'mdi:circle-edit-outline'
+                                icon: 'mdi:palette-swatch'
                                 tap_action:
                                   action: navigate
                                   navigation_path: /config/blueprint/dashboard
                               - entity: {{haspsensor}}
                                 name: Automations
-                                icon: 'mdi:circle-edit-outline'
+                                icon: 'mdi:robot'
                                 tap_action:
                                   action: navigate
                                   navigation_path: /config/automation/dashboard
@@ -515,7 +500,6 @@ action:
                 [{% for p in range(1,12) %}"p[{{p}}].b[1].font={{page1font}}","p[{{p}}].b[1].txt=\"{{page1text}}\"",{% endfor %}
                 {% for p in range(1,12) %}"p[{{p}}].b[2].font={{page2font}}","p[{{p}}].b[2].txt=\"{% if page_scroll %}{{page_names.get("page" ~ p)}}{% else %}{{page2text}}{% endif %}\"",{% endfor %}
                 {% for p in range(1,12) %}"p[{{p}}].b[3].font={{page3font}}","p[{{p}}].b[3].txt=\"{{page3text}}\""{% if not loop.last %},{% endif %}{% endfor %}]
-          # - delay: "00:00:03"
           - service: mqtt.publish # apply selected foreground color to page select buttons
             data:
               topic: "{{jsoncommandtopic}}"
@@ -530,7 +514,6 @@ action:
                 {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].pco={{colorcode}}"{%- else -%}"p[{{p}}].b[2].pco2={{colorcode}}"{%- endif -%},{%- endfor -%}
                 {%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco={{colorcode}}"{%- else -%}"p[{{p}}].b[3].pco2={{colorcode}}"{%- endif -%}{% if not loop.last %},{% endif %}{%- endfor -%}
                 {%- else -%}{%- for p in range(1,12) %}"p[{{p}}].b[3].pco2={{colorcode}}"{% if not loop.last %},{% endif %}{%- endfor -%}{%- endif -%}]
-          # - delay: "00:00:03"
           - service: mqtt.publish # apply selected background color to page select buttons
             data:
               topic: "{{jsoncommandtopic}}"
@@ -545,7 +528,6 @@ action:
                 {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].bco={{colorcode}}"{%- else -%}"p[{{p}}].b[2].bco2={{colorcode}}"{%- endif -%},{%- endfor -%}
                 {%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].bco={{colorcode}}"{%- else -%}"p[{{p}}].b[3].bco2={{colorcode}}"{%- endif -%}{% if not loop.last %},{% endif %}{%- endfor -%}
                 {% else %}{%- for p in range(1,12) %}"p[{{p}}].b[3].bco2={{colorcode}}"{% if not loop.last %},{% endif %}{%- endfor -%}{%- endif -%}]
-          # - delay: "00:00:03"
           - service: mqtt.publish # apply unselected foreground color to page select buttons
             data:
               topic: "{{jsoncommandtopic}}"
@@ -560,7 +542,6 @@ action:
                 {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].pco2={{colorcode}}"{%- else -%}"p[{{p}}].b[2].pco={{colorcode}}"{%- endif -%},{%- endfor -%}
                 {%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].pco2={{colorcode}}"{%- else -%}"p[{{p}}].b[3].pco={{colorcode}}"{%- endif -%}{% if not loop.last %},{% endif %}{%- endfor -%}
                 {% else %}{%- for p in range(1,12) %}"p[{{p}}].b[3].pco={{colorcode}}"{% if not loop.last %},{% endif %}{%- endfor -%}{%- endif -%}]
-          # - delay: "00:00:03"
           - service: mqtt.publish # apply unselected background color to page select buttons
             data:
               topic: "{{jsoncommandtopic}}"
@@ -575,7 +556,6 @@ action:
                 {%- for p in range(1,12) %}{%- if p == page2page|int %}"p[{{p}}].b[2].bco2={{colorcode}}"{%- else -%}"p[{{p}}].b[2].bco={{colorcode}}"{%- endif -%},{%- endfor -%}
                 {%- if not page_scroll -%}{%- for p in range(1,12) %}{%- if p == page3page|int %}"p[{{p}}].b[3].bco2={{colorcode}}"{%- else -%}"p[{{p}}].b[3].bco={{colorcode}}"{%- endif -%}{% if not loop.last %},{% endif %}{%- endfor -%}
                 {% else %}{%- for p in range(1,12) %}"p[{{p}}].b[3].bco={{colorcode}}"{% if not loop.last %},{% endif %}{%- endfor -%}{%- endif -%}]
-          # - delay: "00:00:03"
 
           - service: mqtt.publish # restore active page
             data:

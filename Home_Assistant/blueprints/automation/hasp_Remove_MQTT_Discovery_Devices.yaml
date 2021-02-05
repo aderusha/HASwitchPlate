@@ -132,3 +132,8 @@ action:
       topic: "hasp/{{haspname}}/light/unselectedbackgroundcolor/rgb"
       payload: ""
       retain: true
+  - service: mqtt.publish
+    data:
+      topic: "hasp/{{haspname}}/light/alwayson"
+      payload: ""
+      retain: true

@@ -30,7 +30,7 @@ blueprint:
         number:
           min: 0
           max: 65535
-          mode: box
+          mode: slider
     wakepage:
       name: "Wake-up page"
       description: "Select a HASP page to be shown when the device wakes from sleep.  Set to -1 to disable this feature and HASP will wake to the screen shown when it went to sleep."
@@ -39,7 +39,7 @@ blueprint:
         number:
           min: -1
           max: 11
-          mode: box
+          mode: slider
     refresh:
       name: "Force refresh on wake"
       description: "Force a full refresh when waking from sleep.  This will update all screens which might have missed updates when asleep.  The screen may flicker a bit while this happens."

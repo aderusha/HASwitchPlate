@@ -91,7 +91,7 @@ blueprint:
         number:
           min: 1
           max: 11
-          mode: box
+          mode: slider
     haspbutton:
       name: "HASP Button"
       description: "Select the HASP button (4-15) for the state display. Refer to the HASP Page and Button reference above."
@@ -100,20 +100,20 @@ blueprint:
         number:
           min: 4
           max: 15
-          mode: box
+          mode: slider
     selected_entity:
       name: "Select an entity to display state"
       selector:
         entity:
     prefix:
       name: "State display prefix"
-      description: 'Prefix for state display, enter "none" for no prefix'
+      description: 'Prefix for state display, leave blank for no prefix'
       default: "none"
       selector:
         text:
     suffix:
       name: "State display suffix"
-      description: 'Suffix for state display, enter "none" for no suffix'
+      description: 'Suffix for state display, leave blank for no suffix'
       default: "none"
       selector:
         text:
@@ -125,7 +125,7 @@ blueprint:
         number:
           min: 0
           max: 10
-          mode: box
+          mode: slider
     xcen:
       name: "Text horizontal alignment"
       description: "Horizontal text alignment: 0=Left 1=Center 2=Right"
@@ -134,7 +134,7 @@ blueprint:
         number:
           min: 0
           max: 2
-          mode: box
+          mode: slider
     ycen:
       name: "Text vertical alignment"
       description: "Vertical text alignment: 0=Top 1=Center 2=Bottom"
@@ -143,7 +143,7 @@ blueprint:
         number:
           min: 0
           max: 2
-          mode: box
+          mode: slider
     wrap:
       name: "Text wrap"
       description: "Enable line-wrapping text if too long to fit in the button."
@@ -185,27 +185,31 @@ variables:
   unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
   selectedfg: >-
     {%- set colorsource="light." ~ haspname ~ "_selected_foreground_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   selectedbg: >-
     {%- set colorsource="light." ~ haspname ~ "_selected_background_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   unselectedfg: >-
     {%- set colorsource="light." ~ haspname ~ "_unselected_foreground_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   unselectedbg: >-
     {%- set colorsource="light." ~ haspname ~ "_unselected_background_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
 
 trigger:

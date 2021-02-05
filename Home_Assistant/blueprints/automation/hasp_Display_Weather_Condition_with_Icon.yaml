@@ -38,7 +38,7 @@ blueprint:
         number:
           min: 1
           max: 3
-          mode: box
+          mode: slider
     haspbutton:
       name: "HASP Button"
       description: "Select the HASP button (4-7) for the temperature.  Refer to the object map in the HASP documentation."
@@ -47,7 +47,7 @@ blueprint:
         number:
           min: 4
           max: 7
-          mode: box
+          mode: slider
     weather_provider:
       name: "Weather provider"
       description: "Select the weather provider to obtain the temperature"
@@ -85,27 +85,31 @@ variables:
   unselectedbackgroundcolortopic: '{{ "hasp/" ~ haspname ~ "/light/unselectedbackgroundcolor/rgb" }}'
   selectedfg: >-
     {%- set colorsource="light." ~ haspname ~ "_selected_foreground_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   selectedbg: >-
     {%- set colorsource="light." ~ haspname ~ "_selected_background_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   unselectedfg: >-
     {%- set colorsource="light." ~ haspname ~ "_unselected_foreground_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   unselectedbg: >-
     {%- set colorsource="light." ~ haspname ~ "_unselected_background_color" -%}
-    {%- set red=(state_attr(colorsource, "rgb_color")[0] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set green=(state_attr(colorsource, "rgb_color")[1] * (state_attr(colorsource, "brightness") / 255))|int -%}
-    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * (state_attr(colorsource, "brightness") / 255))|int -%}
+    {%- set brightness = state_attr(colorsource, "brightness")|int / 255 -%}
+    {%- set red=(state_attr(colorsource, "rgb_color")[0] * brightness)|int -%}
+    {%- set green=(state_attr(colorsource, "rgb_color")[1] * brightness)|int -%}
+    {%- set blue=(state_attr(colorsource, "rgb_color")[2] * brightness)|int -%}
     {{ (red|bitwise_and(248)*256) + (green|bitwise_and(252)*8) + (blue|bitwise_and(248)/8)|int }}
   textcolor: "{%- if colortemp == true -%}{{selectedfg}}{% else %}{{selectedfg}}{% endif %}"
 
