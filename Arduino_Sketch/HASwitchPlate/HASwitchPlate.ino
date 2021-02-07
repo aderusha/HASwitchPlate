@@ -176,8 +176,6 @@ void setup()
   debugPrintln(String(F("SYSTEM: heapFree: ")) + String(ESP.getFreeHeap()) + String(F(" heapMaxFreeBlockSize: ")) + String(ESP.getMaxFreeBlockSize()));
   debugPrint(String(F("================================================================================\n\n")));
 
-  WiFi.mode(WIFI_STA); // Get the radio starting up in station mode
-
   configRead(); // Check filesystem for a saved config.json
 
   pinMode(nextionResetPin, OUTPUT);    // Take control over the power switch for the LCD
@@ -199,7 +197,7 @@ void setup()
     }
   }
 
-  espWifiSetup(); // Start up networking
+  espWifiConnect(); // Start up networking
 
   if ((configPassword[0] != '\0') && (configUser[0] != '\0'))
   { // Start the webserver with our assigned password if it's been configured...
@@ -1688,22 +1686,52 @@ void nextionReset()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-void espWifiSetup()
+void espWifiConnect()
 { // Connect to WiFi
   nextionSendCmd("page 0");
   nextionSetAttr("p[0].b[1].font", "6");
-  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connecting...\\r " + String(WiFi.SSID()) + "\"");
 
   WiFi.macAddress(espMac);            // Read our MAC address and save it to espMac
   WiFi.hostname(haspNode);            // Assign our hostname before connecting to WiFi
   WiFi.setAutoReconnect(true);        // Tell WiFi to autoreconnect if connection has dropped
   WiFi.setSleepMode(WIFI_NONE_SLEEP); // Disable WiFi sleep modes to prevent occasional disconnects
+  WiFi.mode(WIFI_STA);
 
   if (String(wifiSSID) == "")
-  { // If the sketch has not defined a static wifiSSID use WiFiManager to collect required information from the user.
+  { // If the sketch has not hard-coded wifiSSID, attempt to use saved creds or use WiFiManager to collect required information from the user.
+
+    // First, check if we have saved wifi creds and try to connect manually.
+    if (WiFi.SSID() != "")
+    {
+      unsigned long connectTimer = millis() + 5000;
+      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connecting...\\r " + String(WiFi.SSID()) + "\"");
+      debugPrintln(String(F("WIFI: Connecting to previously-saved SSID: ")) + String(WiFi.SSID()));
+      WiFi.begin(WiFi.SSID(), WiFi.psk());
+      while ((WiFi.status() != WL_CONNECTED) && (millis() < connectTimer))
+      {
+        yield();
+      }
+
+      unsigned int connectCounter = 0;
+      unsigned int connectRetries = 4;
+      unsigned int connectTime = 10000;
+      while ((WiFi.status() != WL_CONNECTED) && (connectCounter <= connectRetries))
+      {
+        connectCounter++;
+        debugPrintln(String(F("WIFI: Connect failed, retry attempt ")) + String(connectCounter));
+        WiFi.mode(WIFI_OFF); // Force the radio off, and then
+        delay(100);
+        WiFi.mode(WIFI_STA); // toggle it back on again
+        connectTimer = millis() + connectTime;
+        WiFi.begin(WiFi.SSID(), WiFi.psk());
+        while ((WiFi.status() != WL_CONNECTED) && (millis() < connectTimer))
+        {
+          yield();
+        }
+      }
+    }
 
     // id/name, placeholder/prompt, default value, length, extra tags
-
     WiFiManagerParameter custom_haspNodeHeader("<br/><br/><b>HASP Node Name</b>");
     WiFiManagerParameter custom_haspNode("haspNode", "HASP Node (required. lowercase letters, numbers, and _ only)", haspNode, 15, " maxlength=15 required pattern='[a-z0-9_]*'");
     WiFiManagerParameter custom_groupName("groupName", "Group Name (required)", groupName, 15, " maxlength=15 required");
@@ -2577,7 +2605,7 @@ void webHandleSaveConfig()
     if (shouldSaveWifi)
     {
       debugPrintln(String(F("CONFIG: Attempting connection to SSID: ")) + webServer.arg("wifiSSID"));
-      espWifiSetup();
+      espWifiConnect();
     }
     espReset();
   }
