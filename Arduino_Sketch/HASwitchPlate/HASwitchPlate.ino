@@ -6,7 +6,7 @@
 //        Home Automation Switch Plate
 // https://github.com/aderusha/HASwitchPlate
 //
-// Copyright (c) 2020 Allen Derusha allen@derusha.org
+// Copyright (c) 2021 Allen Derusha allen@derusha.org
 //
 // MIT License
 //
@@ -129,7 +129,7 @@ String mqttMotionStateTopic;                          // MQTT topic for outgoing
 String nextionModel;                                  // Record reported model number of LCD panel
 const byte nextionSuffix[] = {0xFF, 0xFF, 0xFF};      // Standard suffix for Nextion commands
 uint32_t tftFileSize = 0;                             // Filesize for TFT firmware upload
-uint8_t nextionResetPin = D6;                         // Pin for Nextion power rail switch (GPIO12/D6)
+const uint8_t nextionResetPin = D6;                   // Pin for Nextion power rail switch (GPIO12/D6)
 const unsigned long nextionSpeeds[] = {2400,
                                        4800,
                                        9600,
@@ -176,10 +176,10 @@ void setup()
   debugPrintln(String(F("SYSTEM: heapFree: ")) + String(ESP.getFreeHeap()) + String(F(" heapMaxFreeBlockSize: ")) + String(ESP.getMaxFreeBlockSize()));
   debugPrint(String(F("================================================================================\n\n")));
 
-  configRead(); // Check filesystem for a saved config.json
-
   pinMode(nextionResetPin, OUTPUT);    // Take control over the power switch for the LCD
   digitalWrite(nextionResetPin, HIGH); // Power on the LCD
+
+  configRead(); // Check filesystem for a saved config.json
 
   Serial.begin(atoi(nextionBaud));  // Serial - LCD RX (after swap), debug TX
   Serial1.begin(atoi(nextionBaud)); // Serial1 - LCD TX, no RX
@@ -1731,86 +1731,90 @@ void espWifiConnect()
       }
     }
 
-    // id/name, placeholder/prompt, default value, length, extra tags
-    WiFiManagerParameter custom_haspNodeHeader("<br/><br/><b>HASP Node Name</b>");
-    WiFiManagerParameter custom_haspNode("haspNode", "HASP Node (required. lowercase letters, numbers, and _ only)", haspNode, 15, " maxlength=15 required pattern='[a-z0-9_]*'");
-    WiFiManagerParameter custom_groupName("groupName", "Group Name (required)", groupName, 15, " maxlength=15 required");
-    WiFiManagerParameter custom_mqttHeader("<br/><br/><b>MQTT Broker</b>");
-    WiFiManagerParameter custom_mqttServer("mqttServer", "MQTT Server", mqttServer, 63, " maxlength=63");
-    WiFiManagerParameter custom_mqttPort("mqttPort", "MQTT Port", mqttPort, 5, " maxlength=5 type='number'");
-    WiFiManagerParameter custom_mqttUser("mqttUser", "MQTT User (optional)", mqttUser, 127, " maxlength=127");
-    WiFiManagerParameter custom_mqttPassword("mqttPassword", "MQTT Password (optional)", mqttPassword, 127, " maxlength=127 type='password'");
-    WiFiManagerParameter custom_mqttTlsLabel("MQTT TLS enabled:");
-    String mqttTlsEnabled_value = "F";
-    if (mqttTlsEnabled)
-    {
-      mqttTlsEnabled_value = "T";
-    }
-    String mqttTlsEnabled_checked = "type=\"checkbox\"";
-    if (mqttTlsEnabled)
-    {
-      mqttTlsEnabled_checked = "type=\"checkbox\" checked=\"true\"";
-    }
-    WiFiManagerParameter custom_mqttTlsEnabled("mqttTlsEnabled", "MQTT TLS enabled:", mqttTlsEnabled_value.c_str(), 2, mqttTlsEnabled_checked.c_str());
-    WiFiManagerParameter custom_mqttFingerprint("mqttFingerprint", "MQTT TLS Fingerprint (optional)", mqttFingerprint, 60, " min length=59 maxlength=59 type='number'");
-    WiFiManagerParameter custom_configHeader("<br/><br/><b>Admin access</b>");
-    WiFiManagerParameter custom_configUser("configUser", "Config User", configUser, 15, " maxlength=31'");
-    WiFiManagerParameter custom_configPassword("configPassword", "Config Password", configPassword, 31, " maxlength=31 type='password'");
+    if (WiFi.status() != WL_CONNECTED)
+    { // We gave it a shot, still couldn't connect, so let WiFiManager run to make one last
+      // connection attempt and then flip to AP mode to collect credentials from the user.
 
-    WiFiManager wifiManager;
-    wifiManager.setSaveConfigCallback(configSaveCallback); // set config save notify callback
-    wifiManager.setCustomHeadElement(HASP_STYLE);          // add custom style
-    wifiManager.addParameter(&custom_haspNodeHeader);
-    wifiManager.addParameter(&custom_haspNode);
-    wifiManager.addParameter(&custom_groupName);
-    wifiManager.addParameter(&custom_mqttHeader);
-    wifiManager.addParameter(&custom_mqttServer);
-    wifiManager.addParameter(&custom_mqttPort);
-    wifiManager.addParameter(&custom_mqttUser);
-    wifiManager.addParameter(&custom_mqttPassword);
-    wifiManager.addParameter(&custom_mqttTlsLabel);
-    wifiManager.addParameter(&custom_mqttTlsEnabled);
-    wifiManager.addParameter(&custom_mqttFingerprint);
-    wifiManager.addParameter(&custom_configHeader);
-    wifiManager.addParameter(&custom_configUser);
-    wifiManager.addParameter(&custom_configPassword);
+      WiFiManagerParameter custom_haspNodeHeader("<br/><br/><b>HASP Node Name</b>");
+      WiFiManagerParameter custom_haspNode("haspNode", "HASP Node (required. lowercase letters, numbers, and _ only)", haspNode, 15, " maxlength=15 required pattern='[a-z0-9_]*'");
+      WiFiManagerParameter custom_groupName("groupName", "Group Name (required)", groupName, 15, " maxlength=15 required");
+      WiFiManagerParameter custom_mqttHeader("<br/><br/><b>MQTT Broker</b>");
+      WiFiManagerParameter custom_mqttServer("mqttServer", "MQTT Server", mqttServer, 63, " maxlength=63");
+      WiFiManagerParameter custom_mqttPort("mqttPort", "MQTT Port", mqttPort, 5, " maxlength=5 type='number'");
+      WiFiManagerParameter custom_mqttUser("mqttUser", "MQTT User (optional)", mqttUser, 127, " maxlength=127");
+      WiFiManagerParameter custom_mqttPassword("mqttPassword", "MQTT Password (optional)", mqttPassword, 127, " maxlength=127 type='password'");
+      WiFiManagerParameter custom_mqttTlsLabel("MQTT TLS enabled:");
+      String mqttTlsEnabled_value = "F";
+      if (mqttTlsEnabled)
+      {
+        mqttTlsEnabled_value = "T";
+      }
+      String mqttTlsEnabled_checked = "type=\"checkbox\"";
+      if (mqttTlsEnabled)
+      {
+        mqttTlsEnabled_checked = "type=\"checkbox\" checked=\"true\"";
+      }
+      WiFiManagerParameter custom_mqttTlsEnabled("mqttTlsEnabled", "MQTT TLS enabled:", mqttTlsEnabled_value.c_str(), 2, mqttTlsEnabled_checked.c_str());
+      WiFiManagerParameter custom_mqttFingerprint("mqttFingerprint", "MQTT TLS Fingerprint (optional)", mqttFingerprint, 60, " min length=59 maxlength=59 type='number'");
+      WiFiManagerParameter custom_configHeader("<br/><br/><b>Admin access</b>");
+      WiFiManagerParameter custom_configUser("configUser", "Config User", configUser, 15, " maxlength=31'");
+      WiFiManagerParameter custom_configPassword("configPassword", "Config Password", configPassword, 31, " maxlength=31 type='password'");
 
-    // Timeout config portal after connectTimeout seconds, useful if configured wifi network was temporarily unavailable
-    wifiManager.setTimeout(connectTimeout);
+      WiFiManager wifiManager;
+      wifiManager.setSaveConfigCallback(configSaveCallback); // set config save notify callback
+      wifiManager.setCustomHeadElement(HASP_STYLE);          // add custom style
+      wifiManager.addParameter(&custom_haspNodeHeader);
+      wifiManager.addParameter(&custom_haspNode);
+      wifiManager.addParameter(&custom_groupName);
+      wifiManager.addParameter(&custom_mqttHeader);
+      wifiManager.addParameter(&custom_mqttServer);
+      wifiManager.addParameter(&custom_mqttPort);
+      wifiManager.addParameter(&custom_mqttUser);
+      wifiManager.addParameter(&custom_mqttPassword);
+      wifiManager.addParameter(&custom_mqttTlsLabel);
+      wifiManager.addParameter(&custom_mqttTlsEnabled);
+      wifiManager.addParameter(&custom_mqttFingerprint);
+      wifiManager.addParameter(&custom_configHeader);
+      wifiManager.addParameter(&custom_configUser);
+      wifiManager.addParameter(&custom_configPassword);
 
-    wifiManager.setAPCallback(espWifiConfigCallback);
+      // Timeout config portal after connectTimeout seconds, useful if configured wifi network was temporarily unavailable
+      wifiManager.setTimeout(connectTimeout);
 
-    // Fetches SSID and pass from EEPROM and tries to connect
-    // If it does not connect it starts an access point with the specified name
-    // and goes into a blocking loop awaiting configuration.
-    if (!wifiManager.autoConnect(wifiConfigAP, wifiConfigPass))
-    { // Reset and try again
-      debugPrintln(F("WIFI: Failed to connect and hit timeout"));
-      espReset();
-    }
+      wifiManager.setAPCallback(espWifiConfigCallback);
 
-    // Read updated parameters
-    strcpy(mqttServer, custom_mqttServer.getValue());
-    strcpy(mqttPort, custom_mqttPort.getValue());
-    strcpy(mqttUser, custom_mqttUser.getValue());
-    strcpy(mqttPassword, custom_mqttPassword.getValue());
-    if (strcmp(custom_mqttTlsEnabled.getValue(), "T") == 0)
-    {
-      mqttTlsEnabled = true;
-    }
-    else
-    {
-      mqttTlsEnabled = false;
-    }
-    strcpy(mqttFingerprint, custom_mqttFingerprint.getValue());
-    strcpy(haspNode, custom_haspNode.getValue());
-    strcpy(groupName, custom_groupName.getValue());
-    strcpy(configUser, custom_configUser.getValue());
-    strcpy(configPassword, custom_configPassword.getValue());
+      // Fetches SSID and pass from EEPROM and tries to connect
+      // If it does not connect it starts an access point with the specified name
+      // and goes into a blocking loop awaiting configuration.
+      if (!wifiManager.autoConnect(wifiConfigAP, wifiConfigPass))
+      { // Reset and try again
+        debugPrintln(F("WIFI: Failed to connect and hit timeout"));
+        espReset();
+      }
 
-    if (shouldSaveConfig)
-    { // Save the custom parameters to FS
-      configSave();
+      // Read updated parameters
+      strcpy(mqttServer, custom_mqttServer.getValue());
+      strcpy(mqttPort, custom_mqttPort.getValue());
+      strcpy(mqttUser, custom_mqttUser.getValue());
+      strcpy(mqttPassword, custom_mqttPassword.getValue());
+      if (strcmp(custom_mqttTlsEnabled.getValue(), "T") == 0)
+      {
+        mqttTlsEnabled = true;
+      }
+      else
+      {
+        mqttTlsEnabled = false;
+      }
+      strcpy(mqttFingerprint, custom_mqttFingerprint.getValue());
+      strcpy(haspNode, custom_haspNode.getValue());
+      strcpy(groupName, custom_groupName.getValue());
+      strcpy(configUser, custom_configUser.getValue());
+      strcpy(configPassword, custom_configPassword.getValue());
+
+      if (shouldSaveConfig)
+      { // Save the custom parameters to FS
+        configSave();
+      }
     }
   }
   else
@@ -1986,8 +1990,8 @@ void configRead()
       File configFile = SPIFFS.open("/config.json", "r");
       if (configFile)
       {
-        DynamicJsonDocument configJson(768);
-        DeserializationError jsonError = deserializeJson(configJson, configFile);
+        DynamicJsonDocument jsonConfigValues(1024);
+        DeserializationError jsonError = deserializeJson(jsonConfigValues, configFile);
 
         if (jsonError)
         { // Couldn't parse the saved config
@@ -1995,53 +1999,53 @@ void configRead()
         }
         else
         {
-          if (!configJson["mqttServer"].isNull())
+          if (!jsonConfigValues["mqttServer"].isNull())
           {
-            strcpy(mqttServer, configJson["mqttServer"]);
+            strcpy(mqttServer, jsonConfigValues["mqttServer"]);
           }
-          if (!configJson["mqttPort"].isNull())
+          if (!jsonConfigValues["mqttPort"].isNull())
           {
-            strcpy(mqttPort, configJson["mqttPort"]);
+            strcpy(mqttPort, jsonConfigValues["mqttPort"]);
           }
-          if (!configJson["mqttUser"].isNull())
+          if (!jsonConfigValues["mqttUser"].isNull())
           {
-            strcpy(mqttUser, configJson["mqttUser"]);
+            strcpy(mqttUser, jsonConfigValues["mqttUser"]);
           }
-          if (!configJson["mqttPassword"].isNull())
+          if (!jsonConfigValues["mqttPassword"].isNull())
           {
-            strcpy(mqttPassword, configJson["mqttPassword"]);
+            strcpy(mqttPassword, jsonConfigValues["mqttPassword"]);
           }
-          if (!configJson["mqttFingerprint"].isNull())
+          if (!jsonConfigValues["mqttFingerprint"].isNull())
           {
-            strcpy(mqttFingerprint, configJson["mqttFingerprint"]);
+            strcpy(mqttFingerprint, jsonConfigValues["mqttFingerprint"]);
           }
-          if (!configJson["haspNode"].isNull())
+          if (!jsonConfigValues["haspNode"].isNull())
           {
-            strcpy(haspNode, configJson["haspNode"]);
+            strcpy(haspNode, jsonConfigValues["haspNode"]);
           }
-          if (!configJson["groupName"].isNull())
+          if (!jsonConfigValues["groupName"].isNull())
           {
-            strcpy(groupName, configJson["groupName"]);
+            strcpy(groupName, jsonConfigValues["groupName"]);
           }
-          if (!configJson["configUser"].isNull())
+          if (!jsonConfigValues["configUser"].isNull())
           {
-            strcpy(configUser, configJson["configUser"]);
+            strcpy(configUser, jsonConfigValues["configUser"]);
           }
-          if (!configJson["configPassword"].isNull())
+          if (!jsonConfigValues["configPassword"].isNull())
           {
-            strcpy(configPassword, configJson["configPassword"]);
+            strcpy(configPassword, jsonConfigValues["configPassword"]);
           }
-          if (!configJson["nextionBaud"].isNull())
+          if (!jsonConfigValues["nextionBaud"].isNull())
           {
-            strcpy(nextionBaud, configJson["nextionBaud"]);
+            strcpy(nextionBaud, jsonConfigValues["nextionBaud"]);
           }
-          if (!configJson["motionPinConfig"].isNull())
+          if (!jsonConfigValues["motionPinConfig"].isNull())
           {
-            strcpy(motionPinConfig, configJson["motionPinConfig"]);
+            strcpy(motionPinConfig, jsonConfigValues["motionPinConfig"]);
           }
-          if (!configJson["mqttTlsEnabled"].isNull())
+          if (!jsonConfigValues["mqttTlsEnabled"].isNull())
           {
-            if (configJson["mqttTlsEnabled"])
+            if (jsonConfigValues["mqttTlsEnabled"])
             {
               mqttTlsEnabled = true;
             }
@@ -2050,9 +2054,9 @@ void configRead()
               mqttTlsEnabled = false;
             }
           }
-          if (!configJson["debugSerialEnabled"].isNull())
+          if (!jsonConfigValues["debugSerialEnabled"].isNull())
           {
-            if (configJson["debugSerialEnabled"])
+            if (jsonConfigValues["debugSerialEnabled"])
             {
               debugSerialEnabled = true;
             }
@@ -2061,9 +2065,9 @@ void configRead()
               debugSerialEnabled = false;
             }
           }
-          if (!configJson["debugTelnetEnabled"].isNull())
+          if (!jsonConfigValues["debugTelnetEnabled"].isNull())
           {
-            if (configJson["debugTelnetEnabled"])
+            if (jsonConfigValues["debugTelnetEnabled"])
             {
               debugTelnetEnabled = true;
             }
@@ -2072,9 +2076,9 @@ void configRead()
               debugTelnetEnabled = false;
             }
           }
-          if (!configJson["mdnsEnabled"].isNull())
+          if (!jsonConfigValues["mdnsEnabled"].isNull())
           {
-            if (configJson["mdnsEnabled"])
+            if (jsonConfigValues["mdnsEnabled"])
             {
               mdnsEnabled = true;
             }
@@ -2083,9 +2087,9 @@ void configRead()
               mdnsEnabled = false;
             }
           }
-          if (!configJson["beepEnabled"].isNull())
+          if (!jsonConfigValues["beepEnabled"].isNull())
           {
-            if (configJson["beepEnabled"])
+            if (jsonConfigValues["beepEnabled"])
             {
               beepEnabled = true;
             }
@@ -2094,9 +2098,9 @@ void configRead()
               beepEnabled = false;
             }
           }
-          String configJsonStr;
-          serializeJson(configJson, configJsonStr);
-          debugPrintln(String(F("SPIFFS: read ")) + String(configFile.size()) + String(F(" bytes and parsed json:")) + configJsonStr);
+          String jsonConfigValuesStr;
+          serializeJson(jsonConfigValues, jsonConfigValuesStr);
+          debugPrintln(String(F("SPIFFS: read ")) + String(configFile.size()) + String(F(" bytes and parsed json:")) + jsonConfigValuesStr);
         }
       }
       else
@@ -2127,7 +2131,7 @@ void configSave()
 { // Save the custom parameters to config.json
   nextionSetAttr("p[0].b[1].txt", "\"Saving\\rconfig\"");
   debugPrintln(F("SPIFFS: Saving config"));
-  DynamicJsonDocument jsonConfigValues(768);
+  DynamicJsonDocument jsonConfigValues(1024);
 
   jsonConfigValues["mqttServer"] = mqttServer;
   jsonConfigValues["mqttPort"] = mqttPort;
