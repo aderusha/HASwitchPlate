@@ -1688,14 +1688,18 @@ void nextionReset()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 void espWifiConnect()
 { // Connect to WiFi
-  nextionSendCmd("page 0");
+
   nextionSetAttr("p[0].b[1].font", "6");
+  if (lcdVersion < 1 || lcdVersion > 2)
+  {
+    nextionSendCmd("page 0");
+  }
 
   WiFi.macAddress(espMac);            // Read our MAC address and save it to espMac
   WiFi.hostname(haspNode);            // Assign our hostname before connecting to WiFi
   WiFi.setAutoReconnect(true);        // Tell WiFi to autoreconnect if connection has dropped
   WiFi.setSleepMode(WIFI_NONE_SLEEP); // Disable WiFi sleep modes to prevent occasional disconnects
-  WiFi.mode(WIFI_STA);
+  WiFi.mode(WIFI_STA); // Set the radio to Station
 
   if (String(wifiSSID) == "")
   { // If the sketch has not hard-coded wifiSSID, attempt to use saved creds or use WiFiManager to collect required information from the user.
@@ -1703,8 +1707,8 @@ void espWifiConnect()
     // First, check if we have saved wifi creds and try to connect manually.
     if (WiFi.SSID() != "")
     {
-      unsigned long connectTimer = millis() + 5000;
       nextionSetAttr("p[0].b[1].txt", "\"WiFi Connecting...\\r " + String(WiFi.SSID()) + "\"");
+      unsigned long connectTimer = millis() + 5000;
       debugPrintln(String(F("WIFI: Connecting to previously-saved SSID: ")) + String(WiFi.SSID()));
       WiFi.begin(WiFi.SSID(), WiFi.psk());
       while ((WiFi.status() != WL_CONNECTED) && (millis() < connectTimer))
@@ -1868,7 +1872,10 @@ void espWifiReconnect()
 void espWifiConfigCallback(WiFiManager *myWiFiManager)
 { // Notify the user that we're entering config mode
   debugPrintln(F("WIFI: Failed to connect to assigned AP, entering config mode"));
-  nextionSendCmd("page 0");
+  if (lcdVersion < 1 || lcdVersion > 2)
+  {
+    nextionSendCmd("page 0");
+  }
   nextionSetAttr("p[0].b[1].font", "6");
   nextionSetAttr("p[0].b[1].txt", "\" HASP WiFi Setup\\r AP: " + String(wifiConfigAP) + "\\rPassword: " + String(wifiConfigPass) + "\\r\\r\\r\\r\\r\\r\\r  http://192.168.4.1\"");
   nextionSendCmd("vis 3,1");
