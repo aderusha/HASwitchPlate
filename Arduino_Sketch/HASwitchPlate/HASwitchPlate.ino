@@ -316,6 +316,10 @@ void mqttConnect()
                                        // trigger any automations, but skip that if we reconnect while
                                        // still running the sketch
 
+  static uint8_t mqttReconnectCount = 0;
+  unsigned long mqttConnectTimer = 0;
+  const unsigned long mqttConnectTimeout = 5000;
+
   // Check to see if we have a broker configured and notify the user if not
   if (strcmp(mqttServer, "") == 0)
   {
@@ -376,33 +380,42 @@ void mqttConnect()
   const String mqttLightSubscription = mqttLightCommandTopic + "/#";
   const String mqttLightBrightSubscription = mqttLightBrightCommandTopic + "/#";
 
-  // Loop until we're reconnected to MQTT
+  // Generate an MQTT client ID as haspNode + our MAC address
+  mqttClientId = String(haspNode) + "-" + String(espMac[0], HEX) + String(espMac[1], HEX) + String(espMac[2], HEX) + String(espMac[3], HEX) + String(espMac[4], HEX) + String(espMac[5], HEX);
+  nextionSendCmd("page 0");
+  nextionSetAttr("p[0].b[1].font", "6");
+  nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connecting:\\r " + String(mqttServer) + "\"");
+  if (mqttTlsEnabled)
+  {
+    debugPrintln(String(F("MQTT: Attempting connection to broker ")) + String(mqttServer) + String(F(" on port ")) + String(mqttPort) + String(F(" with TLS enabled as clientID ")) + mqttClientId);
+  }
+  else
+  {
+    debugPrintln(String(F("MQTT: Attempting connection to broker ")) + String(mqttServer) + String(F(" on port ")) + String(mqttPort) + String(F(" with TLS disabled as clientID ")) + mqttClientId);
+  }
+
+  // Set keepAlive, cleanSession, timeout
+  mqttClient.setOptions(30, true, 5000);
+
+  // declare LWT
+  mqttClient.setWill(mqttStatusTopic.c_str(), "OFF", true, 1);
+
   while (!mqttClient.connected())
   {
-    // Create a reconnect counter
-    static uint8_t mqttReconnectCount = 0;
-
-    // Generate an MQTT client ID as haspNode + our MAC address
-    mqttClientId = String(haspNode) + "-" + String(espMac[0], HEX) + String(espMac[1], HEX) + String(espMac[2], HEX) + String(espMac[3], HEX) + String(espMac[4], HEX) + String(espMac[5], HEX);
-    nextionSendCmd("page 0");
-    nextionSetAttr("p[0].b[1].font", "6");
-    nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connecting:\\r " + String(mqttServer) + "\"");
-    if (mqttTlsEnabled)
+    mqttConnectTimer = millis();
+    // Loop until we're connected to MQTT
+    while (!mqttClient.connect(mqttClientId.c_str(), mqttUser, mqttPassword, false) && (millis() < (mqttConnectTimer + mqttConnectTimeout)))
     {
-      debugPrintln(String(F("MQTT: Attempting connection to broker ")) + String(mqttServer) + String(F(" on port ")) + String(mqttPort) + String(F(" with TLS enabled as clientID ")) + mqttClientId);
-    }
-    else
-    {
-      debugPrintln(String(F("MQTT: Attempting connection to broker ")) + String(mqttServer) + String(F(" on port ")) + String(mqttPort) + String(F(" with TLS disabled as clientID ")) + mqttClientId);
+      yield();
+      nextionHandleInput();     // Nextion serial communications loop
+      ArduinoOTA.handle();      // Arduino OTA loop
+      webServer.handleClient(); // webServer loop
+      telnetHandleClient();     // telnet client loop
+      motionHandle();           // motion sensor loop
+      beepHandle();             // beep feedback loop
     }
 
-    // Set keepAlive, cleanSession, timeout
-    mqttClient.setOptions(30, true, 5000);
-
-    // declare LWT
-    mqttClient.setWill(mqttStatusTopic.c_str(), "OFF", true, 1);
-
-    if (mqttClient.connect(mqttClientId.c_str(), mqttUser, mqttPassword, false))
+    if (mqttClient.connected())
     { // Attempt to connect to broker, setting last will and testament
       // Update panel with MQTT status
       nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connected:\\r " + String(mqttServer) + "\"");
@@ -459,24 +472,13 @@ void mqttConnect()
     else
     { // Retry until we give up and restart after connectTimeout seconds
       mqttReconnectCount++;
-      if (mqttReconnectCount > ((connectTimeout / 10) - 1))
+      if (mqttReconnectCount * mqttConnectTimeout > (connectTimeout * 1000 ))
       {
-        debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Restarting device.")));
+        debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc: ")) + String(mqttClient.returnCode()) + String(F(" and error: ")) + String(mqttClient.lastError()) + String(F(". Restarting device.")));
         espReset();
       }
-      debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(".  Trying again in 5 seconds.")));
+      debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(" and error: ")) + String(mqttClient.lastError()) + String(F(". Trying again in 5 seconds.")));
       nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connect to:\\r " + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\r\\rRetry in 5 sec\"");
-      unsigned long mqttReconnectTimer = millis(); // record current time for our timeout
-      while ((millis() - mqttReconnectTimer) < 5000)
-      { // Handle HTTP and OTA while we're waiting 5sec for MQTT to reconnect
-        yield();
-        nextionHandleInput();     // Nextion serial communications loop
-        ArduinoOTA.handle();      // Arduino OTA loop
-        webServer.handleClient(); // webServer loop
-        telnetHandleClient();     // telnet client loop
-        motionHandle();           // motion sensor loop
-        beepHandle();             // beep feedback loop
-      }
     }
   }
 }
@@ -1699,7 +1701,7 @@ void espWifiConnect()
   WiFi.hostname(haspNode);            // Assign our hostname before connecting to WiFi
   WiFi.setAutoReconnect(true);        // Tell WiFi to autoreconnect if connection has dropped
   WiFi.setSleepMode(WIFI_NONE_SLEEP); // Disable WiFi sleep modes to prevent occasional disconnects
-  WiFi.mode(WIFI_STA); // Set the radio to Station
+  WiFi.mode(WIFI_STA);                // Set the radio to Station
 
   if (String(wifiSSID) == "")
   { // If the sketch has not hard-coded wifiSSID, attempt to use saved creds or use WiFiManager to collect required information from the user.
@@ -1739,15 +1741,15 @@ void espWifiConnect()
     { // We gave it a shot, still couldn't connect, so let WiFiManager run to make one last
       // connection attempt and then flip to AP mode to collect credentials from the user.
 
-      WiFiManagerParameter custom_haspNodeHeader("<br/><br/><b>HASP Node Name</b>");
-      WiFiManagerParameter custom_haspNode("haspNode", "HASP Node (required. lowercase letters, numbers, and _ only)", haspNode, 15, " maxlength=15 required pattern='[a-z0-9_]*'");
-      WiFiManagerParameter custom_groupName("groupName", "Group Name (required)", groupName, 15, " maxlength=15 required");
-      WiFiManagerParameter custom_mqttHeader("<br/><br/><b>MQTT Broker</b>");
-      WiFiManagerParameter custom_mqttServer("mqttServer", "MQTT Server", mqttServer, 63, " maxlength=63");
-      WiFiManagerParameter custom_mqttPort("mqttPort", "MQTT Port", mqttPort, 5, " maxlength=5 type='number'");
-      WiFiManagerParameter custom_mqttUser("mqttUser", "MQTT User (optional)", mqttUser, 127, " maxlength=127");
-      WiFiManagerParameter custom_mqttPassword("mqttPassword", "MQTT Password (optional)", mqttPassword, 127, " maxlength=127 type='password'");
-      WiFiManagerParameter custom_mqttTlsLabel("MQTT TLS enabled:");
+      WiFiManagerParameter custom_haspNodeHeader("<br/><br/><b>HASP Node</b>");
+      WiFiManagerParameter custom_haspNode("haspNode", "<br/>Node Name <small>(required: lowercase letters, numbers, and _ only)</small>", haspNode, 15, " maxlength=15 required pattern='[a-z0-9_]*'");
+      WiFiManagerParameter custom_groupName("groupName", "Group Name <small>(required)</small>", groupName, 15, " maxlength=15 required");
+      WiFiManagerParameter custom_mqttHeader("<br/><br/><b>MQTT</b>");
+      WiFiManagerParameter custom_mqttServer("mqttServer", "<br/>MQTT Broker <small>(required)</small>", mqttServer, 63, " maxlength=63");
+      WiFiManagerParameter custom_mqttPort("mqttPort", "MQTT Port <small>(required)</small>", mqttPort, 5, " maxlength=5 type='number'");
+      WiFiManagerParameter custom_mqttUser("mqttUser", "MQTT User <small>(optional)</small>", mqttUser, 127, " maxlength=127");
+      WiFiManagerParameter custom_mqttPassword("mqttPassword", "MQTT Password <small>(optional)</small>", mqttPassword, 127, " maxlength=127 type='password'");
+      // WiFiManagerParameter custom_mqttTlsLabel("MQTT TLS enabled:");
       String mqttTlsEnabled_value = "F";
       if (mqttTlsEnabled)
       {
@@ -1759,10 +1761,10 @@ void espWifiConnect()
         mqttTlsEnabled_checked = "type=\"checkbox\" checked=\"true\"";
       }
       WiFiManagerParameter custom_mqttTlsEnabled("mqttTlsEnabled", "MQTT TLS enabled:", mqttTlsEnabled_value.c_str(), 2, mqttTlsEnabled_checked.c_str());
-      WiFiManagerParameter custom_mqttFingerprint("mqttFingerprint", "MQTT TLS Fingerprint (optional)", mqttFingerprint, 60, " min length=59 maxlength=59 type='number'");
+      WiFiManagerParameter custom_mqttFingerprint("mqttFingerprint", "</br>MQTT TLS Fingerprint <small>(optional, enter as 01:23:AB:CD, etc)</small>", mqttFingerprint, 60, " min length=59 maxlength=59");
       WiFiManagerParameter custom_configHeader("<br/><br/><b>Admin access</b>");
-      WiFiManagerParameter custom_configUser("configUser", "Config User", configUser, 15, " maxlength=31'");
-      WiFiManagerParameter custom_configPassword("configPassword", "Config Password", configPassword, 31, " maxlength=31 type='password'");
+      WiFiManagerParameter custom_configUser("configUser", "<br/>Config User <small>(required)</small>", configUser, 15, " maxlength=31'");
+      WiFiManagerParameter custom_configPassword("configPassword", "Config Password <small>(optional)</small>", configPassword, 31, " maxlength=31 type='password'");
 
       WiFiManager wifiManager;
       wifiManager.setSaveConfigCallback(configSaveCallback); // set config save notify callback
@@ -1775,7 +1777,7 @@ void espWifiConnect()
       wifiManager.addParameter(&custom_mqttPort);
       wifiManager.addParameter(&custom_mqttUser);
       wifiManager.addParameter(&custom_mqttPassword);
-      wifiManager.addParameter(&custom_mqttTlsLabel);
+      // wifiManager.addParameter(&custom_mqttTlsLabel);
       wifiManager.addParameter(&custom_mqttTlsEnabled);
       wifiManager.addParameter(&custom_mqttFingerprint);
       wifiManager.addParameter(&custom_configHeader);
@@ -2408,8 +2410,10 @@ void webHandleRoot()
   }
   else
   {
-    webServer.sendContent(F("<font color='red'><b>Disconnected</b></font>, return code: "));
+    webServer.sendContent(F("<font color='red'><b>Disconnected</b></font><br/>return code: "));
     webServer.sendContent(String(mqttClient.returnCode()));
+    webServer.sendContent(F("<br/>last error: "));
+    webServer.sendContent(String(mqttClient.lastError()));
   }
   webServer.sendContent(F("<br/><b>MQTT ClientID: </b>"));
   if (mqttClientId != "")
