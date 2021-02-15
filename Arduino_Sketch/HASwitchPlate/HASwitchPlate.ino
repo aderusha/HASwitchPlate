@@ -59,6 +59,7 @@ char nextionBaud[7] = "115200";
 #include <MQTT.h>
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
+#include <ESP8266Ping.h>
 
 const float haspVersion = 0.41;                       // Current HASP software release version
 const uint16_t mqttMaxPacketSize = 2048;              // Size of buffer for incoming MQTT message
@@ -111,6 +112,8 @@ const unsigned long connectTimeout = 300;             // Timeout for WiFi and MQ
 const unsigned long reConnectTimeout = 60;            // Timeout for WiFi reconnection attempts in seconds
 byte espMac[6];                                       // Byte array to store our MAC address
 bool mqttTlsEnabled = false;                          // Enable MQTT client TLS connections
+bool mqttPingCheck = false;                           // MQTT broker ping check result
+bool mqttPortCheck = false;                           // MQTT broke port check result
 String mqttClientId;                                  // Auto-generated MQTT ClientID
 String mqttGetSubtopic;                               // MQTT subtopic for incoming commands requesting .val
 String mqttGetSubtopicJSON;                           // MQTT object buffer for JSON status when requesting .val
@@ -395,31 +398,25 @@ void mqttConnect()
   }
 
   // Set keepAlive, cleanSession, timeout
-  mqttClient.setOptions(30, true, 5000);
+  mqttClient.setOptions(30, true, mqttConnectTimeout);
 
   // declare LWT
   mqttClient.setWill(mqttStatusTopic.c_str(), "OFF", true, 1);
 
   while (!mqttClient.connected())
   {
-    mqttConnectTimer = millis();
     // Loop until we're connected to MQTT
-    while (!mqttClient.connect(mqttClientId.c_str(), mqttUser, mqttPassword, false) && (millis() < (mqttConnectTimer + mqttConnectTimeout)))
-    {
-      yield();
-      nextionHandleInput();     // Nextion serial communications loop
-      ArduinoOTA.handle();      // Arduino OTA loop
-      webServer.handleClient(); // webServer loop
-      telnetHandleClient();     // telnet client loop
-      motionHandle();           // motion sensor loop
-      beepHandle();             // beep feedback loop
-    }
+    mqttClient.connect(mqttClientId.c_str(), mqttUser, mqttPassword, false);
 
     if (mqttClient.connected())
     { // Attempt to connect to broker, setting last will and testament
       // Update panel with MQTT status
       nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected!\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connected:\\r " + String(mqttServer) + "\"");
       debugPrintln(F("MQTT: connected"));
+
+      // Reset our diagnostic booleans
+      mqttPingCheck = true;
+      mqttPortCheck = true;
 
       // Subscribe to our incoming topics
       if (mqttClient.subscribe(mqttCommandSubscription))
@@ -472,13 +469,48 @@ void mqttConnect()
     else
     { // Retry until we give up and restart after connectTimeout seconds
       mqttReconnectCount++;
-      if (mqttReconnectCount * mqttConnectTimeout > (connectTimeout * 1000 ))
+      if (mqttReconnectCount * mqttConnectTimeout * 6 > (connectTimeout * 1000))
       {
         debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc: ")) + String(mqttClient.returnCode()) + String(F(" and error: ")) + String(mqttClient.lastError()) + String(F(". Restarting device.")));
         espReset();
       }
-      debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(" and error: ")) + String(mqttClient.lastError()) + String(F(". Trying again in 5 seconds.")));
-      nextionSetAttr("p[0].b[1].txt", "\"WiFi Connected:\\r " + String(WiFi.SSID()) + "\\rIP: " + WiFi.localIP().toString() + "\\r\\rMQTT Connect to:\\r " + String(mqttServer) + "\\rFAILED rc=" + String(mqttClient.returnCode()) + "\\r\\rRetry in 5 sec\"");
+      mqttConnectTimer = millis();
+      yield();
+      webServer.handleClient();
+      mqttPingCheck = Ping.ping(mqttServer, 4);
+      yield();
+      webServer.handleClient();
+      mqttPortCheck = wifiClient.connect(mqttServer, atoi(mqttPort));
+      String mqttCheckResult = "Ping: FAILED";
+      String mqttCheckResultNextion = "Ping: ";
+      if (mqttPingCheck)
+      {
+        mqttCheckResult = "Ping: SUCCESS";
+        mqttCheckResultNextion = "Ping: ";
+      }
+      if (mqttPortCheck)
+      {
+        mqttCheckResult += " Port: SUCCESS";
+        mqttCheckResultNextion += " Port: ";
+      }
+      else
+      {
+        mqttCheckResult += " Port: FAILED";
+        mqttCheckResultNextion += " Port: ";
+      }
+      debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(" and error: ")) + String(mqttClient.lastError()) + String(F(". Connection checks: ")) + mqttCheckResult + String(F(". Trying again in 30 seconds.")));
+      nextionSetAttr("p[0].b[1].txt", String(F("\"WiFi Connected!\\r ")) + String(WiFi.SSID()) + String(F("\\rIP: ")) + WiFi.localIP().toString() + String(F("\\r\\rMQTT Connect:\\r ")) + String(mqttServer) + String(F("\\rFAILED rc=")) + String(mqttClient.returnCode()) + String(F("\\r")) + mqttCheckResultNextion + String(F("\"")));
+
+      while (millis() < (mqttConnectTimer + (mqttConnectTimeout * 5)))
+      {
+        yield();
+        nextionHandleInput();     // Nextion serial communications loop
+        ArduinoOTA.handle();      // Arduino OTA loop
+        webServer.handleClient(); // webServer loop
+        telnetHandleClient();     // telnet client loop
+        motionHandle();           // motion sensor loop
+        beepHandle();             // beep feedback loop
+      }
     }
   }
 }
@@ -2410,10 +2442,28 @@ void webHandleRoot()
   }
   else
   {
-    webServer.sendContent(F("<font color='red'><b>Disconnected</b></font><br/>return code: "));
+    webServer.sendContent(F("<font color='red'><b>Disconnected</b></font><br/><b>MQTT return code:</b> "));
     webServer.sendContent(String(mqttClient.returnCode()));
-    webServer.sendContent(F("<br/>last error: "));
+    webServer.sendContent(F("<br/><b>MQTT last error:</b> "));
     webServer.sendContent(String(mqttClient.lastError()));
+    webServer.sendContent(F("<br/><b>MQTT broker ping check:</b> "));
+    if (mqttPingCheck)
+    {
+      webServer.sendContent(F("<font color='green'>SUCCESS</font>"));
+    }
+    else
+    {
+      webServer.sendContent(F("<font color='red'>FAILED</font>"));
+    }
+    webServer.sendContent(F("<br/><b>MQTT broker port check:</b> "));
+    if (mqttPortCheck)
+    {
+      webServer.sendContent(F("<font color='green'>SUCCESS</font>"));
+    }
+    else
+    {
+      webServer.sendContent(F("<font color='red'>FAILED</font>"));
+    }
   }
   webServer.sendContent(F("<br/><b>MQTT ClientID: </b>"));
   if (mqttClientId != "")
