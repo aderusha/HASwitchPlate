@@ -404,8 +404,8 @@ void mqttConnect()
   mqttClient.setWill(mqttStatusTopic.c_str(), "OFF", true, 1);
 
   while (!mqttClient.connected())
-  {
-    // Loop until we're connected to MQTT
+  { // Loop until we're connected to MQTT
+    mqttConnectTimer = millis();
     mqttClient.connect(mqttClientId.c_str(), mqttUser, mqttPassword, false);
 
     if (mqttClient.connected())
@@ -474,7 +474,6 @@ void mqttConnect()
         debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc: ")) + String(mqttClient.returnCode()) + String(F(" and error: ")) + String(mqttClient.lastError()) + String(F(". Restarting device.")));
         espReset();
       }
-      mqttConnectTimer = millis();
       yield();
       webServer.handleClient();
       mqttPingCheck = Ping.ping(mqttServer, 4);
@@ -482,7 +481,7 @@ void mqttConnect()
       webServer.handleClient();
       mqttPortCheck = wifiClient.connect(mqttServer, atoi(mqttPort));
       String mqttCheckResult = "Ping: FAILED";
-      String mqttCheckResultNextion = "Ping: ";
+      String mqttCheckResultNextion = "Ping: ";
       if (mqttPingCheck)
       {
         mqttCheckResult = "Ping: SUCCESS";
@@ -496,12 +495,12 @@ void mqttConnect()
       else
       {
         mqttCheckResult += " Port: FAILED";
-        mqttCheckResultNextion += " Port: ";
+        mqttCheckResultNextion += " Port: ";
       }
       debugPrintln(String(F("MQTT connection attempt ")) + String(mqttReconnectCount) + String(F(" failed with rc ")) + String(mqttClient.returnCode()) + String(F(" and error: ")) + String(mqttClient.lastError()) + String(F(". Connection checks: ")) + mqttCheckResult + String(F(". Trying again in 30 seconds.")));
-      nextionSetAttr("p[0].b[1].txt", String(F("\"WiFi Connected!\\r ")) + String(WiFi.SSID()) + String(F("\\rIP: ")) + WiFi.localIP().toString() + String(F("\\r\\rMQTT Connect:\\r ")) + String(mqttServer) + String(F("\\rFAILED rc=")) + String(mqttClient.returnCode()) + String(F("\\r")) + mqttCheckResultNextion + String(F("\"")));
+      nextionSetAttr("p[0].b[1].txt", String(F("\"WiFi Connected!\\r ")) + String(WiFi.SSID()) + String(F("\\rIP: ")) + WiFi.localIP().toString() + String(F("\\r\\rMQTT Failed:\\r ")) + String(mqttServer) + String(F("\\rRC: ")) + String(mqttClient.returnCode()) + String(F("   Error: ")) + String(mqttClient.lastError()) + String(F("\\r")) + mqttCheckResultNextion + String(F("\"")));
 
-      while (millis() < (mqttConnectTimer + (mqttConnectTimeout * 5)))
+      while (millis() < (mqttConnectTimer + (mqttConnectTimeout * 6)))
       {
         yield();
         nextionHandleInput();     // Nextion serial communications loop
@@ -748,13 +747,12 @@ void nextionHandleInput()
 { // Handle incoming serial data from the Nextion panel
   // This will collect serial data from the panel and place it into the global buffer
   // nextionReturnBuffer[nextionReturnIndex]
-  unsigned long handlerTimeout = millis() + 1000;
+  unsigned long handlerTimeout = millis() + 100;
   bool nextionCommandComplete = false;
-  static int nextionTermByteCnt = 0; // counter for our 3 consecutive 0xFFs
+  static uint8_t nextionTermByteCnt = 0; // counter for our 3 consecutive 0xFFs
 
   while (Serial.available() && !nextionCommandComplete && (millis() < handlerTimeout))
   {
-    yield();
     byte nextionCommandByte = Serial.read();
     if (nextionCommandByte == 0xFF)
     { // check to see if we have one of 3 consecutive 0xFF which indicates the end of a command
@@ -777,6 +775,10 @@ void nextionHandleInput()
       nextionAckReceived = true;
       nextionProcessInput();
     }
+
+    webServer.handleClient(); // webServer loop
+    telnetHandleClient();     // telnet client loop
+    yield();
   }
   if (millis() > handlerTimeout)
   {
@@ -1777,7 +1779,7 @@ void espWifiConnect()
       WiFiManagerParameter custom_haspNode("haspNode", "<br/>Node Name <small>(required: lowercase letters, numbers, and _ only)</small>", haspNode, 15, " maxlength=15 required pattern='[a-z0-9_]*'");
       WiFiManagerParameter custom_groupName("groupName", "Group Name <small>(required)</small>", groupName, 15, " maxlength=15 required");
       WiFiManagerParameter custom_mqttHeader("<br/><br/><b>MQTT</b>");
-      WiFiManagerParameter custom_mqttServer("mqttServer", "<br/>MQTT Broker <small>(required)</small>", mqttServer, 63, " maxlength=63");
+      WiFiManagerParameter custom_mqttServer("mqttServer", "<br/>MQTT Broker <small>(required, IP address is preferred)</small>", mqttServer, 63, " maxlength=63");
       WiFiManagerParameter custom_mqttPort("mqttPort", "MQTT Port <small>(required)</small>", mqttPort, 5, " maxlength=5 type='number'");
       WiFiManagerParameter custom_mqttUser("mqttUser", "MQTT User <small>(optional)</small>", mqttUser, 127, " maxlength=127");
       WiFiManagerParameter custom_mqttPassword("mqttPassword", "MQTT Password <small>(optional)</small>", mqttPassword, 127, " maxlength=127 type='password'");
@@ -2305,7 +2307,7 @@ void webHandleRoot()
   webServer.sendContent(haspNode);
   webServer.sendContent(F("'><br/><b>Group Name</b> <i><small>(required)</small></i><input id='groupName' required name='groupName' maxlength=15 placeholder='Group Name' value='"));
   webServer.sendContent(groupName);
-  webServer.sendContent(F("'><br/><br/><b>MQTT Broker</b> <i><small>(required)</small></i><input id='mqttServer' required name='mqttServer' maxlength=63 placeholder='mqttServer' value='"));
+  webServer.sendContent(F("'><br/><br/><b>MQTT Broker</b> <i><small>(required, IP address is preferred)</small></i><input id='mqttServer' required name='mqttServer' maxlength=63 placeholder='mqttServer' value='"));
   if (strcmp(mqttServer, "") != 0)
   {
     webServer.sendContent(mqttServer);
