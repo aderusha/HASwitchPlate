@@ -1,3 +1,11 @@
+# We're Moving!
+
+This repository is an archived snapshot of the pre-1.0 HASP project.
+
+## [Click here to head to the new home for HASPone!](https://github.com/HASwitchPlate/HASPone)
+
+Below you'll find saved information about previous versions of HASP.
+
 # HA SwitchPlate
 
 The HA SwitchPlate is a user-programmable LCD touchscreen you can mount into a [standard North American work box](https://www.nema.org/Standards/ComplimentaryDocuments/NEMA%20WD%206%20-%20Dimensions%20for%20Wiring%20Devices%20-%20Excerpt.pdf) in place of a light switch.  It connects to your home automation system over WiFi to send and receive [MQTT](https://en.wikipedia.org/wiki/MQTT) messages in response to user interactions on the screen or events happening in your home.  The result is an attractive and highly-customizable controller for your home automation system which you can build yourself!
