@@ -1,18 +1,18 @@
 {
   "d1_mini": {
-    "version": "0.40",
+    "version": "1.00",
     "firmware": "http://haswitchplate.com/update/HASwitchPlate.ino.d1_mini.bin"
   },
   "NX3224T024_011R": {
-    "version": 2,
+    "version": 3,
     "firmware": "http://haswitchplate.com/update/HASwitchPlate.tft"
   },
   "NX3224K024_011R": {
-    "version": 2,
+    "version": 3,
     "firmware": "http://haswitchplate.com/update/HASwitchPlate-Enhanced.tft"
   },
   "TJC3224T024_011R": {
-    "version": 2,
+    "version": 3,
     "firmware": "http://haswitchplate.com/update/HASwitchPlate-TJC.tft"
   }
 }
