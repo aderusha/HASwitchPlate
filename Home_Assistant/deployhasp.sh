@@ -4,6 +4,15 @@
 # the latest HASP automation package and modify for the provided device name
 ###############################################################################
 
+echo "================================================================================================="
+echo "WARNING: Chances are good that you don't want to run this command! It is intended to be used with"
+echo "         an older version of this project. Check the following URL for an updated guide to"
+echo "         integrating HASPone with Home Assistant:"
+echo ""
+echo "         https://github.com/HASwitchPlate/HASPone/wiki/Configure-your-HASPone-for-Home-Assistant"
+echo "================================================================================================="
+echo ""
+
 # First order of business is to find 'configuration.yaml' in some likely places
 if [ ! -f configuration.yaml ] # check current directory first
 then
