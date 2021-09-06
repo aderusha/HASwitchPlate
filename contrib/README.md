@@ -1,3 +1,13 @@
+# We're Moving!
+
+This repository is an archived snapshot of the pre-1.0 HASP project.
+
+## [Click here to head to the new home for HASPone!](https://github.com/HASwitchPlate/HASPone)
+
+Below you'll find saved information about previous versions of HASP.
+
+---
+
 # User Contributions
 
 Several users of HASP have found new ways to use, modify, and interact with HASP.  Here are some ideas people have put together and have been kind enough to share with the rest of us!
