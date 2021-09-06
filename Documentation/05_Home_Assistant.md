@@ -1,3 +1,13 @@
+# We're Moving!
+
+This repository is an archived snapshot of the pre-1.0 HASP project.
+
+## [Click here to head to the new home for HASPone!](https://github.com/HASwitchPlate/HASPone)
+
+Below you'll find saved information about previous versions of HASP.
+
+---
+
 # Home Assistant integration
 
 Configuring Home Assistant for the HASP requires making some basic changes to your configuration and downloading the packages to your installation.  [Continue below]((#standard-home-assistant-installation) for a standard Home Assistant installation in a container (HassOS, HassIO, Docker, etc).
