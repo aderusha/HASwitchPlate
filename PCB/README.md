@@ -1,3 +1,13 @@
+# We're Moving!
+
+This repository is an archived snapshot of the pre-1.0 HASP project.
+
+## [Click here to head to the new home for HASPone!](https://github.com/HASwitchPlate/HASPone)
+
+Below you'll find saved information about previous versions of HASP.
+
+---
+
 # PCB source files and Gerber outputs
 
 Above you'll find [KiCad](http://kicad-pcb.org/) [schematic](https://github.com/aderusha/HASwitchPlate/blob/master/PCB/HASwitchPlate.sch) and [PCB](https://github.com/aderusha/HASwitchPlate/blob/master/PCB/HASwitchPlate.kicad_pcb) files along with [a ZIP bundle containing complete gerber outputs](https://github.com/aderusha/HASwitchPlate/raw/master/PCB/HASwitchPlate.gerbers.zip) ready to send to [your favorite PCB shop](https://www.allpcb.com/?Mb_InviteId=34099).
