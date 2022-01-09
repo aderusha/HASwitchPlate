@@ -1,6 +1,6 @@
 {
   "d1_mini": {
-    "version": "1.00",
+    "version": "1.05",
     "firmware": "https://raw.githubusercontent.com/HASwitchPlate/HASPone/main/Arduino_Sketch/HASwitchPlate.ino.d1_mini.bin"
   },
   "NX3224T024_011R": {
